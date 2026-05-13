@@ -466,7 +466,7 @@ POST /api/chat
 GET /api/chat/sessions
 GET /api/chat/sessions/{session_id}
 
-POST /api/assignments/parse
+POST /api/assignments/preview
 POST /api/assignments
 GET /api/assignments
 PATCH /api/assignments/{assignment_id}

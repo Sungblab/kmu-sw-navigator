@@ -55,7 +55,7 @@ eCampus 자동 크롤링과 완전한 Google Calendar 연동은 개발 시간이
 ```txt
 React + Vite + TypeScript
 Tailwind CSS
-shadcn/ui
+lucide-react
 Supabase JS Client
 ```
 
@@ -770,7 +770,7 @@ RAG 기반 질문 답변 API.
 
 ---
 
-## 9.4 POST /api/recommend/club
+## 9.4 POST /api/recommend/activity
 
 동아리/활동 추천 API.
 
@@ -802,7 +802,7 @@ RAG 기반 질문 답변 API.
 
 ---
 
-## 9.5 POST /api/assignments/parse
+## 9.5 POST /api/assignments/preview
 
 자연어 일정 추출 API.
 
@@ -1126,6 +1126,7 @@ SUPABASE_JWT_SECRET=
 GEMINI_API_KEY=
 
 GEMINI_MAIN_MODEL=gemini-3-flash-preview
+GEMINI_SCHEDULE_MODEL=gemini-3.1-flash-lite
 GEMINI_LIGHT_MODEL=gemini-3.1-flash-lite
 GEMINI_PRO_MODEL=gemini-3.1-pro-preview
 GEMINI_EMBEDDING_MODEL=gemini-embedding-2
@@ -1433,7 +1434,7 @@ school_system_guide.md
 - Club Recommend Page
 - Schedule Page
 - Logs Page
-- shadcn/ui 카드, 버튼, input 적용
+- Tailwind CSS 기반 카드, 버튼, input 적용
 
 완료 기준:
 

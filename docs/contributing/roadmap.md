@@ -9,16 +9,16 @@
 | 영역 | 상태 | 설명 |
 | --- | --- | --- |
 | Repo와 문서 기반 | 완료 | README, 기여 가이드, 문서 인덱스, LLM 활용 기록 구조 |
-| FastAPI 기반 | 진행 중 | `/health`, service, script, 테스트 구조 |
-| Supabase schema | 진행 중 | Auth, Postgres, pgvector, raw/wiki/chunk/log 테이블 |
+| FastAPI 기반 | 진행 중 | `/health`, `/api`, service, script, 테스트 구조 |
+| Supabase schema | 진행 중 | Auth, Postgres, pgvector, raw/wiki/chunk/log/calendar token 테이블 |
 | Mini LLM Wiki | 진행 중 | raw markdown을 신입생용 wiki page로 컴파일 |
-| 개인화 프로필/메모리 | 시작 전 | 필수 프로필, 대화형 메모리, 메모리 이벤트/투명성 |
-| RAG ingest | 시작 전 | Markdown chunking, embedding, document_chunks 저장 |
-| RAG chat API | 시작 전 | 질문 embedding, pgvector RPC, Gemini 답변, 출처 |
-| Google grounding | 시작 전 | 최신 진로/취업/창업/공모전 정보 보강 |
-| 추천 기능 | 시작 전 | 조건문/딕셔너리 기반 트랙/활동 추천 |
-| 일정 관리 | 시작 전 | 자연어 일정 추출, 저장, D-day 계산, Google Calendar 내보내기 |
-| React UI | 시작 전 | 홈, 학업, 진로, 프로젝트, 일정, 기록 탭 |
+| 개인화 프로필/메모리 | 1차 구현 완료 | 필수 프로필, 대화형 메모리, 메모리 이벤트/투명성 |
+| RAG ingest | 1차 구현 완료 | Markdown chunking, embedding, document_chunks 저장 script |
+| RAG chat API | 1차 구현 완료 | local/text/vector retrieval, Gemini 답변, 출처, session 저장 |
+| Google grounding | 1차 구현 완료 | 최신 진로/취업/창업/공모전 정보 보강, live smoke 대기 |
+| 추천 기능 | 1차 구현 완료 | 조건문/딕셔너리 기반 트랙/활동 추천, RAG 출처, 메모리 입력 |
+| 일정 관리 | 1차 구현 완료 | 자연어 일정 추출, 저장, D-day 계산, Google Calendar 내보내기 |
+| React UI | 1차 구현 완료 | Claude/NotebookLM식 workspace, 모바일 drawer, 기능 탭 |
 | 보고서/발표 | 시작 전 | 6-10페이지 보고서, 20-25분 발표영상 |
 
 ## 우선순위

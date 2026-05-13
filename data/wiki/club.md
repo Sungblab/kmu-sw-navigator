@@ -4,7 +4,7 @@ type: topic
 category: club
 status: active
 sources: 1
-last_touched: 2026-05-13
+last_touched: 2026-05-14
 ---
 
 # 동아리와 활동

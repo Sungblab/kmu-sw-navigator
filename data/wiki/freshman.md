@@ -4,7 +4,7 @@ type: topic
 category: freshman
 status: active
 sources: 1
-last_touched: 2026-05-13
+last_touched: 2026-05-14
 ---
 
 # 신입생 안내

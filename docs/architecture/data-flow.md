@@ -7,11 +7,13 @@
 -> React UI
 -> FastAPI /api/chat
 -> intent classifier
--> 관련 user memory embedding 검색
+-> active user memory 조회
 -> retrieval router
--> 내부 RAG / Google grounding / 일정 parser 선택
--> Gemini 답변 생성
--> chat_logs, llm_usage_logs 저장
+-> 내부 RAG 검색
+-> 필요 시 Google grounding
+-> Gemini 또는 deterministic fallback 답변 생성
+-> chat_sessions, chat_messages 저장
+-> Gemini 답변 생성/Google grounding 경로는 llm_usage_logs 저장
 -> 답변, 추천 액션, 개인화/내부자료/웹 근거 반환
 ```
 
@@ -21,12 +23,11 @@
 
 ```txt
 사용자 발화
--> memory extractor
+-> 메모리 후보 생성 API 또는 chat memory update 후보
 -> 저장 후보 생성
 -> 민감도 정책 적용
 -> 자동 저장 또는 사용자 확인
 -> user_memories 저장
--> embedding 생성
 -> memory_events에 생성/확인/거절 기록
 ```
 
@@ -40,8 +41,8 @@ data/raw Markdown 자료
 -> Mini LLM Wiki compiler
 -> data/wiki/_index.md와 category별 wiki page 생성
 -> raw/wiki markdown heading-aware chunk 분리
--> Gemini embedding 생성, 768차원
--> Supabase raw_documents, wiki_pages, document_chunks 저장
+-> 선택적으로 Gemini embedding 생성, 768차원
+-> Supabase document_chunks 저장 또는 dry-run payload 확인
 -> 검색 테스트 질문으로 품질 확인
 ```
 
@@ -51,29 +52,26 @@ Mini LLM Wiki는 원문 자료와 답변 사이의 중간 지식 계층입니다
 
 ```txt
 사용자 관심사 입력
--> FastAPI /api/recommend/*
--> profile과 user memory 조회
+-> FastAPI /api/recommend/track 또는 /api/recommend/activity
+-> frontend가 profile/user memory 기반 자동값 또는 직접 입력값 구성
 -> Python 딕셔너리 규칙과 점수 계산
 -> 내부 RAG로 학교 자료 근거 보강
--> 필요 시 Google grounding으로 최신 정보 보강
--> Gemini로 설명 문장 생성
 -> 추천 결과와 근거 반환
--> llm_usage_logs 저장
 ```
 
 ## 4. 일정 흐름
 
 ```txt
 자연어 일정 입력
--> FastAPI /api/assignments/parse
--> Gemini Flash-Lite JSON 추출
+-> FastAPI /api/assignments/preview
+-> Gemini Flash-Lite JSON 추출 또는 Python rules fallback
 -> 사용자 확인
 -> FastAPI /api/assignments 저장
 -> due_at 기준 D-day 계산
--> 사용자가 원하면 Google Calendar event 생성
+-> 사용자가 원하면 Google Calendar event 생성 또는 demo export 상태 저장
 -> 일정 목록 반환
 ```
 
 ## 5. LLM 기록 흐름
 
-앱 안에서 Gemini API를 사용한 기록은 DB의 `llm_usage_logs`에 저장합니다. 개발 과정에서 Codex, ChatGPT, Claude, Gemini를 사용한 기록은 `docs/llm/usage-log.md`에 남깁니다.
+개발 과정에서 Codex, ChatGPT, Claude, Gemini를 사용한 기록은 `docs/llm/usage-log.md`에 남깁니다. 앱 내부 LLM 호출 로그는 `llm_usage_logs` 테이블과 `GET /api/llm-logs`로 조회하며, 현재 자동 저장은 채팅 답변 생성, Google grounding, 일정 parser 경로에 연결했습니다. embedding ingest CLI는 `--llm-log-user-id`를 명시한 경우에만 실행 요약을 남깁니다.

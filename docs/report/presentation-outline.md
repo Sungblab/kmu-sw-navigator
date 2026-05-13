@@ -20,13 +20,13 @@
 
 ## 3. 기능 데모
 
-1. 온보딩과 필수 프로필 설정
-2. 대화형 선택지로 관심/고민 메모리 저장
+1. 메인 workspace: 왼쪽 사이드바, 중앙 상담, 오른쪽 context panel
+2. 설정 화면: Supabase 로그인 구조와 Google Calendar 연결 상태
 3. 개인화 RAG 상담 질문
 4. 개인화 근거, 내부 자료, 최신 웹 근거 확인
-5. 프로젝트/진로 추천
+5. 진로/활동 추천 입력 직접 수정과 추천 결과 확인
 6. 자연어 일정 등록
-7. D-day와 Google Calendar 내보내기
+7. D-day, 완료/삭제, Google Calendar 내보내기
 8. 메모리와 LLM 활용 기록 확인
 
 ## 4. 코드 설명
@@ -38,6 +38,8 @@
 - chunk 반복 처리
 - D-day 계산 함수
 - Calendar 내보내기 중복 방지
+- Supabase Direct/backend와 Framework/frontend env 분리
+- `env:check`와 live smoke 절차
 - LLM usage log 저장
 
 ## 5. LLM 활용과 협업 방식
@@ -45,7 +47,8 @@
 - Codex로 PRD 분석, spec 작성, plan 작성, 문서 구조 설계
 - Gemini API로 앱 기능 구현
 - Google grounding으로 최신 정보 보강
-- 팀원이 직접 검토하고 설명 가능한 코드로 수정
+- LLM 결과는 직접 검토하고, 핵심 로직은 테스트와 주석으로 설명 가능한 코드로 수정
+- LLM 사용 목적과 결과는 `docs/llm/usage-log.md`에 기록
 
 ## 6. 한계와 개선 방향
 
@@ -54,3 +57,15 @@
 - Google Calendar 양방향 동기화
 - eCampus 직접 연동
 - RAG 평가 자동화
+- 실제 Supabase/Gemini/Google 키를 넣은 live smoke 추가
+
+## 7. 권장 시간 배분
+
+| 구간 | 시간 |
+| --- | --- |
+| 문제 정의와 주제 소개 | 2-3분 |
+| 시스템 구조 | 4분 |
+| 앱 데모 | 9-10분 |
+| Python 핵심 로직 설명 | 5분 |
+| LLM 활용 기록과 직접 검증 | 3분 |
+| 한계와 개선 방향 | 2분 |

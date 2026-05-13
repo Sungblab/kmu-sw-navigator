@@ -51,6 +51,7 @@ def parse_raw_document(path: Path) -> RawDocument:
     text = path.read_text(encoding="utf-8")
     metadata, body = _split_frontmatter(text)
     body = body.strip()
+    # 원문 frontmatter가 부족해도 파일명/H1로 fallback해 wiki 자료가 누락되지 않게 한다.
     title = metadata.get("title") or _first_h1(body) or _title_from_stem(path.stem)
     category = _slugify(metadata.get("category") or "general")
     source = metadata.get("source") or "팀 정리"
@@ -75,9 +76,11 @@ def load_raw_documents(raw_dir: Path) -> list[RawDocument]:
 def compile_wiki(raw_documents: list[RawDocument], generated_at: date) -> WikiBuild:
     grouped: dict[str, list[RawDocument]] = {}
     for document in raw_documents:
+        # 빈 문서는 RAG 근거로 쓸 수 없으므로 wiki page 생성 대상에서 제외한다.
         if document.body.strip():
             grouped.setdefault(document.category, []).append(document)
 
+    # category별 page를 만들면 "신입생/트랙/동아리"처럼 상담 주제 단위로 먼저 검색할 수 있다.
     pages = [
         _compile_category_page(category, sorted(documents, key=lambda doc: doc.title), generated_at)
         for category, documents in sorted(grouped.items())
@@ -135,6 +138,7 @@ def _title_from_stem(stem: str) -> str:
 
 
 def _slugify(value: str) -> str:
+    # 한글 category와 제목도 URL/file slug로 안전하게 재사용할 수 있게 정규화한다.
     slug = re.sub(r"[^0-9A-Za-z가-힣_-]+", "-", value.strip().lower())
     slug = re.sub(r"-+", "-", slug).strip("-_")
     return slug or "general"

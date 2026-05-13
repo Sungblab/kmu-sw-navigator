@@ -44,3 +44,20 @@ Supabase pgvector의 cosine distance 연산자 `<=>`를 사용합니다. FastAPI
 2. 신입생이 수강신청 전에 뭘 확인해야 해?
 3. 개발과 운동에 관심 있으면 어떤 활동이 좋을까?
 4. 학교 시스템을 처음 쓰는 신입생이 알아야 할 것은?
+
+## 현재 구현 상태
+
+- `backend/app/services/document_ingest.py`가 raw/wiki Markdown을 `document_chunks` payload로 변환한다.
+- `pnpm rag:ingest:dry`로 Supabase 없이 chunk 생성 수를 확인할 수 있다.
+- `backend/app/services/embedding_service.py`가 Gemini embedding adapter와 deterministic test fallback을 제공한다.
+- `pnpm rag:ingest:embeddings`는 `GEMINI_API_KEY`가 있을 때 768차원 embedding을 포함해 insert한다.
+- 현재 로컬에는 Gemini key가 없어 live embedding ingest는 아직 수행하지 않았다.
+- `backend/app/services/retrieval_service.py`가 DB 없이 raw/wiki chunk를 검색하는 local fallback retriever를 제공한다.
+- `/api/chat`은 현재 local retrieval 결과를 `evidence.internal_sources`로 반환한다.
+- Supabase env만 있으면 `search_document_chunks_text` RPC adapter를 사용한다.
+- Supabase env와 Gemini key가 모두 있으면 질문 embedding을 만든 뒤 `match_document_chunks` vector RPC adapter를 사용한다.
+- 모든 retrieval 경로는 같은 evidence 형태를 반환한다.
+- `backend/app/services/answer_generation_service.py`는 retrieved evidence와 user memory를 prompt로 묶어 Gemini 답변 생성을 수행한다.
+- `GEMINI_API_KEY`가 없으면 deterministic contract answer를 유지한다.
+- `/api/chat`은 응답 뒤 chat session/message store에 user/assistant message pair를 저장한다.
+- `/api/chat/sessions`와 `/api/chat/sessions/{session_id}/messages`는 저장된 상담 목록과 메시지를 프론트 sidebar에 제공한다.

@@ -10,6 +10,41 @@
 
 ---
 
+## Implementation Result
+
+2026-05-13에 `feature/profile-memory-foundation` 브랜치에서 backend-first로 구현했다.
+
+구현된 범위:
+
+- `supabase/schema.sql`에 `profiles`, `chat_sessions`, `chat_messages`, `user_memories`, `memory_events`, `google_oauth_tokens`, assignment Calendar fields, 사용자 소유 테이블 RLS policy를 추가했다.
+- `backend/app/schemas/`에 profile, memory, chat contract Pydantic 모델을 추가했다.
+- `backend/app/services/memory_service.py`에 deterministic 메모리 민감도 정책, candidate/confirm/reject/archive/update 흐름, 이벤트 기록을 추가했다.
+- `backend/app/api/`에 `/api/profile`, `/api/memories`, `/api/chat` 라우터와 테스트용 user dependency를 추가했다.
+- `backend/app/services/chat_contract_service.py`에 Gemini/RAG 연결 전 deterministic intent fallback과 evidence/choice 응답 contract를 추가했다.
+- `frontend/src/`에 API 타입/client, Home page, Records page, 실제 앱 shell을 추가했다.
+- Windows `uv run pytest` console-script canonicalize 문제를 피하기 위해 root scripts를 `uv run python -m ...` 형태로 정리했다.
+- 메모리 민감도 정책, 메모리 이벤트 기록, chat intent fallback, Chat contract 근거 슬롯에 발표용 의도 주석을 추가했다.
+- `docs/architecture/python-core-logic.md`에 핵심 Python 로직의 판단 이유와 현재 한계를 정리했다.
+
+검증 결과:
+
+```powershell
+pnpm docs:check
+pnpm test:backend
+pnpm lint:backend
+pnpm build:frontend
+```
+
+결과: `pnpm docs:check`, `pnpm wiki:build`, `pnpm test:backend`, `pnpm lint:backend`, `pnpm build:frontend`가 통과했다. 중간에 `uv run pytest`와 기존 `pnpm test:backend`는 console-script shim 문제로 실패했지만, `uv run python -m pytest`로 root script를 수정한 뒤 `pnpm test:backend`가 Python 3.12.11 환경에서 22개 테스트 통과로 복구됐다.
+
+남은 범위:
+
+- 현재 profile/memory 저장소는 Supabase adapter 전 단계의 in-memory 구현이다.
+- `/api/chat`은 실제 RAG/Gemini가 아니라 deterministic contract shell이다.
+- 실제 Supabase JWT 검증, embedding 생성, RAG retrieval, Google grounding, 일정 저장/Calendar export는 후속 plan에서 구현한다.
+
+---
+
 ## File Structure
 
 Create or modify these files during implementation:

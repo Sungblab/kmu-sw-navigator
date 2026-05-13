@@ -28,6 +28,7 @@
 | 전체 데이터 흐름 | `architecture/data-flow.md` |
 | RAG 설계 | `architecture/rag-design.md` |
 | Mini LLM Wiki 설계 | `architecture/mini-llm-wiki.md` |
+| 핵심 Python 로직 설명 | `architecture/python-core-logic.md` |
 
 ## LLM 활용과 협업 기록
 
@@ -55,3 +56,4 @@
 | RAG 평가 기준 | `testing/rag-evaluation.md` |
 | 보고서 목차 | `report/report-outline.md` |
 | 발표자료 목차 | `report/presentation-outline.md` |
+| 제출 전 체크리스트 | `report/submission-checklist.md` |
