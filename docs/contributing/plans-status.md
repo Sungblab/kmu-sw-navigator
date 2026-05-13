@@ -8,6 +8,7 @@
 | --- | --- | --- | --- |
 | 2026-05-13 | repo와 문서 기반 세팅 | 초기 세팅 완료 | `docs/superpowers/plans/2026-05-13-repo-docs-initialization.md` |
 | 2026-05-13 | Mini LLM Wiki foundation | 구현/검증 완료 | `docs/superpowers/plans/2026-05-13-mini-llm-wiki.md` |
+| 2026-05-13 | 로그인/메인 HTML 목업 | 구현/검증 완료 | `docs/superpowers/plans/2026-05-13-login-main-mockup.md` |
 
 ## 다음 작업 후보
 

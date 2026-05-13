@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>북악 새내기 AI - 메인 목업</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-page">
+      <section class="app-shell" aria-label="북악 새내기 AI 메인 앱">
+        <aside class="sidebar">
+          <div class="logo-block">
+            <span class="logo-mark">北</span>
+            <h1>북악 새내기 AI</h1>
+            <p>KMU Software Freshman Assistant</p>
+          </div>
+
+          <nav class="nav-list" aria-label="주요 메뉴">
+            <a class="nav-item active" href="#"><span>AI 질문</span><span>01</span></a>
+            <a class="nav-item" href="#"><span>Mini Wiki</span><span>02</span></a>
+            <a class="nav-item" href="#"><span>트랙/활동 추천</span><span>03</span></a>
+            <a class="nav-item" href="#"><span>일정 D-day</span><span>04</span></a>
+            <a class="nav-item" href="#"><span>LLM 기록</span><span>05</span></a>
+          </nav>
+
+          <div class="sidebar-footer">
+            <strong>데모 상태</strong><br />
+            raw 문서 4개, wiki page 4개를 기준으로 화면을 구성한 목업입니다.
+          </div>
+        </aside>
+
+        <section class="main-area">
+          <header class="topbar">
+            <div>
+              <h2>안녕하세요, 김성빈님</h2>
+              <span class="muted">신입생 질문을 입력하면 wiki-first RAG로 답변합니다.</span>
+            </div>
+            <div class="topbar-meta">
+              <span class="status-pill">Wiki updated 2026-05-13</span>
+              <span class="status-pill">출처 표시 ON</span>
+            </div>
+          </header>
+
+          <div class="content-grid">
+            <div class="workspace-column">
+              <section class="app-panel">
+                <div class="section-heading">
+                  <div>
+                    <h3>무엇이 궁금한가요?</h3>
+                    <p>수강, 트랙, 동아리, 학교 시스템, 일정 질문을 자연어로 입력합니다.</p>
+                  </div>
+                  <span class="tag">RAG mode</span>
+                </div>
+
+                <div class="question-box">
+                  <textarea>
+소프트웨어학부 1학년이 먼저 챙겨야 할 과목과 활동을 알려줘. 코딩 경험은 조금 있고 AI 트랙에 관심 있어.</textarea
+                  >
+                  <div class="question-actions">
+                    <div class="quick-prompts">
+                      <span class="prompt-chip">1학년 수강</span>
+                      <span class="prompt-chip">AI 트랙</span>
+                      <span class="prompt-chip">동아리 추천</span>
+                    </div>
+                    <button class="secondary-button" type="button">질문 보내기</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="answer-card">
+                <div class="section-heading">
+                  <div>
+                    <h3>답변 미리보기</h3>
+                    <p>출처가 부족하면 단정하지 않고 추가 확인이 필요하다고 안내합니다.</p>
+                  </div>
+                  <span class="tag">source 3</span>
+                </div>
+
+                <div class="answer-body">
+                  AI 트랙에 관심이 있다면 1학년에는 프로그래밍 기초와 수학 기반 과목을 먼저
+                  안정적으로 가져가는 것이 좋습니다. 동시에 학부 공지, 커리큘럼 로드맵, 활동
+                  목록을 확인해 프로젝트 경험을 쌓을 수 있는 동아리나 스터디를 함께 선택하는 흐름을
+                  추천합니다.
+                </div>
+
+                <div class="source-list">
+                  <article class="source-item">
+                    <strong>Mini Wiki · 커리큘럼 로드맵</strong>
+                    <p>1학년 기초 과목과 이후 트랙 선택을 연결해 설명한 wiki page.</p>
+                  </article>
+                  <article class="source-item">
+                    <strong>Raw Document · 소프트웨어융합대학 안내</strong>
+                    <p>학부 구조, 전공 탐색, 학교 시스템 관련 원문 자료.</p>
+                  </article>
+                </div>
+              </section>
+            </div>
+
+            <aside class="side-column">
+              <section class="side-card accent-card">
+                <div class="section-heading">
+                  <div>
+                    <h3>추천 결과</h3>
+                    <p>조건문/딕셔너리 기반 로직으로 발표에서 설명 가능한 추천입니다.</p>
+                  </div>
+                </div>
+                <div class="metric-list">
+                  <div class="metric">
+                    <strong>AI/데이터 관심</strong>
+                    <p>수학 기초, Python 실습, 데이터 분석 활동을 우선 추천합니다.</p>
+                  </div>
+                  <div class="metric">
+                    <strong>코딩 경험 조금 있음</strong>
+                    <p>초급 스터디보다 프로젝트형 활동을 함께 탐색합니다.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="side-card">
+                <div class="section-heading">
+                  <div>
+                    <h3>일정 D-day</h3>
+                    <p>자연어 입력을 구조화한 뒤 마감까지 남은 기간을 보여줍니다.</p>
+                  </div>
+                </div>
+                <div class="table-like">
+                  <div class="table-row">
+                    <strong>D-3</strong>
+                    <span>프로그래밍 과제 제출</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>D-12</strong>
+                    <span>팀 프로젝트 중간 점검</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>D-29</strong>
+                    <span>최종 발표 영상 제출</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="side-card">
+                <div class="section-heading">
+                  <div>
+                    <h3>LLM 활용 기록</h3>
+                    <p>Codex, Gemini API 사용 목적과 직접 검토 내용을 제출용으로 남깁니다.</p>
+                  </div>
+                </div>
+                <div class="metric-list">
+                  <div class="metric">
+                    <strong>Codex</strong>
+                    <p>문서 구조, UI 목업, 검증 명령 정리에 사용.</p>
+                  </div>
+                  <div class="metric">
+                    <strong>Gemini Code Assist</strong>
+                    <p>PR 리뷰 코멘트 확인 후 반영/미반영 이유 기록 예정.</p>
+                  </div>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

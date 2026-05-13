@@ -13,6 +13,7 @@
 | 2026-05-13 | 김성빈 | Codex | OpenCairn/UnivMind 구현 참고 후 Mini LLM Wiki 설계/구현 | raw/wiki 자료 구조, heading-aware chunker, wiki compiler, schema 확장, wiki 생성 script 추가 | LangGraph/worker는 과제 범위에서 제외하고 Python script로 축소 구현 |
 | 2026-05-13 | 김성빈 | Codex | 코드 리뷰와 주석 기록 방식 정리 | Gemini Code Assist 자동 리뷰, 팀원 리뷰, 리뷰 반영/미반영 이유, 의도 주석을 제출 증거로 남기는 규칙 추가 | 리뷰 코멘트를 맹목적으로 반영하지 않고 직접 판단한 근거를 PR thread와 문서에 남기기로 결정 |
 | 2026-05-13 | 김성빈 | Codex | 프로젝트 전용 Codex 스킬 세팅 | `~/.codex/skills/kmu-freshman-ai`에 과제 조건, 문서 라우팅, 검증, Gemini 리뷰 대응 절차를 담은 스킬 작성 | 새 세션에서도 동일한 작업 방식과 기록 기준을 유지하기 위한 로컬 개발 가이드로 사용 |
+| 2026-05-13 | 김성빈 | Codex | 로그인/메인 HTML 목업 스타일 결정 | getdesign.md의 Cal.com 뉴트럴 UI를 참고해 랜딩페이지 없이 로그인/메인 앱 화면 목업 작성 | 발표 데모와 실제 React 구현 기준으로 쓰기 위해 튀지 않는 밝은 뉴트럴 스타일을 선택 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
