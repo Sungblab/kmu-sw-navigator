@@ -6,7 +6,7 @@
 
 | 항목 | 내용 |
 | --- | --- |
-| 프로젝트명 | KMU Freshman AI Assistant, 북악 새내기 AI |
+| 프로젝트명 | KMU Freshman AI Assistant, 국민 새내기 AI |
 | 주제 | 국민대 소프트웨어융합대학 신입생 RAG AI 도우미 |
 | PM / 개발 리드 | 김성빈 |
 | 팀원 | 정재훈, 이가은, 차성민, 최승범, 비타 |

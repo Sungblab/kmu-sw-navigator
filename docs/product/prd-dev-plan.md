@@ -1,6 +1,6 @@
 # KMU Freshman AI Assistant PRD & 개발 계획서
 
-> 프로젝트명 후보: **북악 새내기 AI**  
+> 프로젝트명 후보: **국민 새내기 AI**
 > 영문명 후보: **KMU Freshman AI Assistant**  
 > 대상: 국민대학교 소프트웨어융합대학/소프트웨어학부 신입생  
 > 개발 언어 핵심: **Python**  
