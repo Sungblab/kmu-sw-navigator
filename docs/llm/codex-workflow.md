@@ -40,6 +40,29 @@ brainstorming
 - 기술 스택 후보와 공식 문서 근거를 대조하는 데 사용
 - 검증 명령과 GitHub 공개 repo 세팅을 점검하는 데 사용
 
+## 개인 Codex 스킬
+
+김성빈의 로컬 Codex 환경에는 `kmu-freshman-ai` 전용 스킬을 둡니다.
+
+```txt
+~/.codex/skills/kmu-freshman-ai
+```
+
+이 스킬은 새 Codex 세션이 시작될 때 아래 내용을 빠르게 복원하기 위한 가이드입니다.
+
+- 과제 조건과 제출물
+- 문서 먼저 읽는 순서
+- Superpowers spec/plan/verification 기록 방식
+- Mini LLM Wiki와 RAG 개발 흐름
+- Gemini Code Assist 리뷰 확인과 답변 방식
+- 직접 push와 PR 기반 작업을 구분하는 기준
+
+사용 예시:
+
+```txt
+Use $kmu-freshman-ai before working in the kmu-freshman-ai repo.
+```
+
 ## 코드 리뷰 활용
 
 기능 단위 작업은 PR을 통해 Gemini Code Assist 자동 리뷰와 팀원 리뷰를 받습니다. 리뷰 코멘트는 그대로 따르는 것이 아니라, 타당성을 확인한 뒤 반영하거나 반영하지 않는 이유를 답합니다. 이 과정은 “LLM 생성 코드를 그대로 제출하지 않았다”는 협업 증거로 사용합니다.
