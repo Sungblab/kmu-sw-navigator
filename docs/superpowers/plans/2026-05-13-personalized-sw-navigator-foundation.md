@@ -442,4 +442,3 @@ After this foundation slice:
 1. `2026-05-13-rag-grounding-router.md`: Gemini service, embedding service, internal RAG, retrieval router, Google grounding.
 2. `2026-05-13-schedule-calendar-export.md`: assignment parser, D-day, Google Calendar export.
 3. `2026-05-13-navigator-ui.md`: polished Home/Academic/Career/Project/Schedule/Records tabs.
-
