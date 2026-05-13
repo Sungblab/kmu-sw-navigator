@@ -8,6 +8,7 @@
 - `active`: 구현 중
 - `complete`: 1차 구현 완료
 - `blocked`: 결정 필요
+- `retired`: 산출물은 보관하지 않고 설계/기록만 유지
 
 | Feature ID | 상태 | 소유 경로 | 설명 | 중복 방지 |
 | --- | --- | --- | --- | --- |
@@ -17,8 +18,8 @@
 | mini-llm-wiki | active | `data/raw/`, `data/wiki/`, `backend/app/services/wiki_compiler.py`, `backend/app/services/markdown_chunker.py` | 원문 자료를 wiki page로 컴파일하고 RAG 우선 검색 계층으로 사용 | LangGraph/worker 없이 Python script 중심으로 유지 |
 | rag-ingest | planned | `backend/app/services/`, `data/` | Markdown chunking, embedding, Supabase insert | embedding 차원은 768로 유지 |
 | rag-chat | planned | `backend/app/api/`, `frontend/src/` | 질문 답변, 출처 표시, chat log | 답변은 검색된 문서 근거가 부족하면 제한적으로 답변 |
-| frontend-ui-mockups | complete | `frontend/mockups/`, `docs/superpowers/specs/`, `docs/superpowers/plans/` | 로그인/메인 화면의 정적 HTML 목업 | React 구현 전 목업 기준을 먼저 확인 |
-| chatbot-evidence-visualization | complete | `frontend/mockups/chatbot.html`, `frontend/mockups/styles.css`, `docs/superpowers/specs/`, `docs/superpowers/plans/` | 챗봇 답변 옆에 출처, 로드맵, 추천 이유를 시각화하는 목업 | 실제 RAG 구현 전 근거 표시 UX를 먼저 고정 |
+| frontend-ui-mockups | retired | `docs/superpowers/specs/`, `docs/superpowers/plans/` | 로그인/메인 화면의 정적 HTML 목업 기록 | 실제 UI는 개인화 SW 내비게이터 React 구현으로 대체 |
+| chatbot-evidence-visualization | retired | `docs/superpowers/specs/`, `docs/superpowers/plans/` | 챗봇 답변 옆 출처, 로드맵, 추천 이유 시각화 목업 기록 | 근거 표시 UX는 `personalized-sw-navigator-design`에 통합 |
 | personalized-sw-navigator-design | complete | `docs/superpowers/specs/2026-05-13-personalized-sw-navigator-design.md`, `docs/superpowers/plans/2026-05-13-personalized-sw-navigator-foundation.md` | 신입생 전용에서 전체 학년 개인화 SW 내비게이터로 제품 범위 확장 | 레포 이름 변경은 별도 작업으로 미루고 문서/구현 범위만 먼저 정렬 |
 | user-profile-memory | planned | `backend/app/api/`, `backend/app/services/`, `backend/app/schemas/`, `supabase/schema.sql`, `frontend/src/` | 필수 프로필, 대화형 메모리, memory_events, 메모리 수정/삭제 | `profiles`, `user_memories`, `memory_events`, `chat_messages` 관계를 유지 |
 | grounded-career-advisor | planned | `backend/app/services/`, `docs/architecture/`, `frontend/src/` | 최신 진로/취업/창업 정보에 Google grounding 적용 | 학교 내부 RAG와 웹 grounding 근거를 분리 표시 |

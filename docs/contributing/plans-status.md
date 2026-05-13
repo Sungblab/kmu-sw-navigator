@@ -8,8 +8,8 @@
 | --- | --- | --- | --- |
 | 2026-05-13 | repo와 문서 기반 세팅 | 초기 세팅 완료 | `docs/superpowers/plans/2026-05-13-repo-docs-initialization.md` |
 | 2026-05-13 | Mini LLM Wiki foundation | 구현/검증 완료 | `docs/superpowers/plans/2026-05-13-mini-llm-wiki.md` |
-| 2026-05-13 | 로그인/메인 HTML 목업 | 구현/검증 완료 | `docs/superpowers/plans/2026-05-13-login-main-mockup.md` |
-| 2026-05-13 | 챗봇 근거 시각화 목업 | 구현/검증 완료 | `docs/superpowers/plans/2026-05-13-chatbot-visualization-mockup.md` |
+| 2026-05-13 | 로그인/메인 HTML 목업 | 정적 파일 삭제, 설계 기록만 유지 | `docs/superpowers/plans/2026-05-13-login-main-mockup.md` |
+| 2026-05-13 | 챗봇 근거 시각화 목업 | 정적 파일 삭제, 개인화 내비게이터 설계에 통합 | `docs/superpowers/plans/2026-05-13-chatbot-visualization-mockup.md` |
 | 2026-05-13 | 개인화 SW 내비게이터 umbrella 설계 | 설계/계획 작성 완료 | `docs/superpowers/specs/2026-05-13-personalized-sw-navigator-design.md`, `docs/superpowers/plans/2026-05-13-personalized-sw-navigator-foundation.md` |
 
 ## 다음 작업 후보
