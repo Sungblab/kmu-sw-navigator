@@ -16,6 +16,7 @@
 ## 핵심 기능
 
 - **RAG 챗봇**: 국민대/소프트웨어학부 자료를 검색하고 출처와 함께 답변합니다.
+- **Mini LLM Wiki**: 원문 자료를 신입생용 위키 페이지로 정리한 뒤 RAG 검색에 우선 사용합니다.
 - **트랙/활동 추천**: 관심 분야, 목표, 코딩 경험, 학습 성향을 바탕으로 추천 결과를 제공합니다.
 - **일정 관리**: 자연어로 입력한 과제/일정을 구조화하고 D-day를 계산합니다.
 - **LLM 활용 기록**: Gemini API 사용 기록과 Codex 기반 개발 워크플로우를 문서로 남깁니다.
@@ -42,7 +43,8 @@
 3. [docs/contributing/dev-guide.md](docs/contributing/dev-guide.md): 로컬 개발 환경
 4. [docs/contributing/feature-registry.md](docs/contributing/feature-registry.md): 기능 소유 영역
 5. [docs/llm/codex-workflow.md](docs/llm/codex-workflow.md): Codex/Superpowers 활용 방식
-6. [CONTRIBUTING.md](CONTRIBUTING.md): 팀원 기여 방법
+6. [docs/architecture/mini-llm-wiki.md](docs/architecture/mini-llm-wiki.md): Mini LLM Wiki 설계
+7. [CONTRIBUTING.md](CONTRIBUTING.md): 팀원 기여 방법
 
 ## 빠른 시작
 
@@ -98,6 +100,14 @@ pnpm docs:check
 
 이 명령은 제출과 협업에 필요한 핵심 문서가 존재하는지 검사합니다.
 
+### 6. Mini LLM Wiki 재생성
+
+```powershell
+pnpm wiki:build
+```
+
+`data/raw/`의 원문 Markdown을 읽어 `data/wiki/`의 `_index.md`, `log.md`, category별 wiki page를 재생성합니다.
+
 ## 개발 원칙
 
 - 기능을 만들기 전 `docs/superpowers/specs/`에 설계를 남깁니다.
@@ -125,7 +135,7 @@ pnpm docs:check
 | 반복문 | 문서 chunk 처리, 일정 목록, 로그 목록 |
 | 함수 | RAG 검색, 임베딩 생성, 추천, D-day 계산 |
 | 리스트/딕셔너리 | 추천 규칙, 문서 목록, sources, logs |
-| 의미 있는 출력 | 근거 기반 답변, 추천 결과, D-day, LLM 기록 |
+| 의미 있는 출력 | Mini LLM Wiki, 근거 기반 답변, 추천 결과, D-day, LLM 기록 |
 | 실행 가능한 코드 | 프론트엔드와 백엔드 로컬 실행 |
 | LLM 활용 기록 | `docs/llm/usage-log.md`, `docs/llm/codex-workflow.md` |
 

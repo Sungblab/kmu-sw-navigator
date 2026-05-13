@@ -66,6 +66,7 @@ pnpm dev:frontend
 
 ```powershell
 pnpm docs:check
+pnpm wiki:build
 cd backend
 uv run pytest
 uv run ruff check .

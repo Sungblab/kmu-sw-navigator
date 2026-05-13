@@ -17,13 +17,17 @@
 ## 2. 문서 ingest 흐름
 
 ```txt
-Markdown 자료
--> 파일별 metadata 확인
--> 500-1000자 chunk 분리
+data/raw Markdown 자료
+-> 파일별 frontmatter metadata 확인
+-> Mini LLM Wiki compiler
+-> data/wiki/_index.md와 category별 wiki page 생성
+-> raw/wiki markdown heading-aware chunk 분리
 -> Gemini embedding 생성, 768차원
--> Supabase document_chunks 저장
+-> Supabase raw_documents, wiki_pages, document_chunks 저장
 -> 검색 테스트 질문으로 품질 확인
 ```
+
+Mini LLM Wiki는 원문 자료와 답변 사이의 중간 지식 계층입니다. 질문 답변에서는 `wiki_page` chunk를 우선 검색하고, 충분한 근거가 없을 때 `raw_document` chunk를 함께 사용합니다.
 
 ## 3. 추천 흐름
 
@@ -52,4 +56,3 @@ Markdown 자료
 ## 5. LLM 기록 흐름
 
 앱 안에서 Gemini API를 사용한 기록은 DB의 `llm_usage_logs`에 저장합니다. 개발 과정에서 Codex, ChatGPT, Claude, Gemini를 사용한 기록은 `docs/llm/usage-log.md`에 남깁니다.
-

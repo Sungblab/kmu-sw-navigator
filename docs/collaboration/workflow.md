@@ -46,6 +46,7 @@ PR에는 실행한 명령을 적습니다.
 
 ```txt
 pnpm docs:check
+pnpm wiki:build
 cd backend && uv run pytest
 cd backend && uv run ruff check .
 pnpm build:frontend

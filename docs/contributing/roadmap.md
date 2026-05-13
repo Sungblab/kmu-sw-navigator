@@ -8,9 +8,10 @@
 
 | 영역 | 상태 | 설명 |
 | --- | --- | --- |
-| Repo와 문서 기반 | 진행 중 | README, 기여 가이드, 문서 인덱스, LLM 활용 기록 구조 |
-| FastAPI 기반 | 시작 전 | `/health`, API 라우터, schema, service 분리 |
-| Supabase schema | 시작 전 | Auth, Postgres, pgvector, 로그 테이블 |
+| Repo와 문서 기반 | 완료 | README, 기여 가이드, 문서 인덱스, LLM 활용 기록 구조 |
+| FastAPI 기반 | 진행 중 | `/health`, service, script, 테스트 구조 |
+| Supabase schema | 진행 중 | Auth, Postgres, pgvector, raw/wiki/chunk/log 테이블 |
+| Mini LLM Wiki | 진행 중 | raw markdown을 신입생용 wiki page로 컴파일 |
 | RAG ingest | 시작 전 | Markdown chunking, embedding, document_chunks 저장 |
 | RAG chat API | 시작 전 | 질문 embedding, pgvector RPC, Gemini 답변, 출처 |
 | 추천 기능 | 시작 전 | 조건문/딕셔너리 기반 트랙/활동 추천 |
@@ -21,7 +22,7 @@
 ## 우선순위
 
 1. repo와 문서 체계
-2. Supabase schema와 백엔드 skeleton
+2. Mini LLM Wiki와 Supabase schema
 3. Gemini 연결과 RAG ingest
 4. RAG chat API
 5. 추천/일정 기능
@@ -35,4 +36,3 @@
 - 추천과 일정 기능이 Python 코드로 설명 가능합니다.
 - LLM 활용 기록이 개발 과정과 함께 남아 있습니다.
 - 발표 데모가 sample data로 재현 가능합니다.
-

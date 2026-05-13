@@ -71,6 +71,7 @@
 
 ```powershell
 pnpm docs:check
+pnpm wiki:build
 pnpm lint:backend
 pnpm test:backend
 pnpm build:frontend

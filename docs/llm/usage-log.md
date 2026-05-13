@@ -10,6 +10,7 @@
 | 2026-05-13 | 김성빈 | Codex | OpenCairn 문서 구조 조사 | docs index, roadmap, feature registry, dev guide, Superpowers spec/plan 구조를 본 프로젝트에 맞게 축소 | 과제 repo에는 private docs가 아니라 제출 증거로 docs/superpowers를 포함하기로 결정 |
 | 2026-05-13 | 김성빈 | Codex | repo 초기 문서와 공개 GitHub 세팅 준비 | README, CONTRIBUTING, AGENTS, docs 구조, LLM 기록 템플릿 작성 | 김성빈이 PM/개발 리드 역할과 팀원 역할 미정을 반영 |
 | 2026-05-13 | 김성빈 | Codex | 패키지 구조와 GitHub 운영 방식 정리 | pnpm workspace, uv backend, Docker 선택 사항, PR/Issue 템플릿, verify workflow 구성 | 수업 MVP에서는 Supabase Cloud를 기본으로 쓰고 Docker를 필수 요구사항에서 제외하기로 결정 |
+| 2026-05-13 | 김성빈 | Codex | OpenCairn/UnivMind 구현 참고 후 Mini LLM Wiki 설계/구현 | raw/wiki 자료 구조, heading-aware chunker, wiki compiler, schema 확장, wiki 생성 script 추가 | LangGraph/worker는 과제 범위에서 제외하고 Python script로 축소 구현 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

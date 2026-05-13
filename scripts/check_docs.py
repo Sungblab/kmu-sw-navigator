@@ -6,6 +6,7 @@ REQUIRED_FILES = [
     "AGENTS.md",
     "docs/README.md",
     "docs/product/prd-dev-plan.md",
+    "docs/architecture/mini-llm-wiki.md",
     "docs/contributing/dev-guide.md",
     "docs/contributing/roadmap.md",
     "docs/contributing/feature-registry.md",
@@ -15,7 +16,9 @@ REQUIRED_FILES = [
     "docs/llm/usage-log.md",
     "docs/llm/codex-workflow.md",
     "docs/superpowers/specs/2026-05-13-kmu-freshman-ai-design.md",
+    "docs/superpowers/specs/2026-05-13-mini-llm-wiki-design.md",
     "docs/superpowers/plans/2026-05-13-repo-docs-initialization.md",
+    "docs/superpowers/plans/2026-05-13-mini-llm-wiki.md",
     "docs/testing/rag-evaluation.md",
 ]
 
@@ -34,4 +37,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

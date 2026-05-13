@@ -10,6 +10,7 @@
     "dev:backend": "cd backend && uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
     "test:backend": "cd backend && uv run pytest",
     "lint:backend": "cd backend && uv run ruff check .",
+    "wiki:build": "cd backend && uv run python -m app.scripts.build_wiki --raw-dir ../data/raw --wiki-dir ../data/wiki",
     "docs:check": "python scripts/check_docs.py"
   },
   "packageManager": "pnpm@10.0.0",

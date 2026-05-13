@@ -11,6 +11,8 @@
 | 대상 | 테스트 |
 | --- | --- |
 | `/health` | API 서버가 실행 가능한지 확인 |
+| markdown chunker | heading path, content hash, 긴 문단 분리 확인 |
+| wiki compiler | raw metadata 파싱, category별 wiki page, `_index.md` 생성 확인 |
 | 추천 service | 조건문/딕셔너리 추천 결과 확인 |
 | D-day service | 날짜 차이 계산 확인 |
 | RAG service | 검색 결과 없음/있음 분기 확인 |

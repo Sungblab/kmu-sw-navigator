@@ -12,3 +12,4 @@
 | 4 | 기술 스택과 OpenCairn 문서 구조 조사 | docs index, roadmap, feature registry, dev guide, Superpowers spec/plan 구조 도입 |
 | 5 | repo와 문서 세팅 후 GitHub public 공개 | README, CONTRIBUTING, AGENTS, docs, LLM 기록 구조를 첫 커밋에 포함 |
 | 6 | pnpm 구조와 Docker 필요 여부 검토 | pnpm workspace + uv backend로 정리하고, Docker는 Supabase 로컬 재현 시 선택 사항으로 문서화 |
+| 7 | Karpathy LLM Wiki 아이디어와 로컬 OpenCairn/UnivMind 구현 참고 | Mini LLM Wiki를 앱 핵심 RAG 효율화 계층으로 도입 |
