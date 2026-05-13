@@ -1,7 +1,7 @@
 [project]
-name = "kmu-freshman-ai-backend"
+name = "kmu-sw-navigator-backend"
 version = "0.1.0"
-description = "KMU Freshman AI Assistant FastAPI backend"
+description = "kmu-sw-navigator FastAPI backend"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi>=0.124.0",
@@ -32,4 +32,3 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
-

@@ -1,8 +1,8 @@
 {
-  "name": "kmu-freshman-ai",
+  "name": "kmu-sw-navigator",
   "version": "0.1.0",
   "private": false,
-  "description": "국민대학교 소프트웨어융합대학 신입생을 위한 RAG 기반 AI 학교생활 도우미",
+  "description": "국민대학교 소프트웨어융합대학 학생을 위한 개인화 RAG 기반 AI 내비게이터",
   "license": "MIT",
   "scripts": {
     "dev:frontend": "pnpm --dir frontend dev",

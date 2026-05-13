@@ -42,13 +42,11 @@ brainstorming
 
 ## 개인 Codex 스킬
 
-김성빈의 로컬 Codex 환경에는 `kmu-freshman-ai` 전용 스킬을 둡니다.
+김성빈의 로컬 Codex 환경에는 현재 repo인 `kmu-sw-navigator` 작업 규칙을 복원하는 전용 스킬을 둡니다. 스킬은 새 Codex 세션이 시작될 때 아래 내용을 빠르게 복원하기 위한 가이드입니다.
 
 ```txt
-~/.codex/skills/kmu-freshman-ai
+~/.codex/skills/<project-skill>
 ```
-
-이 스킬은 새 Codex 세션이 시작될 때 아래 내용을 빠르게 복원하기 위한 가이드입니다.
 
 - 과제 조건과 제출물
 - 문서 먼저 읽는 순서
@@ -60,13 +58,13 @@ brainstorming
 사용 예시:
 
 ```txt
-Use $kmu-freshman-ai before working in the kmu-freshman-ai repo.
+Use the project Codex skill before working in the kmu-sw-navigator repo.
 ```
 
-추가로 개발 현황을 따라가기 위한 `kmu-freshman-ai-next-step` 스킬을 둡니다.
+추가로 개발 현황을 따라가기 위한 next-step 스킬을 둡니다.
 
 ```txt
-~/.codex/skills/kmu-freshman-ai-next-step
+~/.codex/skills/<project-next-step-skill>
 ```
 
 이 스킬은 새 세션에서 문서, git 상태, 실제 코드, 검증 기록을 함께 읽고 현재 구현 상태와 다음 구현 단위를 추천하기 위한 가이드입니다. 단순히 `plans-status.md`만 믿지 않고 실제 파일과 테스트 근거를 대조하도록 지시합니다.
@@ -74,7 +72,7 @@ Use $kmu-freshman-ai before working in the kmu-freshman-ai repo.
 사용 예시:
 
 ```txt
-Use $kmu-freshman-ai-next-step to inspect current implementation status and recommend the next KMU Freshman AI development slice.
+Use the project next-step skill to inspect current implementation status and recommend the next kmu-sw-navigator development slice.
 ```
 
 ## LLM 개발 하네스
@@ -88,8 +86,8 @@ Use $kmu-freshman-ai-next-step to inspect current implementation status and reco
 | 작업 상태 | `docs/contributing/plans-status.md` | 현재 활성 작업과 다음 작업 후보를 기록 |
 | 기능 레지스트리 | `docs/contributing/feature-registry.md` | 기능별 소유 경로와 중복 방지 규칙을 기록 |
 | 설계/계획 기록 | `docs/superpowers/specs/`, `docs/superpowers/plans/` | 기능을 구현하기 전 요구사항과 실행 순서를 남김 |
-| Codex 스킬 | `~/.codex/skills/kmu-freshman-ai` | 새 Codex 세션이 과제 조건과 repo 규칙을 복원하도록 함 |
-| 다음 작업 스킬 | `~/.codex/skills/kmu-freshman-ai-next-step` | 현재 구현 상태를 다시 읽고 다음 vertical slice를 고르도록 함 |
+| Codex 스킬 | `~/.codex/skills/<project-skill>` | 새 Codex 세션이 kmu-sw-navigator 과제 조건과 repo 규칙을 복원하도록 함 |
+| 다음 작업 스킬 | `~/.codex/skills/<project-next-step-skill>` | 현재 구현 상태를 다시 읽고 다음 vertical slice를 고르도록 함 |
 | 검증 명령 | `pnpm docs:check`, `pnpm wiki:build`, `pnpm test:backend`, `pnpm lint:backend`, `pnpm build:frontend` | 문서, Python 백엔드, wiki 생성, 프론트 빌드가 실제로 동작하는지 확인 |
 | 사용 기록 | `docs/llm/usage-log.md`, `docs/llm/prompt-summary-log.md` | 어떤 목적으로 LLM을 썼고 어떤 결정을 사람이 검토했는지 제출용으로 남김 |
 

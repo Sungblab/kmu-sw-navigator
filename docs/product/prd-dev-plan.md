@@ -1,8 +1,8 @@
-# KMU Freshman AI Assistant PRD & 개발 계획서
+# kmu-sw-navigator PRD & 개발 계획서
 
-> 프로젝트명 후보: **국민 새내기 AI**
-> 영문명 후보: **KMU Freshman AI Assistant**  
-> 대상: 국민대학교 소프트웨어융합대학/소프트웨어학부 신입생  
+> 현재 프로젝트명: **kmu-sw-navigator**
+> 제품 방향: **국민대학교 소프트웨어융합대학 학생을 위한 개인화 RAG 기반 AI 내비게이터**
+> 대상: 국민대학교 소프트웨어융합대학 학생. 신입생 지원은 핵심 데모로 유지
 > 개발 언어 핵심: **Python**  
 > 제출 마감: **6월 11일**  
 > 문서 버전: v1.0
@@ -13,7 +13,7 @@
 
 초기 PRD는 “소프트웨어융합대학/소프트웨어학부 신입생”을 주 대상으로 작성되었지만, 이후 설계 논의에서 제품 범위를 **소프트웨어융합대학 전체 학년을 위한 개인화 AI 내비게이터**로 확장했다. 신입생 지원은 핵심 데모로 유지하되, 서비스는 학년별 학업, 진로/취업/창업, 프로젝트, 일정 관리를 함께 다룬다.
 
-확장된 설계의 기준 문서는 `docs/superpowers/specs/2026-05-13-personalized-sw-navigator-design.md`다. 레포 이름 변경은 구현 안정화 후 별도 작업으로 처리한다.
+확장된 설계의 기준 문서는 `docs/superpowers/specs/2026-05-13-personalized-sw-navigator-design.md`다.
 
 추가된 핵심 방향:
 
@@ -1806,9 +1806,9 @@ AI에 관심이 많은 신입생인데 어떤 트랙을 보면 좋을까?
 ## 24. README 초안
 
 ```md
-# KMU Freshman AI Assistant
+# kmu-sw-navigator
 
-국민대학교 소프트웨어융합대학 신입생을 위한 RAG 기반 AI 학교생활 도우미입니다.
+국민대학교 소프트웨어융합대학 학생을 위한 개인화 RAG 기반 AI 내비게이터입니다.
 
 ## Features
 

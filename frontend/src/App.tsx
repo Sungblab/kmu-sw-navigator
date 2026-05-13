@@ -29,10 +29,10 @@ export default function App() {
       <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10">
         <header className="flex flex-col gap-3 border-b border-slate-800 pb-8">
           <p className="text-sm font-medium text-sky-300">국민대학교 소프트웨어융합대학</p>
-          <h1 className="text-4xl font-bold tracking-normal">국민 새내기 AI</h1>
+          <h1 className="text-4xl font-bold tracking-normal">kmu-sw-navigator</h1>
           <p className="max-w-3xl text-base leading-7 text-slate-300">
-            신입생이 커리큘럼, 트랙, 동아리, 학교 시스템, 과제 일정을 한 곳에서 탐색할 수
-            있도록 돕는 RAG 기반 AI 학교생활 도우미입니다.
+            국민대학교 소프트웨어융합대학 학생이 커리큘럼, 트랙, 진로, 프로젝트, 일정을
+            한 곳에서 탐색할 수 있도록 돕는 개인화 RAG 기반 AI 내비게이터입니다.
           </p>
         </header>
 

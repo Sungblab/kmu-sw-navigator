@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
-    title="KMU Freshman AI Assistant API",
-    description="국민대 소프트웨어융합대학 신입생 RAG AI 도우미 API",
+    title="kmu-sw-navigator API",
+    description="국민대학교 소프트웨어융합대학 학생을 위한 개인화 RAG 기반 AI 내비게이터 API",
     version="0.1.0",
 )
 
@@ -18,5 +18,4 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "kmu-freshman-ai-backend"}
-
+    return {"status": "ok", "service": "kmu-sw-navigator-backend"}

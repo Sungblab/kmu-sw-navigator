@@ -15,7 +15,7 @@ REQUIRED_FILES = [
     "docs/collaboration/workflow.md",
     "docs/llm/usage-log.md",
     "docs/llm/codex-workflow.md",
-    "docs/superpowers/specs/2026-05-13-kmu-freshman-ai-design.md",
+    "docs/superpowers/specs/2026-05-13-kmu-sw-navigator-design.md",
     "docs/superpowers/specs/2026-05-13-mini-llm-wiki-design.md",
     "docs/superpowers/plans/2026-05-13-repo-docs-initialization.md",
     "docs/superpowers/plans/2026-05-13-mini-llm-wiki.md",

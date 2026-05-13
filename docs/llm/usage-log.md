@@ -21,6 +21,7 @@
 | 2026-05-13 | 김성빈 | Codex | LLM 개발 하네스 문서화 | `AGENTS.md`, `docs/README.md`, feature registry, Superpowers spec/plan, Codex 스킬, 검증 명령, 사용 기록이 연결되는 구조를 `docs/llm/codex-workflow.md`에 정리 | 보고서에서 “AI가 만든 코드”가 아니라 “AI를 통제하고 검증한 개발 절차”로 설명하기로 결정 |
 | 2026-05-13 | 김성빈 | Codex | 개인화 SW 내비게이터 초기 설계 확정 | 신입생 전용 범위에서 전체 학년 대상의 학업/진로/프로젝트/일정 개인화 AI 내비게이터로 확장하는 umbrella spec 작성 | 필수 프로필은 최소화하고, 관심사/진로 고민은 대화형 선택지와 메모리로 쌓는 방향을 확정 |
 | 2026-05-13 | 김성빈 | Codex | 메모리/RAG/grounding/Calendar 설계 정리 | `profiles`, `user_memories`, `memory_events`, 내부 RAG, Google grounding, Google Calendar export, 근거 표시 정책을 문서화 | 파인튜닝 대신 raw 자료, Mini LLM Wiki, embedding RAG, 최신 웹 grounding을 조합하기로 결정 |
+| 2026-05-13 | 김성빈 | Codex | repo/product rename 정리 | 로컬 폴더, GitHub repo, package/workspace metadata, README, API title, frontend title, GitHub 설정 문서를 `kmu-sw-navigator` 방향으로 정렬 | 과거 LLM 사용 기록의 초기 스킬명은 당시 이름으로 보존하고 현재 사용자-facing 명칭만 갱신 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

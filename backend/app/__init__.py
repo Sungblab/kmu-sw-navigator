@@ -1,2 +1,1 @@
-"""KMU Freshman AI Assistant backend package."""
-
+"""kmu-sw-navigator backend package."""

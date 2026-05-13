@@ -197,7 +197,7 @@ def _build_index(pages: list[WikiPage], generated_at: date) -> str:
     page_lines = "\n".join(
         f"- [[{page.slug}]] — {page.title} ({page.source_count}개 원문)" for page in pages
     )
-    return f"""# KMU Freshman AI Wiki
+    return f"""# kmu-sw-navigator Wiki
 
 생성일: {generated_at.isoformat()}
 

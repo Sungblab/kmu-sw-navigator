@@ -351,7 +351,7 @@ wheels = [
 ]
 
 [[package]]
-name = "kmu-freshman-ai-backend"
+name = "kmu-sw-navigator-backend"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

@@ -1,4 +1,4 @@
-# KMU Freshman AI Wiki
+# kmu-sw-navigator Wiki
 
 생성일: 2026-05-13
 

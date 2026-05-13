@@ -1,2 +1,1 @@
-"""Service modules for KMU Freshman AI backend."""
-
+"""Service modules for kmu-sw-navigator backend."""
