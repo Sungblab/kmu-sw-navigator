@@ -1,0 +1,38 @@
+name: 버그 리포트
+description: 실행 오류, 기능 오작동, 문서 불일치를 기록합니다.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 문제 상황
+      description: 어떤 상황에서 문제가 발생했는지 적어 주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 재현 방법
+      description: 실행한 명령, 입력값, 클릭 경로를 순서대로 적어 주세요.
+      placeholder: |
+        1. pnpm dev:frontend 실행
+        2. 질문 입력
+        3. 응답 버튼 클릭
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 기대 결과
+      description: 원래 나와야 하는 결과를 적어 주세요.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: 로그 또는 스크린샷
+      description: 오류 메시지, 콘솔 로그, 화면 캡처 설명을 붙여 주세요.
+    validations:
+      required: false
+

@@ -1,0 +1,43 @@
+# 의존성
+node_modules/
+.pnpm/
+.venv/
+__pycache__/
+*.pyc
+.ruff_cache/
+.pytest_cache/
+
+# 빌드 산출물
+dist/
+build/
+coverage/
+htmlcov/
+frontend/dist/
+backend/.coverage
+
+# 환경 변수와 비밀값
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets/
+
+# 로컬 도구/세션 산출물
+.codex/
+.claude/
+.superpowers/
+.worktrees/
+logs/
+*.log
+test-results/
+playwright-report/
+
+# 에디터/OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+

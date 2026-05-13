@@ -1,0 +1,25 @@
+{
+  "name": "kmu-freshman-ai",
+  "version": "0.1.0",
+  "private": false,
+  "description": "국민대학교 소프트웨어융합대학 신입생을 위한 RAG 기반 AI 학교생활 도우미",
+  "license": "MIT",
+  "scripts": {
+    "dev:frontend": "pnpm --dir frontend dev",
+    "build:frontend": "pnpm --dir frontend build",
+    "dev:backend": "cd backend && uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
+    "test:backend": "cd backend && uv run pytest",
+    "lint:backend": "cd backend && uv run ruff check .",
+    "docs:check": "python scripts/check_docs.py"
+  },
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=20.19.0",
+    "pnpm": ">=10.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

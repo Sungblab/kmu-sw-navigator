@@ -1,0 +1,26 @@
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  docs-and-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check required docs
+        run: python scripts/check_docs.py
+
+      - name: Check Python syntax
+        run: python -m py_compile scripts/check_docs.py backend/app/main.py
+
