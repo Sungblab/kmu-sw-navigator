@@ -84,6 +84,23 @@ pnpm dev:frontend
 
 브라우저에서 `http://localhost:5173`을 엽니다.
 
+## 홈서버/Docker 운영 메모
+
+라즈베리파이 같은 홈서버에서 장기 실행할 때는 로컬 개발 명령을 그대로 띄우기보다 Docker Compose로 고정된 실행 환경을 만든다. 기본 방향은 FastAPI backend container와 Vite build 결과를 제공하는 static frontend container 또는 Caddy/Nginx reverse proxy를 분리하는 것이다.
+
+권장 경계:
+
+- Supabase Auth/Postgres/pgvector는 외부 Supabase 프로젝트를 계속 사용한다.
+- Raspberry Pi에는 앱 서버와 reverse proxy만 올리고, 비밀값은 서버의 `.env`에만 둔다.
+- ARM64 환경에서 backend image build와 Node/Vite build가 되는지 별도로 확인한다.
+- HTTPS, DDNS, 포트포워딩, 학교/발표장 네트워크 차단 가능성이 있으므로 발표 당일 주 데모 경로는 로컬 노트북 실행으로 둔다.
+
+발표 데모 우선순위:
+
+1. 노트북 로컬 실행: `pnpm dev:backend`, `pnpm dev:frontend`
+2. 홈서버 URL: Docker Compose 배포가 미리 검증된 경우 보조 시연
+3. 녹화/스크린샷: 외부 네트워크나 OAuth 문제가 생길 때의 백업
+
 ## Supabase 세팅
 
 1. Supabase 프로젝트를 생성합니다.
