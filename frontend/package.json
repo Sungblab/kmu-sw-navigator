@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1 --port 4173"
   },
   "dependencies": {
+    "@streamdown/cjk": "^1.0.3",
     "@supabase/supabase-js": "^2.47.10",
     "@tailwindcss/vite": "^4.0.0",
     "class-variance-authority": "^0.7.1",
@@ -17,6 +18,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.1",
+    "sonner": "^2.0.7",
+    "streamdown": "^2.5.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^4.0.0"
   },

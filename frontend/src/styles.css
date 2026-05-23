@@ -1,5 +1,6 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 @import "tailwindcss";
+@source "../node_modules/streamdown/dist/*.js";
 
 html {
   color-scheme: light;
@@ -17,4 +18,71 @@ button,
 textarea,
 input {
   font: inherit;
+}
+
+.assistant-markdown {
+  color: #2f2c28;
+}
+
+.assistant-markdown :where(p, ul, ol, pre, table, blockquote) {
+  margin-block: 0.65rem;
+}
+
+.assistant-markdown :where(p:first-child, ul:first-child, ol:first-child, pre:first-child) {
+  margin-top: 0;
+}
+
+.assistant-markdown :where(p:last-child, ul:last-child, ol:last-child, pre:last-child) {
+  margin-bottom: 0;
+}
+
+.assistant-markdown :where(ul, ol) {
+  padding-left: 1.25rem;
+}
+
+.assistant-markdown ul {
+  list-style: disc;
+}
+
+.assistant-markdown ol {
+  list-style: decimal;
+}
+
+.assistant-markdown :where(code) {
+  border-radius: 0.375rem;
+  background: #f1ece3;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.92em;
+}
+
+.assistant-markdown :where(pre) {
+  overflow-x: auto;
+  border: 1px solid #ded7cb;
+  border-radius: 0.75rem;
+  background: #191817;
+  color: #fffdf8;
+  padding: 0.875rem;
+}
+
+.assistant-markdown :where(pre code) {
+  background: transparent;
+  padding: 0;
+}
+
+.assistant-markdown :where(a) {
+  color: #3d5a80;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.assistant-markdown :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+}
+
+.assistant-markdown :where(th, td) {
+  border: 1px solid #ded7cb;
+  padding: 0.45rem 0.55rem;
+  text-align: left;
 }

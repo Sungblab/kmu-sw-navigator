@@ -5,7 +5,10 @@ import {
   Send,
   X,
 } from "lucide-react";
+import { cjk } from "@streamdown/cjk";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Streamdown } from "streamdown";
+import { Toaster, toast } from "sonner";
 
 import { Sidebar, MobileDrawer } from "./components/navigation";
 import { TopBar } from "./components/TopBar";
@@ -63,6 +66,10 @@ import type {
   RecommendationInputDraft,
   WorkspacePage,
 } from "./types/navigator";
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
 
 export default function App() {
   const [activePage, setActivePage] = useState<WorkspacePage>("chat");
@@ -147,7 +154,9 @@ export default function App() {
       setLlmUsageLogs(llmLogData);
       setAssignments(await getAssignments());
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "데이터를 불러오지 못했습니다.");
+      const message = getErrorMessage(apiError, "데이터를 불러오지 못했습니다.");
+      setError(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -165,14 +174,18 @@ export default function App() {
       if (mode === "signin") {
         await signInWithEmailPassword(authEmail, authPassword);
         setAuthStatus("로그인되었습니다.");
+        toast.success("로그인되었습니다.");
       } else {
         await signUpWithEmailPassword(authEmail, authPassword);
         setAuthStatus("가입 요청이 완료되었습니다. Supabase 설정에 따라 이메일 확인이 필요할 수 있습니다.");
+        toast.success("가입 요청이 완료되었습니다.");
       }
       await refreshAuthSession();
       await refresh();
     } catch (authError) {
-      setAuthStatus(authError instanceof Error ? authError.message : "인증 요청에 실패했습니다.");
+      const message = getErrorMessage(authError, "인증 요청에 실패했습니다.");
+      setAuthStatus(message);
+      toast.error(message);
     } finally {
       setIsAuthBusy(false);
     }
@@ -186,9 +199,12 @@ export default function App() {
       await signOutSupabase();
       setAuthSession(null);
       setAuthStatus("로그아웃되었습니다. demo fallback으로 전환됩니다.");
+      toast.success("로그아웃되었습니다.");
       await refresh();
     } catch (authError) {
-      setAuthStatus(authError instanceof Error ? authError.message : "로그아웃에 실패했습니다.");
+      const message = getErrorMessage(authError, "로그아웃에 실패했습니다.");
+      setAuthStatus(message);
+      toast.error(message);
     } finally {
       setIsAuthBusy(false);
     }
@@ -198,8 +214,11 @@ export default function App() {
     setError(null);
     try {
       setAssignmentPreview(await previewAssignment(assignmentDraft));
+      toast.success("일정 미리보기를 만들었습니다.");
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "일정 미리보기에 실패했습니다.");
+      const message = getErrorMessage(apiError, "일정 미리보기에 실패했습니다.");
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -217,8 +236,11 @@ export default function App() {
       });
       setAssignments((current) => [saved, ...current]);
       setAssignmentPreview(null);
+      toast.success("일정을 저장했습니다.");
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "일정 저장에 실패했습니다.");
+      const message = getErrorMessage(apiError, "일정 저장에 실패했습니다.");
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -227,8 +249,11 @@ export default function App() {
     try {
       const updated = await updateAssignment(assignmentId, { status: "done" });
       setAssignments((current) => current.filter((assignment) => assignment.id !== updated.id));
+      toast.success("일정을 완료 처리했습니다.");
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "일정 완료 처리에 실패했습니다.");
+      const message = getErrorMessage(apiError, "일정 완료 처리에 실패했습니다.");
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -237,8 +262,11 @@ export default function App() {
     try {
       await deleteAssignment(assignmentId);
       setAssignments((current) => current.filter((assignment) => assignment.id !== assignmentId));
+      toast.success("일정을 삭제했습니다.");
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "일정 삭제에 실패했습니다.");
+      const message = getErrorMessage(apiError, "일정 삭제에 실패했습니다.");
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -257,8 +285,11 @@ export default function App() {
             : assignment,
         ),
       );
+      toast.success("Calendar 내보내기를 기록했습니다.");
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "Calendar 내보내기에 실패했습니다.");
+      const message = getErrorMessage(apiError, "Calendar 내보내기에 실패했습니다.");
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -267,12 +298,16 @@ export default function App() {
     try {
       const response = await getGoogleCalendarConnectUrl();
       if (!response.authorization_url) {
-        setError(response.reason ?? "Google Calendar OAuth 설정이 필요합니다.");
+        const message = response.reason ?? "Google Calendar OAuth 설정이 필요합니다.";
+        setError(message);
+        toast.error(message);
         return;
       }
       window.location.assign(response.authorization_url);
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "Calendar 연결 URL을 만들지 못했습니다.");
+      const message = getErrorMessage(apiError, "Calendar 연결 URL을 만들지 못했습니다.");
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -295,8 +330,11 @@ export default function App() {
       ]);
       setTrackResult(track);
       setActivityResult(activity);
+      toast.success("추천 결과를 갱신했습니다.");
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "추천 요청에 실패했습니다.");
+      const message = getErrorMessage(apiError, "추천 요청에 실패했습니다.");
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -320,8 +358,11 @@ export default function App() {
           curriculum_year: "2025",
         }),
       );
+      toast.success("프로필을 저장했습니다.");
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "프로필 저장에 실패했습니다.");
+      const message = getErrorMessage(apiError, "프로필 저장에 실패했습니다.");
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -353,8 +394,11 @@ export default function App() {
           response,
         },
       ]);
+      toast.success("AI 답변을 받았습니다.");
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "채팅 요청에 실패했습니다.");
+      const message = getErrorMessage(apiError, "채팅 요청에 실패했습니다.");
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSending(false);
     }
@@ -383,7 +427,9 @@ export default function App() {
         })),
       );
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "채팅 기록을 불러오지 못했습니다.");
+      const message = getErrorMessage(apiError, "채팅 기록을 불러오지 못했습니다.");
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -425,6 +471,7 @@ export default function App() {
 
   return (
     <main className="h-screen min-h-[720px] overflow-hidden bg-[#faf8f3] text-[#191817]">
+      <Toaster richColors position="top-right" />
       <div className="grid h-full grid-cols-1 lg:grid-cols-[272px_minmax(0,1fr)_336px]">
         <Sidebar
           activePage={activePage}
@@ -607,7 +654,17 @@ function MessageBubble({
             : "max-w-[720px] py-1 text-[15px] leading-7"
         }
       >
-        <p>{message.text}</p>
+        {isUser ? (
+          <p>{message.text}</p>
+        ) : (
+          <Streamdown
+            className="assistant-markdown"
+            mode="static"
+            plugins={{ cjk }}
+          >
+            {message.text}
+          </Streamdown>
+        )}
         {message.response ? (
           <div className="mt-3 flex flex-wrap gap-2">
             <EvidenceChip label={`intent · ${message.response.intent}`} />
