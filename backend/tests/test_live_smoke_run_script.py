@@ -4,6 +4,7 @@ from app.scripts.live_smoke_run import (
     SmokeCommand,
     SmokeCommandResult,
     build_smoke_commands,
+    print_failure_guidance,
     print_result_summary,
     print_schema_blocker_next_actions,
     run_smoke_commands,
@@ -17,6 +18,7 @@ def test_build_smoke_commands_uses_api_base_and_keeps_google_optional() -> None:
     assert "Google Calendar event smoke" not in names
     login = next(command for command in commands if command.name == "Supabase login/API smoke")
     assert login.args[-1] == "http://127.0.0.1:8001"
+    assert login.failure_category == "auth"
 
 
 def test_build_smoke_commands_can_include_google() -> None:
@@ -56,6 +58,23 @@ def test_print_result_summary_marks_failed_result(capsys) -> None:
     output = capsys.readouterr().out
     assert "[passed] ok" in output
     assert "[failed:1] bad" in output
+
+
+def test_print_failure_guidance_classifies_first_failed_command(capsys) -> None:
+    print_failure_guidance(
+        [
+            SmokeCommandResult(
+                name="Supabase login/API smoke",
+                returncode=1,
+                failure_category="auth",
+                next_action="Check backend server and Supabase Auth credentials.",
+            )
+        ]
+    )
+
+    output = capsys.readouterr().out
+    assert "Failure classification: auth" in output
+    assert "Check backend server and Supabase Auth credentials." in output
 
 
 def test_print_schema_blocker_next_actions_names_bundle_command(capsys) -> None:

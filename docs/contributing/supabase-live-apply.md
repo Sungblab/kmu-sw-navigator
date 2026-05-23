@@ -59,6 +59,7 @@ pnpm live:smoke-run --api-base http://127.0.0.1:8001
 - `pnpm rag:ingest:embeddings`: `document_chunks` upsert와 Gemini embedding 생성 완료. 같은 자료를 다시 실행해도 `source_type,title,heading_path,chunk_index,content_hash` 기준으로 중복 chunk를 만들지 않는다.
 - `supabase/seed.sql`: 초기 확인용 seed를 반복 실행해도 `document_chunks`가 같은 conflict key 기준으로 중복되지 않는다.
 - `pnpm live:smoke-run --api-base http://127.0.0.1:8001`: 위 필수 smoke를 dependency 순서대로 모두 통과
+- schema 적용 뒤 개별 smoke가 실패하면 `live:smoke-run`은 첫 실패를 `schema`, `auth`, `env`, `code` 중 하나로 분류하고 다음 점검 명령을 출력한다.
 
 ## 현재 blocker
 

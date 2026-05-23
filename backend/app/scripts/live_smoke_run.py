@@ -15,12 +15,16 @@ class SmokeCommand:
     name: str
     args: list[str]
     required: bool = True
+    failure_category: str = "code"
+    next_action: str = "Inspect the command output above and rerun the focused smoke."
 
 
 @dataclass(frozen=True)
 class SmokeCommandResult:
     name: str
     returncode: int
+    failure_category: str = "code"
+    next_action: str = "Inspect the command output above and rerun the focused smoke."
 
     @property
     def passed(self) -> bool:
@@ -29,15 +33,45 @@ class SmokeCommandResult:
 
 def build_smoke_commands(*, api_base: str, include_google: bool) -> list[SmokeCommand]:
     commands = [
-        SmokeCommand("Supabase DB smoke", ["-m", "app.scripts.supabase_smoke"]),
-        SmokeCommand("Supabase LLM usage smoke", ["-m", "app.scripts.llm_usage_smoke"]),
+        SmokeCommand(
+            "Supabase DB smoke",
+            ["-m", "app.scripts.supabase_smoke"],
+            failure_category="schema",
+            next_action="Run pnpm supabase:schema-check and confirm the smoke user UUID exists.",
+        ),
+        SmokeCommand(
+            "Supabase LLM usage smoke",
+            ["-m", "app.scripts.llm_usage_smoke"],
+            failure_category="schema",
+            next_action="Check llm_usage_logs schema and rerun pnpm supabase:llm-smoke.",
+        ),
         SmokeCommand(
             "Supabase login/API smoke",
             ["-m", "app.scripts.supabase_login_smoke", "--api-base", api_base],
+            failure_category="auth",
+            next_action=(
+                "Confirm the FastAPI server is running and the Supabase Auth "
+                "email/password are valid."
+            ),
         ),
-        SmokeCommand("Gemini smoke", ["-m", "app.scripts.gemini_smoke"]),
-        SmokeCommand("Gemini answer smoke", ["-m", "app.scripts.gemini_answer_smoke"]),
-        SmokeCommand("Gemini grounding smoke", ["-m", "app.scripts.gemini_grounding_smoke"]),
+        SmokeCommand(
+            "Gemini smoke",
+            ["-m", "app.scripts.gemini_smoke"],
+            failure_category="env",
+            next_action="Check GEMINI_API_KEY and Gemini model availability.",
+        ),
+        SmokeCommand(
+            "Gemini answer smoke",
+            ["-m", "app.scripts.gemini_answer_smoke"],
+            failure_category="env",
+            next_action="Check GEMINI_API_KEY and answer model availability.",
+        ),
+        SmokeCommand(
+            "Gemini grounding smoke",
+            ["-m", "app.scripts.gemini_grounding_smoke"],
+            failure_category="env",
+            next_action="Check GEMINI_API_KEY and Google Search grounding availability.",
+        ),
         SmokeCommand(
             "Embedding ingest",
             [
@@ -49,11 +83,24 @@ def build_smoke_commands(*, api_base: str, include_google: bool) -> list[SmokeCo
                 "../data/wiki",
                 "--with-embeddings",
             ],
+            failure_category="schema",
+            next_action=(
+                "Check document_chunks schema, Gemini embedding config, and rerun "
+                "pnpm rag:ingest:embeddings."
+            ),
         ),
     ]
     if include_google:
         commands.append(
-            SmokeCommand("Google Calendar event smoke", ["-m", "app.scripts.calendar_export_smoke"])
+            SmokeCommand(
+                "Google Calendar event smoke",
+                ["-m", "app.scripts.calendar_export_smoke"],
+                failure_category="auth",
+                next_action=(
+                    "Connect Google Calendar for the smoke user, then rerun "
+                    "pnpm google:calendar-smoke."
+                ),
+            )
         )
     return commands
 
@@ -64,7 +111,14 @@ def run_smoke_commands(commands: list[SmokeCommand]) -> list[SmokeCommandResult]
         print("")
         print(f"== {command.name} ==")
         completed = subprocess.run([sys.executable, *command.args], check=False)
-        results.append(SmokeCommandResult(name=command.name, returncode=completed.returncode))
+        results.append(
+            SmokeCommandResult(
+                name=command.name,
+                returncode=completed.returncode,
+                failure_category=command.failure_category,
+                next_action=command.next_action,
+            )
+        )
         if command.required and completed.returncode != 0:
             break
     return results
@@ -76,6 +130,15 @@ def print_result_summary(results: list[SmokeCommandResult]) -> None:
     for result in results:
         status = "passed" if result.passed else f"failed:{result.returncode}"
         print(f"- [{status}] {result.name}")
+
+
+def print_failure_guidance(results: list[SmokeCommandResult]) -> None:
+    failed = next((result for result in results if not result.passed), None)
+    if failed is None:
+        return
+    print("")
+    print(f"Failure classification: {failed.failure_category}")
+    print(f"Next action: {failed.next_action}")
 
 
 def print_schema_blocker_next_actions() -> None:
@@ -116,6 +179,7 @@ def main() -> int:
         build_smoke_commands(api_base=args.api_base, include_google=args.include_google)
     )
     print_result_summary(results)
+    print_failure_guidance(results)
     return 0 if all(result.passed for result in results) else 1
 
 
