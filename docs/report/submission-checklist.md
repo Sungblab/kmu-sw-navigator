@@ -69,7 +69,7 @@ pnpm build:frontend
 - `pnpm supabase:create-smoke-user --write-root-env`: Supabase Auth 테스트 유저 생성 성공, password는 출력하지 않고 gitignored root `.env`에 저장
 - `pnpm supabase:schema-check`: `profiles`, `raw_documents`, `wiki_pages`, `wiki_logs`, `document_chunks`, `assignments`, `chat_sessions`, `chat_messages`, `chat_logs`, `llm_usage_logs`, `user_memories`, `memory_events`, `google_oauth_tokens`, `search_document_chunks_text`, `match_document_chunks` 모두 missing
 - `pnpm supabase:smoke`: schema 미적용으로 실패. 원인: `profiles` table 없음
-- `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`: schema 적용 전에는 Supabase login 후 FastAPI profile/onboarding memory write에서 503 `supabase_schema_missing`
+- `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`: schema 적용 전에는 최신 FastAPI server에서 profile/onboarding memory write가 503 `supabase_schema_missing`으로 분류되어야 한다. 오래된 backend가 떠 있으면 `/api/runtime/public-status` preflight에서 재시작 안내를 출력
 - `pnpm supabase:llm-smoke`: schema 미적용으로 실패. 원인: `llm_usage_logs` table 없음
 - Supabase CLI: 현재 로컬에 설치되어 있지 않아 schema 적용은 Dashboard SQL Editor에서 수행 필요
 - Schema contract check: `search_document_chunks_text(search_query, match_count, filter_source_type)` 인자명이 backend adapter와 schema check에 맞게 정렬됨
@@ -93,6 +93,7 @@ pnpm build:frontend
 - 로그인 후 app data 로딩이 schema 503 등으로 실패하면 무한 로딩 대신 live 상태, schema 다음 액션, 새로고침/로그아웃을 표시
 - 확장 온보딩: 첫 로그인 뒤 관심 분야/목표/코딩 경험/학습 선호/활동 방식을 입력하면 `/api/profile`과 `/api/memories`를 순서대로 호출해 실제 사용자 프로필과 active onboarding memory를 저장
 - live status는 Supabase schema missing table/function 전체와 Google Calendar missing env 이름을 표시하되 비밀값은 출력하지 않음
+- login/API smoke는 profile write/read 전에 `/api/runtime/public-status`를 확인해 stale backend와 실제 auth/schema 실패를 분리
 - `pnpm wiki:build`: raw_documents=12, wiki_pages=7 생성 완료
 - `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 demo/mock 출처 표현 없음
 - `pnpm rag:ingest:dry`: documents=19, chunks=118, wiki_chunks=72, raw_chunks=46 준비 완료

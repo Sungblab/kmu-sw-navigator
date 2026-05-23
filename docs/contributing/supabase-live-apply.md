@@ -61,7 +61,7 @@ pnpm supabase:schema-check -- --retries 5 --retry-delay 1
 pnpm live:smoke-run --api-base http://127.0.0.1:8001
 ```
 
-`--api-base`에 맞는 FastAPI 서버가 켜져 있어야 login/API smoke가 실행된다. 서버가 꺼져 있으면 `live:smoke-run`은 `/health` preflight에서 멈추고 아래 실행 명령을 안내한다.
+`--api-base`에 맞는 최신 FastAPI 서버가 켜져 있어야 login/API smoke가 실행된다. 서버가 꺼져 있으면 `live:smoke-run`은 `/health` preflight에서 멈추고, 오래된 서버가 같은 port에 떠 있으면 `supabase:login-smoke`가 `/api/runtime/public-status` contract preflight에서 멈춘다. 이 경우 아래 명령으로 현재 repo 코드를 다시 띄운다.
 
 ```powershell
 cd backend
@@ -83,6 +83,7 @@ uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 - `pnpm live:smoke-run --api-base http://127.0.0.1:8001`: 위 필수 smoke를 dependency 순서대로 모두 통과
 - schema 적용 직후 PostgREST schema cache 반영이 늦으면 `live:smoke-run`이 schema check를 짧게 재시도한 뒤 결과를 출력
 - schema 적용 뒤 `--api-base` 서버가 꺼져 있으면 `/health` preflight에서 멈추고 8001 backend 실행 명령을 출력
+- 오래된 backend가 떠 있으면 login/API smoke가 `/api/runtime/public-status` preflight에서 멈추고 현재 repo 코드로 FastAPI를 재시작하라고 출력
 - schema 적용 뒤 개별 smoke가 실패하면 `live:smoke-run`은 첫 실패를 `schema`, `auth`, `env`, `code` 중 하나로 분류하고 다음 점검 명령을 출력한다.
 
 ## 현재 blocker

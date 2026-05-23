@@ -142,6 +142,8 @@ def test_run_login_auth_api_smoke_fetches_token_then_calls_profile_api() -> None
         requests.append(request)
         if request.url.host == "project.supabase.co":
             return httpx.Response(200, json={"access_token": "access-token"})
+        if request.url.path == "/api/runtime/public-status":
+            return httpx.Response(200, json={"mode": "live"})
         if request.url.path == "/api/memories":
             return httpx.Response(
                 200,
@@ -178,6 +180,14 @@ def test_run_login_auth_api_smoke_fetches_token_then_calls_profile_api() -> None
         "api.test",
         "api.test",
         "api.test",
+        "api.test",
+    ]
+    assert [request.url.path for request in requests] == [
+        "/auth/v1/token",
+        "/api/runtime/public-status",
+        "/api/profile",
+        "/api/memories",
+        "/api/profile",
     ]
     assert result["profile_exists"] is True
     assert result["onboarding_memory_status"] == "active"

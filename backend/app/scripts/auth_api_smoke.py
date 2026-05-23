@@ -51,8 +51,19 @@ def build_onboarding_memory_smoke_payload() -> dict[str, Any]:
     }
 
 
+def check_api_contract(client: httpx.Client, api_base: str) -> None:
+    response = client.get(f"{normalize_api_base(api_base)}/api/runtime/public-status")
+    if response.status_code == 404:
+        raise RuntimeError(
+            "FastAPI server does not expose /api/runtime/public-status. "
+            "Restart FastAPI with the current repo code before running live smoke."
+        )
+    response.raise_for_status()
+
+
 def run_auth_api_smoke(client: httpx.Client, api_base: str, access_token: str) -> dict[str, Any]:
     headers = {"Authorization": f"Bearer {access_token}"}
+    check_api_contract(client, api_base)
     # Bearer token smoke는 인증된 user_id로 profile upsert/read가 이어지는지 확인한다.
     write_response = client.post(
         f"{normalize_api_base(api_base)}/api/profile",

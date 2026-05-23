@@ -79,6 +79,7 @@
 | 2026-05-23 | Supabase SQL Editor copy helper | Supabase CLI/psql 없이 Dashboard SQL Editor에 붙여넣을 schema+seed bundle을 검증 후 클립보드로 복사하고 다음 smoke 명령을 출력 | `scripts/copy_supabase_sql_bundle.py`, `tests/test_copy_supabase_sql_bundle.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Live onboarding memory | 첫 로그인 온보딩에서 관심 분야, 목표, 코딩 경험, 학습 선호, 활동 방식을 받아 기존 `user_memories`에 active memory로 저장하고 첫 채팅/추천 입력에 연결 | `backend/app/api/memories.py`, `backend/app/schemas/memory.py`, `backend/tests/api/test_memory_api.py`, `frontend/src/App.tsx`, `frontend/src/lib/api.ts` |
 | 2026-05-23 | Login smoke onboarding memory | Supabase login/API smoke가 profile write/read뿐 아니라 onboarding memory 생성까지 검증하도록 확장 | `backend/app/scripts/auth_api_smoke.py`, `backend/app/scripts/supabase_login_smoke.py`, `backend/tests/test_auth_api_smoke_script.py`, `backend/tests/test_supabase_login_smoke_script.py` |
+| 2026-05-23 | Login smoke API contract preflight | 오래된 FastAPI 서버가 같은 port에 떠 있을 때 auth/schema 문제처럼 보이지 않도록 `/api/runtime/public-status` contract를 먼저 확인 | `backend/app/scripts/auth_api_smoke.py`, `backend/tests/test_auth_api_smoke_script.py`, `docs/contributing/supabase-live-apply.md` |
 
 ## 다음 작업 후보
 
