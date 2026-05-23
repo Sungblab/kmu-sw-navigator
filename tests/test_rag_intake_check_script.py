@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts.check_rag_intake import check_intake_file, check_intake_tree
+from scripts.check_rag_intake import (
+    build_prepare_raw_command,
+    check_intake_file,
+    check_intake_tree,
+    format_results,
+)
 
 
 VALID_INTAKE = """# 인공지능학부 교과과정 접수
@@ -69,3 +74,27 @@ def test_check_intake_tree_skips_templates(tmp_path: Path) -> None:
     results = check_intake_tree(inbox)
 
     assert results == []
+
+
+def test_build_prepare_raw_command_uses_checked_metadata(tmp_path: Path) -> None:
+    intake = tmp_path / "ai curriculum.md"
+    intake.write_text(VALID_INTAKE, encoding="utf-8")
+    result = check_intake_file(intake)
+
+    command = build_prepare_raw_command(result)
+
+    assert command == (
+        'pnpm rag:prepare-raw --input "../data/inbox/ai curriculum.md" '
+        '--title "인공지능학부 교과과정" --category curriculum '
+        '--source "국민대학교 소프트웨어융합대학 홈페이지" --collected-at 2026-05-23'
+    )
+
+
+def test_format_results_prints_prepare_command_for_ready_file(tmp_path: Path) -> None:
+    intake = tmp_path / "club.md"
+    intake.write_text(VALID_INTAKE.replace("curriculum", "club"), encoding="utf-8")
+
+    output = "\n".join(format_results([check_intake_file(intake)]))
+
+    assert "prepare:" in output
+    assert "pnpm rag:prepare-raw" in output

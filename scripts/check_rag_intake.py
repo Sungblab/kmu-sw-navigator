@@ -39,6 +39,7 @@ class IntakeCheckResult:
     path: Path
     errors: list[str]
     warnings: list[str]
+    fields: dict[str, str]
 
     @property
     def passed(self) -> bool:
@@ -60,17 +61,21 @@ def extract_field(text: str, label: str) -> str | None:
 def check_intake_file(path: Path) -> IntakeCheckResult:
     errors: list[str] = []
     warnings: list[str] = []
+    fields: dict[str, str] = {}
 
     if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
         errors.append("unsupported file type: extract PDF/photo text to .txt or .md first")
-        return IntakeCheckResult(path=path, errors=errors, warnings=warnings)
+        return IntakeCheckResult(path=path, errors=errors, warnings=warnings, fields=fields)
 
     text = path.read_text(encoding="utf-8")
     for field in REQUIRED_FIELDS:
-        if not extract_field(text, field):
+        value = extract_field(text, field)
+        if value:
+            fields[field] = value
+        else:
             errors.append(f"missing or empty field: {field}")
 
-    category = extract_field(text, "RAG category")
+    category = fields.get("RAG category")
     if category and category not in VALID_CATEGORIES:
         errors.append(f"unsupported RAG category: {category}")
 
@@ -81,7 +86,7 @@ def check_intake_file(path: Path) -> IntakeCheckResult:
     if "공식 출처 확인 필요" in text:
         warnings.append("source requires official verification")
 
-    return IntakeCheckResult(path=path, errors=errors, warnings=warnings)
+    return IntakeCheckResult(path=path, errors=errors, warnings=warnings, fields=fields)
 
 
 def check_intake_tree(inbox_dir: Path) -> list[IntakeCheckResult]:
@@ -108,7 +113,43 @@ def format_results(results: list[IntakeCheckResult]) -> list[str]:
             lines.append(f"  error: {error}")
         for warning in result.warnings:
             lines.append(f"  warning: {warning}")
+        if result.passed:
+            lines.append(f"  prepare: {build_prepare_raw_command(result)}")
     return lines
+
+
+def quote_powershell(value: str) -> str:
+    return '"' + value.replace('"', '`"') + '"'
+
+
+def command_input_path(path: Path) -> str:
+    try:
+        relative = path.resolve().relative_to(Path.cwd().resolve() / "data" / "inbox")
+    except ValueError:
+        return "../data/inbox/" + path.name
+    return "../data/inbox/" + relative.as_posix()
+
+
+def build_prepare_raw_command(result: IntakeCheckResult) -> str:
+    title = result.fields["자료 제목"]
+    category = result.fields["RAG category"]
+    source = result.fields["공식 출처명"]
+    collected_at = result.fields["수집일"]
+    return " ".join(
+        [
+            "pnpm rag:prepare-raw",
+            "--input",
+            quote_powershell(command_input_path(result.path)),
+            "--title",
+            quote_powershell(title),
+            "--category",
+            category,
+            "--source",
+            quote_powershell(source),
+            "--collected-at",
+            collected_at,
+        ]
+    )
 
 
 def main() -> int:

@@ -15,7 +15,7 @@
 1. 출처와 수집일을 확인합니다.
 2. `source-intake-template.md` 기준으로 학부/학년/category/핵심 필드를 채웁니다.
 3. 표/사진/PDF는 텍스트로 추출하거나 사람이 읽어 Markdown으로 옮깁니다.
-4. `pnpm rag:intake-check`로 출처/category/개인정보 위험을 먼저 확인합니다.
+4. `pnpm rag:intake-check`로 출처/category/개인정보 위험을 먼저 확인합니다. 통과한 파일은 다음 단계에서 쓸 `pnpm rag:prepare-raw ...` 명령을 함께 출력합니다.
 5. `pnpm rag:prepare-raw`로 frontmatter가 있는 `data/raw/*.md` 파일을 만듭니다.
 6. `pnpm wiki:build`로 Mini LLM Wiki를 재생성합니다.
 7. `pnpm rag:ingest:dry`로 chunk 수를 확인합니다.
