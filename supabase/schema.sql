@@ -316,3 +316,5 @@ as $$
     rank desc
   limit match_count;
 $$;
+
+notify pgrst, 'reload schema';

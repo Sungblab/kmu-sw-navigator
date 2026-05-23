@@ -11,6 +11,7 @@ REQUIRED_SCHEMA_MARKERS = (
     "create table if not exists google_oauth_tokens",
     "create or replace function search_document_chunks_text",
     "create or replace function match_document_chunks",
+    "notify pgrst, 'reload schema'",
 )
 REQUIRED_SEED_MARKERS = (
     "-- section: seed.sql",

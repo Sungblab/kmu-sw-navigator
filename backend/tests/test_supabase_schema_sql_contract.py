@@ -34,6 +34,12 @@ def test_schema_sql_contains_all_live_smoke_tables_and_functions() -> None:
     assert "create unique index if not exists document_chunks_unique_chunk_idx" in sql
 
 
+def test_schema_sql_requests_postgrest_schema_cache_reload() -> None:
+    sql = SCHEMA_SQL.read_text(encoding="utf-8").casefold()
+
+    assert "notify pgrst, 'reload schema'" in sql
+
+
 def test_schema_check_covers_every_schema_table() -> None:
     sql = SCHEMA_SQL.read_text(encoding="utf-8")
     schema_tables = {

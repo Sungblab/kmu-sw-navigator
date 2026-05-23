@@ -15,6 +15,7 @@ def test_build_sql_bundle_includes_schema_without_seed_by_default() -> None:
 
     assert "-- section: schema.sql" in bundle
     assert "create table if not exists profiles" in bundle
+    assert "notify pgrst, 'reload schema'" in bundle.lower()
     assert "-- section: seed.sql" not in bundle
     assert "SUPABASE_SERVICE_ROLE_KEY" not in bundle
 
