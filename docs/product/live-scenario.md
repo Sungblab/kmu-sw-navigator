@@ -12,7 +12,7 @@ pnpm dev:frontend
 
 - 최종 발표 설명 기준은 실제 Supabase 연결과 live smoke 결과다. in-memory fallback은 단위 테스트와 오프라인 장애 분석용으로만 설명한다.
 - live 검증을 할 때는 `backend/.env`, `frontend/.env`를 채우고 Supabase Auth user를 만든 뒤 `pnpm env:check:strict`, `pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>`, `pnpm supabase:login-smoke -- --email <email> --password <password>`, `pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>`, `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`, `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke` 순서로 확인한다.
-- 발표에서는 실제 로그인 사용자 데이터가 저장되는 SaaS 경로를 먼저 보여준다.
+- 발표에서는 실제 로그인 사용자 데이터가 저장되는 SaaS 경로만 사용자 흐름으로 보여준다.
 - 라즈베리파이 홈서버 배포는 Docker Compose 기반 후속 운영 경로로 설명하되, 발표 당일 주 시연은 네트워크 변수에 덜 흔들리는 노트북 로컬 실행으로 한다.
 - 홈서버 URL을 보여줄 경우에는 같은 라이브 앱을 다른 호스트에서 실행한 보조 시연으로만 사용하고, 장애 시에는 미리 남긴 live smoke 결과와 녹화/스크린샷 증거로 전환한다.
 

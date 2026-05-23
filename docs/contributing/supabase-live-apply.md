@@ -40,6 +40,13 @@ pnpm supabase:login-smoke --api-base http://127.0.0.1:8001
 pnpm rag:ingest:embeddings
 ```
 
+`pnpm supabase:schema-check`는 기본적으로 schema check를 3회 재시도한다. 적용 직후 cache 반영을 더 짧게 확인하고 싶으면 아래처럼 조정할 수 있다.
+
+```powershell
+pnpm supabase:schema-check -- --retries 1
+pnpm supabase:schema-check -- --retries 5 --retry-delay 1
+```
+
 또는 아래 명령 하나로 schema check 이후의 live smoke를 순서대로 실행할 수 있다.
 
 ```powershell
@@ -59,7 +66,7 @@ uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 
 ## 성공 기준
 
-- `pnpm supabase:schema-check`: 모든 table/function이 `[ready]`
+- `pnpm supabase:schema-check`: 모든 table/function이 `[ready]`. 기본 3회 retry 뒤에도 missing이면 SQL Editor 적용 여부를 다시 확인
 - `pnpm supabase:smoke`: `profile_exists=True`, `memory_status=active`
 - `pnpm supabase:llm-smoke`: `created_feature=llm_usage_smoke`
 - `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`: `profile_exists=True`

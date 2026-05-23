@@ -23,7 +23,7 @@
 - **일정 관리**: 자연어로 입력한 과제/일정을 구조화하고 D-day를 계산하며 Google Calendar 내보내기를 지원합니다.
 - **Supabase 연결 점검**: backend Direct 값과 frontend Framework/client 값을 분리해 확인합니다.
 - **LLM 활용 기록**: 앱 내부 Gemini 사용 기록과 Codex 기반 개발 워크플로우를 함께 남깁니다.
-- **발표/보고서 지원**: 데모 시나리오, 보고서 목차, 코드 설명 포인트를 repo 안에서 관리합니다.
+- **발표/보고서 지원**: 라이브 시연 순서, 보고서 목차, 코드 설명 포인트를 repo 안에서 관리합니다.
 
 ## 기술 스택
 
@@ -172,7 +172,7 @@ pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>
 `google:calendar-smoke`는 같은 사용자에게 저장된 Google Calendar token이 있을 때 실제 `events.insert` 경로를 검증합니다.
 `live:smoke-plan`은 비밀값을 출력하지 않고 어떤 smoke가 준비됐고 무엇이 빠졌는지 순서대로 보여줍니다.
 
-현재 repo는 외부 키가 없어도 in-memory fallback으로 실행됩니다. live DB 검증은 실제 Supabase 값과 Auth user가 준비된 뒤 수행합니다.
+현재 repo는 실제 Supabase 로그인과 live smoke를 최종 기준으로 둡니다. in-memory fallback은 단위 테스트와 장애 분석용 보조 경로이며, 사용자에게 보여주는 기본 흐름은 Supabase Auth 세션이 있어야 진행됩니다.
 
 ### 7. 검증
 
@@ -213,7 +213,7 @@ pnpm submission:check
 - Google Calendar OAuth/connect/token refresh/export adapter
 - 트랙/활동 추천 API, RAG 근거, 직접 입력 편집 UI
 - LLM usage log API와 LLM 기록 화면
-- `env:check`, `supabase:smoke`, 보고서/발표 데모 문서
+- `env:check`, `supabase:smoke`, 보고서/발표 라이브 시연 문서
 - `live:smoke-plan`으로 제출 전 live smoke 준비 상태 점검
 - `supabase:auth-smoke`로 실제 Supabase access token API 요청 검증 경로
 - `supabase:login-smoke`로 Supabase email/password login 후 API 요청 검증 경로
@@ -223,11 +223,10 @@ pnpm submission:check
 - `gemini:answer-smoke`로 Gemini 답변 생성 live 검증 경로
 - `gemini:grounding-smoke`로 Gemini Google Search grounding live 검증 경로
 
-아직 실제 키가 필요해 대기 중인 항목:
+아직 live blocker가 남은 항목:
 
 - Supabase live DB smoke
 - 실제 Supabase Auth 가입/로그인/API 요청 smoke
-- Gemini/Grounding live smoke
 - Google Calendar OAuth consent와 실제 event insert smoke
 
 ## 개발 원칙
@@ -265,7 +264,7 @@ pnpm submission:check
 
 | 목적 | 문서 |
 | --- | --- |
-| 데모 흐름 | [docs/product/demo-scenario.md](docs/product/demo-scenario.md) |
+| 라이브 시연 흐름 | [docs/product/live-scenario.md](docs/product/live-scenario.md) |
 | 보고서 목차와 문장 초안 | [docs/report/report-outline.md](docs/report/report-outline.md) |
 | 발표 구성과 시간 배분 | [docs/report/presentation-outline.md](docs/report/presentation-outline.md) |
 | 제출 전 체크리스트 | [docs/report/submission-checklist.md](docs/report/submission-checklist.md) |

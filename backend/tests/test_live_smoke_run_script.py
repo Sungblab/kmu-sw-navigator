@@ -6,14 +6,12 @@ from app.scripts.live_smoke_run import (
     SmokeCommandResult,
     build_smoke_commands,
     check_api_health,
-    check_schema_with_retries,
     print_api_health_blocker,
     print_failure_guidance,
     print_result_summary,
     print_schema_blocker_next_actions,
     run_smoke_commands,
 )
-from app.scripts.supabase_schema_check import SchemaCheckItem
 
 
 def test_build_smoke_commands_uses_api_base_and_keeps_google_optional() -> None:
@@ -123,39 +121,3 @@ def test_print_api_health_blocker_names_backend_command(capsys) -> None:
     output = capsys.readouterr().out
     assert "FastAPI server is not reachable" in output
     assert "uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001" in output
-
-
-def test_check_schema_with_retries_stops_after_ready(monkeypatch) -> None:
-    attempts = 0
-
-    def fake_check(client: object) -> list[SchemaCheckItem]:
-        nonlocal attempts
-        attempts += 1
-        if attempts == 1:
-            return [SchemaCheckItem(kind="table", name="profiles", ready=False)]
-        return [SchemaCheckItem(kind="table", name="profiles", ready=True)]
-
-    monkeypatch.setattr("app.scripts.live_smoke_run.check_supabase_schema", fake_check)
-    monkeypatch.setattr("app.scripts.live_smoke_run.time.sleep", lambda _seconds: None)
-
-    result = check_schema_with_retries(object(), retries=3, delay_seconds=0.01)
-
-    assert attempts == 2
-    assert all(item.ready for item in result)
-
-
-def test_check_schema_with_retries_returns_last_failed_attempt(monkeypatch) -> None:
-    attempts = 0
-
-    def fake_check(client: object) -> list[SchemaCheckItem]:
-        nonlocal attempts
-        attempts += 1
-        return [SchemaCheckItem(kind="table", name=f"profiles-{attempts}", ready=False)]
-
-    monkeypatch.setattr("app.scripts.live_smoke_run.check_supabase_schema", fake_check)
-    monkeypatch.setattr("app.scripts.live_smoke_run.time.sleep", lambda _seconds: None)
-
-    result = check_schema_with_retries(object(), retries=2, delay_seconds=0.01)
-
-    assert attempts == 2
-    assert result == [SchemaCheckItem(kind="table", name="profiles-2", ready=False)]

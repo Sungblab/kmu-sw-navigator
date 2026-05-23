@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
-import time
 from dataclasses import dataclass
 from urllib import request
 from urllib.error import URLError
@@ -11,8 +10,7 @@ from urllib.error import URLError
 from app.core.config import get_settings
 from app.db.supabase_client import get_supabase_client
 from app.scripts.supabase_schema_check import (
-    SchemaCheckItem,
-    check_supabase_schema,
+    check_supabase_schema_with_retries,
     format_schema_report,
 )
 
@@ -159,28 +157,6 @@ def print_schema_blocker_next_actions() -> None:
     print("4. Rerun pnpm live:smoke-run --api-base http://127.0.0.1:8001")
 
 
-def check_schema_with_retries(
-    client: object,
-    *,
-    retries: int = 3,
-    delay_seconds: float = 2.0,
-) -> list[SchemaCheckItem]:
-    attempts = max(retries, 1)
-    last_items: list[SchemaCheckItem] = []
-    for attempt in range(1, attempts + 1):
-        last_items = check_supabase_schema(client)
-        if all(item.ready for item in last_items):
-            return last_items
-        if attempt < attempts:
-            print("")
-            print(
-                "Supabase schema is not visible yet. "
-                f"Retrying schema check ({attempt + 1}/{attempts})..."
-            )
-            time.sleep(delay_seconds)
-    return last_items
-
-
 def check_api_health(api_base: str) -> bool:
     try:
         response = request.urlopen(f"{api_base.rstrip('/')}/health", timeout=2)
@@ -217,7 +193,7 @@ def main() -> int:
         print("Live smoke run skipped: SUPABASE_URL and SERVICE_ROLE key are required.")
         return 2
 
-    schema_items = check_schema_with_retries(get_supabase_client())
+    schema_items = check_supabase_schema_with_retries(get_supabase_client())
     print("\n".join(format_schema_report(schema_items)))
     if not all(item.ready for item in schema_items):
         print_schema_blocker_next_actions()

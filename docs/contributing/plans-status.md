@@ -30,7 +30,7 @@
 | 2026-05-14 | Google Calendar OAuth connect/callback/refresh | 구현/집중 검증 완료, live OAuth smoke 대기 | `docs/superpowers/plans/2026-05-14-google-calendar-oauth-connect.md` |
 | 2026-05-14 | Track/activity recommendation | 구현/집중 검증 완료, RAG 출처 근거, 프로필/메모리 기반 입력 자동화, 직접 입력 편집 UI 완료 | `docs/superpowers/plans/2026-05-14-track-activity-recommendation.md` |
 | 2026-05-14 | Google grounding | 구현/집중 검증 완료, live Gemini smoke 대기 | `docs/superpowers/plans/2026-05-14-google-grounding.md` |
-| 2026-05-14 | 보고서/발표 데모 시나리오 보강 | 현재 구현 기준 문서 업데이트 완료 | `docs/product/demo-scenario.md`, `docs/report/report-outline.md`, `docs/report/presentation-outline.md` |
+| 2026-05-14 | 보고서/발표 라이브 시연 시나리오 보강 | 현재 구현 기준 문서 업데이트 완료 | `docs/product/live-scenario.md`, `docs/report/report-outline.md`, `docs/report/presentation-outline.md` |
 | 2026-05-14 | README 실행/제출 섹션 최신화 | 현재 명령어, 구현 상태, 제출 문서 링크 업데이트 완료 | `README.md`, `docs/contributing/dev-guide.md` |
 | 2026-05-14 | 제출 전 체크리스트 | 과제 조건, 데모, 검증 명령, 제출 문서 매핑 완료 | `docs/report/submission-checklist.md` |
 | 2026-05-14 | 최종 코드/문서 감사 | 오래된 API 이름과 구현 상태 불일치 문구 정리 완료 | `docs/architecture/data-flow.md`, `docs/product/prd-dev-plan.md`, `frontend/src/App.tsx` |
@@ -41,7 +41,7 @@
 | 2026-05-16 | 에이전트 기반 코딩 증거 문서 보강 | 교수님 평가 포인트에 맞춰 Codex/Superpowers/Gemini Code Assist/Gemini API 역할, 하네스, 직접 검토 기준, 발표/보고서 연결 문서화 | `docs/llm/agent-coding-evidence.md`, `docs/llm/codex-workflow.md`, `docs/report/` |
 | 2026-05-23 | 데모 UI polish | assistant 답변 Streamdown markdown 렌더링, CJK plugin, Sonner toast, Streamdown vendor chunk 분리 구현/검증 완료 | `docs/superpowers/specs/2026-05-23-demo-ui-polish-design.md`, `docs/superpowers/plans/2026-05-23-demo-ui-polish.md`, `frontend/src/App.tsx`, `frontend/src/styles.css`, `frontend/vite.config.ts` |
 | 2026-05-23 | Supabase live auth gate | 프론트/백엔드 런타임에서 `demo-user`/`X-User-Id` fallback을 제거하고 Supabase session Bearer token이 있어야 앱과 API를 사용할 수 있게 변경 | `frontend/src/App.tsx`, `frontend/src/lib/api.ts`, `backend/app/api/dependencies.py`, `backend/app/api/auth.py`, `backend/tests/api/test_auth_dependency.py` |
-| 2026-05-23 | SaaS 제출 목표 재정렬 | 로컬 fallback을 보조 경로로 낮추고 Supabase live 연결, Python 핵심 로직 설명 가능성, LLM 활용 기록을 최종 제출 기준으로 문서화 | `docs/product/prd-dev-plan.md`, `docs/contributing/roadmap.md`, `docs/report/report-outline.md`, `docs/report/submission-checklist.md`, `docs/product/demo-scenario.md` |
+| 2026-05-23 | SaaS 제출 목표 재정렬 | 로컬 fallback을 보조 경로로 낮추고 Supabase live 연결, Python 핵심 로직 설명 가능성, LLM 활용 기록을 최종 제출 기준으로 문서화 | `docs/product/prd-dev-plan.md`, `docs/contributing/roadmap.md`, `docs/report/report-outline.md`, `docs/report/submission-checklist.md`, `docs/product/live-scenario.md` |
 | 2026-05-23 | Supabase/Gemini live readiness 점검 | backend Direct/frontend Framework/Gemini env는 ready, Gemini live smoke 3종은 통과. Supabase DB/login/LLM smoke는 `schema_ready=False`와 smoke user id/email/password 미준비로 blocker 유지 | `pnpm env:check:strict`, `pnpm live:smoke-plan`, `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`, `docs/architecture/python-core-logic.md`, `docs/report/submission-checklist.md` |
 | 2026-05-23 | RAG 자료 접수/정형화 경로 | 사용자가 제공할 교과과정/트랙/동아리/학교 시스템 자료를 `data/inbox`로 받고 `pnpm rag:prepare-raw`로 `data/raw` Markdown에 정형화하는 흐름 추가 | `backend/app/scripts/prepare_raw_document.py`, `data/inbox/README.md`, `data/README.md`, `docs/architecture/rag-data-intake.md` |
 | 2026-05-23 | Supabase live smoke user/schema 분리 | service role로 Auth smoke user를 생성해 root `.env`에 저장하고, schema check command와 503 schema-missing API 응답을 추가. DB/login/LLM smoke는 모두 schema 미적용으로 분류 | `backend/app/scripts/create_smoke_user.py`, `backend/app/scripts/supabase_schema_check.py`, `backend/app/main.py`, `pnpm supabase:schema-check`, `pnpm supabase:create-smoke-user --write-root-env`, `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001` |
@@ -75,6 +75,7 @@
 | 2026-05-23 | Live readiness API health report | `pnpm live:readiness`가 schema 준비 뒤 `--api-base` `/health` 상태까지 보여주고 서버 미실행 시 backend 실행 명령을 다음 액션으로 안내 | `scripts/live_readiness_report.py`, `tests/test_live_readiness_report_script.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Supabase schema cache reload marker | SQL Editor 적용 직후 PostgREST RPC/table schema cache 반영을 유도하도록 `notify pgrst, 'reload schema'`를 schema와 bundle validation gate에 추가 | `supabase/schema.sql`, `scripts/build_supabase_sql_bundle.py`, `backend/tests/test_supabase_schema_sql_contract.py`, `tests/test_build_supabase_sql_bundle.py` |
 | 2026-05-23 | Live smoke schema retry | SQL Editor 적용 직후 PostgREST schema cache 반영 지연으로 table/RPC가 잠깐 missing일 때 `live:smoke-run`이 schema check를 짧게 재시도 | `backend/app/scripts/live_smoke_run.py`, `backend/tests/test_live_smoke_run_script.py`, `docs/contributing/supabase-live-apply.md` |
+| 2026-05-23 | Supabase schema-check retry option | 적용 직후 `pnpm supabase:schema-check`도 기본 3회 retry를 수행하고 `--retries`, `--retry-delay`로 조정 가능하게 보강 | `backend/app/scripts/supabase_schema_check.py`, `backend/tests/test_supabase_schema_check_script.py`, `docs/contributing/supabase-live-apply.md` |
 
 ## 다음 작업 후보
 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import sys
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -71,6 +73,28 @@ def check_supabase_schema(client: Any) -> list[SchemaCheckItem]:
     return items
 
 
+def check_supabase_schema_with_retries(
+    client: Any,
+    *,
+    retries: int = 3,
+    delay_seconds: float = 2.0,
+) -> list[SchemaCheckItem]:
+    attempts = max(retries, 1)
+    last_items: list[SchemaCheckItem] = []
+    for attempt in range(1, attempts + 1):
+        last_items = check_supabase_schema(client)
+        if all(item.ready for item in last_items):
+            return last_items
+        if attempt < attempts:
+            print("")
+            print(
+                "Supabase schema is not visible yet. "
+                f"Retrying schema check ({attempt + 1}/{attempts})..."
+            )
+            time.sleep(delay_seconds)
+    return last_items
+
+
 def format_schema_report(items: list[SchemaCheckItem]) -> list[str]:
     lines = ["Supabase schema check", ""]
     for item in items:
@@ -87,18 +111,31 @@ def format_schema_report(items: list[SchemaCheckItem]) -> list[str]:
     return lines
 
 
-def main() -> int:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Check whether the live Supabase project has required tables/functions."
     )
-    parser.parse_args()
+    parser.add_argument("--retries", type=int, default=3)
+    parser.add_argument("--retry-delay", type=float, default=2.0)
+    normalized_argv = sys.argv[1:] if argv is None else argv
+    if normalized_argv[:1] == ["--"]:
+        normalized_argv = normalized_argv[1:]
+    return parser.parse_args(normalized_argv)
+
+
+def main() -> int:
+    args = parse_args()
 
     settings = get_settings()
     if not settings.has_supabase_backend:
         print("Supabase schema check skipped: SUPABASE_URL and SERVICE_ROLE key are required.")
         return 2
 
-    items = check_supabase_schema(get_supabase_client())
+    items = check_supabase_schema_with_retries(
+        get_supabase_client(),
+        retries=args.retries,
+        delay_seconds=args.retry_delay,
+    )
     print("\n".join(format_schema_report(items)))
     return 0 if all(item.ready for item in items) else 1
 

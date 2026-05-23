@@ -18,7 +18,7 @@
 - 사용자 프로필/메모리와 memory events
 - Google Search grounding과 Google Calendar API
 
-## 3. 기능 데모
+## 3. 라이브 기능 시연
 
 1. 메인 workspace: 왼쪽 사이드바, 중앙 상담, 오른쪽 context panel
 2. 설정 화면: Supabase 로그인 구조와 Google Calendar 연결 상태
@@ -67,7 +67,7 @@
 | --- | --- |
 | 문제 정의와 주제 소개 | 2-3분 |
 | 시스템 구조 | 4분 |
-| 앱 데모 | 9-10분 |
+| 앱 라이브 시연 | 9-10분 |
 | Python 핵심 로직 설명 | 5분 |
 | 에이전트 활용 기록과 직접 검증 | 3분 |
 | 한계와 개선 방향 | 2분 |
