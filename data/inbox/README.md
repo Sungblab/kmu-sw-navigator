@@ -13,11 +13,12 @@
 ## 정형화 기준
 
 1. 출처와 수집일을 확인합니다.
-2. 표/사진/PDF는 텍스트로 추출하거나 사람이 읽어 Markdown으로 옮깁니다.
-3. `pnpm rag:prepare-raw`로 frontmatter가 있는 `data/raw/*.md` 파일을 만듭니다.
-4. `pnpm wiki:build`로 Mini LLM Wiki를 재생성합니다.
-5. `pnpm rag:ingest:dry`로 chunk 수를 확인합니다.
-6. Supabase schema가 준비된 뒤 `pnpm rag:ingest:embeddings`로 live vector 자료를 넣습니다.
+2. `source-intake-template.md` 기준으로 학부/학년/category/핵심 필드를 채웁니다.
+3. 표/사진/PDF는 텍스트로 추출하거나 사람이 읽어 Markdown으로 옮깁니다.
+4. `pnpm rag:prepare-raw`로 frontmatter가 있는 `data/raw/*.md` 파일을 만듭니다.
+5. `pnpm wiki:build`로 Mini LLM Wiki를 재생성합니다.
+6. `pnpm rag:ingest:dry`로 chunk 수를 확인합니다.
+7. Supabase schema가 준비된 뒤 `pnpm rag:ingest:embeddings`로 live vector 자료를 넣습니다.
 
 ## 개인정보 주의
 

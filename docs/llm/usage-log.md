@@ -86,6 +86,7 @@
 | 2026-05-23 | 김성빈 | Codex | Supabase schema missing UX 보강 | 백엔드 `503 supabase_schema_missing` 응답을 프론트 API client가 JSON으로 파싱해 사용자에게 schema 미적용 원인을 보여주도록 수정 | 단순 `API 요청 실패: 503` 대신 live 준비 blocker를 직접 설명하게 하고, frontend build와 backend tests로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Live smoke runner 추가 | schema 적용 후 Supabase DB/LLM/login, Gemini smoke, embedding ingest를 순차 실행하는 `pnpm live:smoke-run` 명령을 추가 | schema check를 먼저 실행해 미적용이면 후속 write smoke를 막고, runner 단위 테스트와 전체 backend tests로 검증 |
 | 2026-05-23 | 김성빈 | Codex | RAG embedding ingest 중복 방지 | `document_chunks`에 unique index를 추가하고 ingest script를 insert에서 upsert로 변경 | live smoke runner와 자료 보강을 반복해도 같은 chunk가 중복 저장되지 않도록 conflict key를 테스트로 검증 |
+| 2026-05-23 | 김성빈 | Codex | RAG 원천자료 접수 템플릿 보강 | 사용자가 교과과정/트랙/동아리/학사 자료를 파일이나 사진으로 줄 때 출처, 대상 학부/학년, category, 필수 필드를 함께 받는 템플릿 추가 | 바로 JSON으로 고정하지 않고 Markdown 정형화 후 chunk/embedding ingest로 넘기는 기준을 문서와 dry-run으로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

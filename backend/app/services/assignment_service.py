@@ -175,7 +175,7 @@ def preview_assignment_from_text(
 ) -> AssignmentPreviewResponse:
     today = reference_date or date.today()
     if parser is not None:
-        # Gemini parser는 자연어 표현을 넓게 처리하지만, 실패해도 과제 데모가 멈추지 않게 한다.
+        # Gemini parser는 자연어 표현을 넓게 처리하지만, 실패해도 일정 저장 흐름이 멈추지 않게 한다.
         parsed = _try_parse_with_parser(text, parser=parser, reference_date=today)
         if parsed is not None:
             # D-day는 LLM 출력값을 믿지 않고 Python 날짜 계산으로 다시 산출한다.

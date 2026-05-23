@@ -18,12 +18,13 @@
 ## 정형화 흐름
 
 1. 원본 파일을 `data/inbox/`에 둔다.
-2. 개인정보나 학생 개인 자료가 섞였는지 확인하고 제거한다.
-3. 텍스트/Markdown으로 바꾼다.
-4. `pnpm rag:prepare-raw`로 frontmatter가 있는 raw 문서를 만든다.
-5. `pnpm wiki:build`로 `data/wiki`를 재생성한다.
-6. `pnpm rag:ingest:dry`로 chunk 수와 category 구성을 확인한다.
-7. Supabase schema가 준비되면 `pnpm rag:ingest:embeddings`로 live DB에 넣는다.
+2. `data/inbox/source-intake-template.md`에 출처, 대상 학부/학년, category, 핵심 필드를 채운다.
+3. 개인정보나 학생 개인 자료가 섞였는지 확인하고 제거한다.
+4. 텍스트/Markdown으로 바꾼다.
+5. `pnpm rag:prepare-raw`로 frontmatter가 있는 raw 문서를 만든다.
+6. `pnpm wiki:build`로 `data/wiki`를 재생성한다.
+7. `pnpm rag:ingest:dry`로 chunk 수와 category 구성을 확인한다.
+8. Supabase schema가 준비되면 `pnpm rag:ingest:embeddings`로 live DB에 넣는다.
 
 예시:
 
@@ -50,6 +51,17 @@ collected_at: 2026-05-23
 ```
 
 `source`는 답변 근거로 사용자에게 보일 수 있으므로 “팀 정리”라고만 쓰기보다 가능한 한 공식 페이지명, 문서명, 수집 경로를 남긴다.
+
+## 자료별 필수 메타데이터
+
+| 자료 유형 | 반드시 남길 필드 |
+| --- | --- |
+| 교과과정/트랙 | 과목명, 학년/학기, 이수구분, 학점, 선수과목, 연결 트랙, 추천 상황 |
+| 동아리/활동 | 활동명, 분야, 모집 시기, 활동 내용, 요구 역량, 추천 대상, 신청 경로 |
+| 학교 시스템/학사 | 제도명, 사용 시점, 신청/확인 경로, 준비물, 마감, 문의처 |
+| 진로/취업/창업 | 프로그램명, 대상, 신청 기간, 얻을 수 있는 결과, 추천 준비, 연결 과목/프로젝트 |
+
+이 필드는 JSON 파일로 바로 저장하지 않아도 된다. 먼저 사람이 읽을 수 있는 Markdown으로 정리하고, ingest 단계에서 `category`, `source_type`, `title`, `heading_path`, `chunk_index`, `content_hash`와 함께 Supabase chunk로 변환한다.
 
 ## 사진과 PDF 처리 원칙
 

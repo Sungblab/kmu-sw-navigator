@@ -120,7 +120,7 @@ def build_google_calendar_event(assignment: AssignmentResponse) -> dict[str, Any
         description_parts.append(f"메모: {assignment.memo}")
 
     # 과제 마감은 한 시점이지만 Google Calendar event는 시작/종료가 필요하다.
-    # 발표 데모에서 마감 직전 알림 블록으로 보이도록 30분짜리 event로 변환한다.
+    # 마감 직전 준비 시간을 캘린더에서 분리해 볼 수 있도록 30분짜리 event로 변환한다.
     return {
         "summary": summary,
         "description": "\n".join(description_parts),
