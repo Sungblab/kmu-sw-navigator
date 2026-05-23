@@ -39,3 +39,10 @@ class MemoryUpdateRequest(BaseModel):
     natural_text: str | None = None
     value_json: dict[str, Any] | None = None
     status: MemoryStatus | None = None
+
+
+class MemoryCreateRequest(BaseModel):
+    natural_text: str = Field(min_length=1)
+    category: str = Field(min_length=1)
+    key: str = Field(min_length=1)
+    value_json: dict[str, Any] = Field(default_factory=dict)

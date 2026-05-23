@@ -63,6 +63,36 @@ def test_patch_memory_updates_natural_text_and_value_json() -> None:
     assert response.json()["value_json"]["topics"] == ["AI", "백엔드", "데이터"]
 
 
+def test_post_memory_creates_active_onboarding_memory() -> None:
+    store = InMemoryMemoryStore()
+    app.dependency_overrides[get_current_user_id] = lambda: "user-1"
+    app.dependency_overrides[get_memory_store] = lambda: store
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/memories",
+        json={
+            "natural_text": "온보딩 관심사: AI, 백엔드. 목표: AI 서비스 개발.",
+            "category": "onboarding",
+            "key": "learning_context",
+            "value_json": {
+                "interests": ["AI", "백엔드"],
+                "goal": "AI 서비스 개발",
+                "preference": "project",
+            },
+        },
+    )
+
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["category"] == "onboarding"
+    assert payload["key"] == "learning_context"
+    assert payload["status"] == "active"
+    assert payload["value_json"]["interests"] == ["AI", "백엔드"]
+    assert len(store.list_events("user-1")) == 1
+
+
 def test_delete_memory_archives_memory() -> None:
     store = InMemoryMemoryStore()
     memory = create_memory_candidate(

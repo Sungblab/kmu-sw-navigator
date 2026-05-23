@@ -104,6 +104,18 @@ export function upsertProfile(input: ProfileInput): Promise<Profile> {
   });
 }
 
+export function createMemory(input: {
+  natural_text: string;
+  category: string;
+  key: string;
+  value_json: Record<string, unknown>;
+}): Promise<Memory> {
+  return request<Memory>("/api/memories", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export async function getMemories(): Promise<Memory[]> {
   const data = await request<{ memories: Memory[] }>("/api/memories");
   return data.memories;

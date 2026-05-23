@@ -14,6 +14,7 @@ import { Sidebar, MobileDrawer } from "./components/navigation";
 import { TopBar } from "./components/TopBar";
 import {
   ApiError,
+  createMemory,
   getChatMessages,
   getChatSessions,
   createAssignment,
@@ -85,6 +86,12 @@ interface ProfileInput {
   department: Department;
   grade: number;
   curriculum_year: CurriculumYear;
+  interests_text: string;
+  goal: string;
+  coding_level: RecommendationInputContext["codingLevel"];
+  preference: RecommendationInputContext["preference"];
+  activity_style: RecommendationInputContext["activityStyle"];
+  weekly_hours: number;
 }
 
 export default function App() {
@@ -119,6 +126,12 @@ export default function App() {
     department: "software",
     grade: 1,
     curriculum_year: "2025",
+    interests_text: "AI, 백엔드",
+    goal: "AI 서비스 개발",
+    coding_level: "beginner",
+    preference: "project",
+    activity_style: "team",
+    weekly_hours: 4,
   });
 
   const latestAssistantResponse = [...messages]
@@ -397,9 +410,42 @@ export default function App() {
   async function saveOnboardingProfile() {
     setError(null);
     try {
-      setProfile(
-        await upsertProfile(onboardingDraft),
+      const savedProfile = await upsertProfile({
+        department: onboardingDraft.department,
+        grade: onboardingDraft.grade,
+        curriculum_year: onboardingDraft.curriculum_year,
+      });
+      const interests = splitOnboardingTerms(onboardingDraft.interests_text);
+      if (interests.length || onboardingDraft.goal.trim()) {
+        await createMemory({
+          natural_text: buildOnboardingMemoryText(onboardingDraft, interests),
+          category: "onboarding",
+          key: "learning_context",
+          value_json: {
+            interests,
+            goal: onboardingDraft.goal.trim(),
+            coding_level: onboardingDraft.coding_level,
+            preference: onboardingDraft.preference,
+            activity_style: onboardingDraft.activity_style,
+            weekly_hours: onboardingDraft.weekly_hours,
+          },
+        });
+      }
+      setProfile(savedProfile);
+      setDraft(buildFirstQuestion(onboardingDraft, interests));
+      setRecommendationDraft(
+        recommendationContextToDraft({
+          trackInterests: interests.length ? interests : ["AI", "백엔드"],
+          activityInterests: interests.length ? interests : ["개발"],
+          goal: onboardingDraft.goal.trim() || "AI 서비스 개발",
+          codingLevel: onboardingDraft.coding_level,
+          preference: onboardingDraft.preference,
+          activityStyle: onboardingDraft.activity_style,
+          weeklyHours: onboardingDraft.weekly_hours,
+          sourceLabel: "온보딩 메모리",
+        }),
       );
+      setIsRecommendationEdited(false);
       setActivePage("chat");
       toast.success("프로필을 저장했습니다.");
       await refresh();
@@ -689,6 +735,40 @@ export default function App() {
   );
 }
 
+function splitOnboardingTerms(value: string): string[] {
+  return Array.from(
+    new Set(
+      value
+        .split(/[,\n]/)
+        .map((term) => term.trim())
+        .filter(Boolean),
+    ),
+  ).slice(0, 8);
+}
+
+function buildOnboardingMemoryText(draft: ProfileInput, interests: string[]): string {
+  const interestText = interests.length ? interests.join(", ") : "미정";
+  return [
+    `온보딩 관심사: ${interestText}`,
+    `목표: ${draft.goal.trim() || "미정"}`,
+    `코딩 경험: ${draft.coding_level}`,
+    `학습 선호: ${draft.preference}`,
+    `활동 방식: ${draft.activity_style}`,
+    `주간 가능 시간: ${draft.weekly_hours}시간`,
+  ].join(". ");
+}
+
+function buildFirstQuestion(draft: ProfileInput, interests: string[]): string {
+  const interestText = interests.length ? interests.join(", ") : "AI";
+  const departmentText =
+    draft.department === "ai"
+      ? "인공지능학부"
+      : draft.department === "software"
+        ? "소프트웨어학부"
+        : "소프트웨어융합대학";
+  return `${departmentText} ${draft.grade}학년이고 ${interestText}에 관심 있어. ${draft.goal.trim() || "진로 준비"} 기준으로 이번 학기에 뭘 먼저 하면 좋을까?`;
+}
+
 function FullPageShell({ children }: { children: ReactNode }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#faf8f3] px-5 text-[#191817]">
@@ -954,6 +1034,95 @@ function OnboardingPage({
               <option value="unknown">미정</option>
             </select>
           </label>
+          <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+            관심 분야
+            <input
+              className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+              value={draft.interests_text}
+              onChange={(event) => setDraft({ ...draft, interests_text: event.target.value })}
+              placeholder="AI, 백엔드, 데이터"
+            />
+          </label>
+          <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+            목표
+            <input
+              className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+              value={draft.goal}
+              onChange={(event) => setDraft({ ...draft, goal: event.target.value })}
+              placeholder="AI 서비스 개발"
+            />
+          </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+              코딩 경험
+              <select
+                className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                value={draft.coding_level}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    coding_level: event.target.value as RecommendationInputContext["codingLevel"],
+                  })
+                }
+              >
+                <option value="beginner">초급</option>
+                <option value="intermediate">중급</option>
+                <option value="advanced">고급</option>
+              </select>
+            </label>
+            <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+              학습 선호
+              <select
+                className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                value={draft.preference}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    preference: event.target.value as RecommendationInputContext["preference"],
+                  })
+                }
+              >
+                <option value="project">프로젝트</option>
+                <option value="lecture">강의</option>
+                <option value="study">스터디</option>
+                <option value="unknown">미정</option>
+              </select>
+            </label>
+            <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+              활동 방식
+              <select
+                className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                value={draft.activity_style}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    activity_style: event.target.value as RecommendationInputContext["activityStyle"],
+                  })
+                }
+              >
+                <option value="team">팀</option>
+                <option value="solo">개인</option>
+                <option value="mixed">혼합</option>
+                <option value="unknown">미정</option>
+              </select>
+            </label>
+            <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+              주간 가능 시간
+              <input
+                className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                min={0}
+                max={40}
+                type="number"
+                value={draft.weekly_hours}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    weekly_hours: Math.min(Math.max(Number(event.target.value) || 0, 0), 40),
+                  })
+                }
+              />
+            </label>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <button

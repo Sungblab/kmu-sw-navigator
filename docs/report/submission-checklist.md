@@ -24,6 +24,7 @@
 | --- | --- | --- |
 | 메인 workspace UI | `frontend/src/App.tsx` | 준비됨 |
 | Supabase 로그인 UI | 첫 화면 로그인/가입, 온보딩 gate | 실제 session 없으면 앱과 API 사용 불가 |
+| 관심사 온보딩 | 첫 로그인 뒤 학부/학년/교과과정과 관심 분야/목표/학습 선호 저장 | profile은 `profiles`, 개인화 시작점은 `user_memories`에 저장 |
 | 개인화 RAG 상담 | AI 상담 화면, 오른쪽 context panel | 준비됨 |
 | 내부 자료 근거 | `evidence.internal_sources` chip | 준비됨 |
 | 최신 웹 grounding 근거 | `evidence.web_sources` chip | live Gemini key 필요 |
@@ -90,6 +91,7 @@ pnpm build:frontend
 - 로그인 화면 live readiness: 로그인 전에도 비인증 runtime status로 Supabase backend/schema/Gemini readiness를 확인할 수 있어, Gemini key ready와 Supabase schema blocker를 같은 화면에서 구분 가능
 - Supabase schema blocker가 표시되면 앱 안에서도 `pnpm supabase:sql-bundle -- --include-seed`, SQL Editor 적용, `pnpm live:smoke-run --api-base http://127.0.0.1:8001` 순서를 확인 가능
 - 로그인 후 app data 로딩이 schema 503 등으로 실패하면 무한 로딩 대신 live 상태, schema 다음 액션, 새로고침/로그아웃을 표시
+- 확장 온보딩: 첫 로그인 뒤 관심 분야/목표/코딩 경험/학습 선호/활동 방식을 입력하면 `/api/profile`과 `/api/memories`를 순서대로 호출해 실제 사용자 프로필과 active onboarding memory를 저장
 - live status는 Supabase schema missing table/function 전체와 Google Calendar missing env 이름을 표시하되 비밀값은 출력하지 않음
 - `pnpm wiki:build`: raw_documents=12, wiki_pages=7 생성 완료
 - `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 demo/mock 출처 표현 없음

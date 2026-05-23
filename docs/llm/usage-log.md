@@ -115,6 +115,7 @@
 | 2026-05-23 | 김성빈 | Codex | Supabase schema-check retry option 추가 | SQL Editor 적용 직후 `pnpm supabase:schema-check` 자체도 schema check를 기본 3회 재시도하고 `--retries`, `--retry-delay` 옵션을 받도록 보강 | TDD로 retry 성공/실패와 pnpm `--` separator 처리를 먼저 실패시킨 뒤 구현했고, focused test로 검증 |
 | 2026-05-23 | 김성빈 | Codex | live 시연 용어와 RAG 자료 접수 기준 정리 | 사용자가 데모 유저/목업이 아니라 로그인부터 온보딩, 채팅까지 live 흐름을 원한다고 명확히 한 뒤 현재 문서 링크를 `docs/product/live-scenario.md`로 바꾸고 자료 접수 항목을 보강 | Gemini live smoke 3종은 실제 API 호출 성공, Supabase live smoke는 schema 미적용 blocker로 분리해 검증 |
 | 2026-05-23 | 김성빈 | Codex | Supabase SQL Editor copy helper 추가 | Supabase CLI/psql과 DB password가 없는 현재 환경에서 SQL Editor 적용 실수를 줄이기 위해 검증된 schema+seed bundle을 클립보드에 복사하는 `pnpm supabase:sql-copy` 추가 | TDD로 env project ref 파싱, Dashboard URL 생성, pnpm separator, clipboard 호출을 검증했고 비밀값은 출력하지 않도록 기존 bundle validator를 재사용 |
+| 2026-05-23 | 김성빈 | Codex | Live onboarding memory 확장 | 첫 로그인 온보딩에서 관심 분야, 목표, 코딩 경험, 학습 선호, 활동 방식을 받아 기존 `user_memories` active memory로 저장하고 첫 채팅 질문/추천 입력에 반영 | TDD로 `POST /api/memories`가 onboarding memory와 memory event를 생성하는 API 테스트를 먼저 실패시킨 뒤 구현했고, frontend build와 focused backend test로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

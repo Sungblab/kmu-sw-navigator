@@ -1,6 +1,6 @@
 # 라이브 시연 시나리오
 
-발표영상은 20-25분을 목표로 한다. 시연은 Supabase 로그인부터 온보딩, 채팅, 추천, 일정 저장까지 실제 앱 흐름을 먼저 보여주고, 각 기능 뒤에 짧게 Python 핵심 로직과 LLM 활용 기록을 설명한다.
+발표영상은 20-25분을 목표로 한다. 시연은 Supabase 로그인부터 관심사 온보딩, 채팅, 추천, 일정 저장까지 실제 앱 흐름을 먼저 보여주고, 각 기능 뒤에 짧게 Python 핵심 로직과 LLM 활용 기록을 설명한다.
 
 ## 0. 라이브 시연 전 준비
 
@@ -44,6 +44,7 @@ pnpm dev:frontend
 - frontend는 Supabase `Framework/client` 값으로 로그인 세션을 만든다.
 - backend는 Supabase `Direct`/service-role 값으로 DB 저장소에 접근한다.
 - service role key는 브라우저에 넣지 않는다.
+- 첫 로그인 뒤 온보딩은 `profiles`에 학부/학년/교과과정을 저장하고, 관심 분야/목표/학습 선호는 `user_memories`에 active memory로 저장한다.
 
 ## 3. 개인화 RAG 상담
 
