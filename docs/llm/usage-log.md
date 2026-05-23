@@ -89,7 +89,7 @@
 | 2026-05-23 | 김성빈 | Codex | RAG 원천자료 접수 템플릿 보강 | 사용자가 교과과정/트랙/동아리/학사 자료를 파일이나 사진으로 줄 때 출처, 대상 학부/학년, category, 필수 필드를 함께 받는 템플릿 추가 | 바로 JSON으로 고정하지 않고 Markdown 정형화 후 chunk/embedding ingest로 넘기는 기준을 문서와 dry-run으로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Runtime product mode gate 추가 | 사용자가 우려한 목업/데모 fallback 회귀를 막기 위해 `frontend/src`, `backend/app`에서 `demo-user`, `X-User-Id`, mock/목업/데모 표현을 검사하는 `pnpm product:check` 추가 | `pnpm product:check`, backend tests, frontend build로 검증하고 `verify:local`에도 포함 |
 | 2026-05-23 | 김성빈 | Codex | Supabase schema readiness coverage 보강 | live schema check가 핵심 앱 테이블만 보는 문제를 줄이기 위해 `schema.sql`에 정의된 모든 table을 `pnpm supabase:schema-check` 대상에 포함 | contract test를 먼저 실패시킨 뒤 `raw_documents`, `wiki_pages`, `wiki_logs`, `chat_logs`까지 체크하도록 수정하고 live blocker 목록을 갱신 |
-| 2026-05-23 | 김성빈 | Codex | RAG source product mode gate 추가 | raw/wiki/seed 자료가 더 이상 데모용 샘플처럼 보이지 않도록 출처를 `팀 정리 초안 - 공식 출처 확인 필요`로 바꾸고 회귀 검사를 추가 | `pnpm wiki:build`, `pnpm rag:source-check`, `pnpm rag:ingest:dry`로 data/wiki 재생성과 ingest payload를 검증 |
+| 2026-05-23 | 김성빈 | Codex | RAG source product mode gate 추가 | raw/wiki/seed 자료가 더 이상 임시 샘플처럼 보이지 않도록 출처 표시와 회귀 검사를 추가 | `pnpm wiki:build`, `pnpm rag:source-check`, `pnpm rag:ingest:dry`로 data/wiki 재생성과 ingest payload를 검증 |
 | 2026-05-23 | 김성빈 | Codex | Calendar export live gate 강화 | 사용자가 모든 흐름을 live로 보여주겠다고 명확히 해 token 없는 Google Calendar export의 synthetic id 성공 처리를 제거하고 409 연결 필요 오류로 변경 | TDD로 서비스/API 테스트를 먼저 실패시킨 뒤 구현했고, `pnpm test:backend -- tests/services/test_calendar_service.py tests/api/test_assignments_api.py`로 검증 |
 | 2026-05-23 | 김성빈 | Codex | 공식 공개 자료 기반 RAG 보강 | 국민대학교 소프트웨어융합대학 공개 페이지를 확인해 인공지능학부 교육 목표, 소프트웨어학부 교육 구조, 동아리 활동, 교학팀 문의 경로를 raw RAG 문서로 요약 추가 | 원문 전체 복사가 아니라 출처 URL과 상담용 판단 기준 중심으로 정리하고 wiki build/source check/ingest dry-run으로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Supabase seed 중복 방지 | schema 적용 뒤 초기 확인용 seed를 반복 실행해도 `document_chunks`가 중복되지 않도록 `content_hash`와 conflict key를 추가 | seed SQL contract test를 먼저 실패시킨 뒤 수정하고 focused/backend tests로 검증 |
@@ -106,6 +106,7 @@
 | 2026-05-23 | 김성빈 | Codex | 로그인 전 live readiness 표시 | 로그인 화면에서 비인증 `/api/runtime/public-status`를 호출해 Supabase backend/schema/Gemini readiness를 비밀값 없이 표시 | public endpoint 테스트를 먼저 실패시킨 뒤 구현했고, frontend build와 브라우저 로그인 화면 확인으로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Runtime schema blocker next action 표시 | Supabase schema blocker가 있을 때 runtime status API와 화면에 SQL bundle 생성, SQL Editor 적용, live smoke 재실행 순서를 표시 | TDD로 `next_actions` 기대값을 먼저 실패시킨 뒤 구현했고, API 응답과 frontend build로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Live app data failure recovery 보강 | Supabase Auth 로그인 후 app data 로딩이 schema 503 등으로 실패할 때 무한 로딩 대신 live 상태와 schema 다음 액션을 보여주는 복구 화면을 추가 | 프론트엔드 전용 테스트 하네스가 없어 `pnpm build:frontend`로 TypeScript/Vite 빌드를 검증했고, 문서에는 live schema blocker가 남아 있음을 과장 없이 기록 |
+| 2026-05-23 | 김성빈 | Codex | 공식 KMU RAG 자료 보강 2 | 공식 페이지 기반으로 인공지능학부 2025 교과과정, 소프트웨어학부 트랙 선택 구조, 졸업요건 상담 기준, K-StarTrack 현장실습 자료를 raw/wiki에 추가하고 초기 raw 자료의 출처 표현도 공식 확인 경로로 정리 | 웹으로 공식 출처를 확인한 뒤 raw 문서를 직접 요약/구조화했고, `pnpm wiki:build`, `pnpm rag:source-check`, `pnpm rag:ingest:dry`로 19 documents / 118 chunks 준비를 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
