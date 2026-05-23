@@ -5,7 +5,23 @@
 > 대상: 국민대학교 소프트웨어융합대학 학생. 신입생 지원은 핵심 데모로 유지
 > 개발 언어 핵심: **Python**  
 > 제출 마감: **6월 11일**  
-> 문서 버전: v1.0
+> 문서 버전: v1.1
+
+---
+
+## 0.2 2026-05-23 SaaS 완성도 재정렬 메모
+
+현재 목표는 “로컬에서만 가능한 데모”가 아니라, **Supabase Auth/Postgres와 Python FastAPI 백엔드가 실제로 연결된 SaaS형 개인화 학업 내비게이터**를 제출 수준까지 완성하는 것이다. 로컬 fallback은 발표 장애와 외부 키 누락에 대비한 안전장치일 뿐, 최종 완성 기준으로 쓰지 않는다.
+
+이 재정렬 이후의 우선순위는 다음과 같다.
+
+- Supabase schema, Auth, 사용자별 profile/memory/chat/assignment/LLM log 저장을 live smoke로 검증한다.
+- Python 백엔드는 추천, RAG 근거 선택, 일정 파싱, 메모리 저장 정책처럼 발표에서 직접 설명해야 하는 핵심 로직을 담당한다.
+- React 프론트엔드는 SaaS 사용자가 로그인하고, 입력하고, 결과와 근거를 확인하는 제품 UI로 유지한다.
+- Gemini와 Google grounding은 답변 품질과 최신성 보강용이며, LLM이 임의로 만든 결과를 Python 판단 로직 대신 사용하지 않는다.
+- 보고서와 발표는 “LLM으로 만든 데모”가 아니라 “LLM을 도구로 사용해 직접 검토, 수정, 테스트한 Python 중심 웹서비스”라는 점을 증명한다.
+
+완료 기준은 `pnpm verify:local` 통과에 더해, 가능한 live 항목은 `pnpm env:check:strict`, `pnpm supabase:smoke`, `pnpm supabase:login-smoke`, `pnpm supabase:llm-smoke`, Gemini smoke 결과로 남기는 것이다.
 
 ---
 
@@ -29,9 +45,9 @@
 
 ### 최종 주제
 
-**국민대학교 소프트웨어융합대학 신입생을 위한 RAG 기반 AI 학교생활 도우미**
+**국민대학교 소프트웨어융합대학 학생을 위한 SaaS형 개인화 RAG 학업 내비게이터**
 
-신입생이 입학 초기에 겪는 정보 탐색 문제를 해결하기 위해, 학교/학과/커리큘럼/동아리/일정 관련 자료를 기반으로 답변하는 도메인 특화 AI 웹앱을 개발한다.
+소프트웨어융합대학 학생이 학업, 트랙, 진로/취업/창업, 프로젝트, 과제 일정을 한곳에서 관리할 수 있도록, Supabase Auth/Postgres와 Python FastAPI 백엔드가 연결된 도메인 특화 AI 웹앱을 개발한다. 신입생 지원은 핵심 데모 시나리오로 유지하되, 제품 구조는 로그인 사용자별 데이터가 저장되는 SaaS 형태를 목표로 한다.
 
 ### 최종 MVP 범위
 
@@ -44,7 +60,7 @@
 3. 관심사 기반 동아리/활동 추천
 4. 과제/일정 등록 및 D-day 관리
 
-eCampus 자동 크롤링과 완전한 Google Calendar 연동은 개발 시간이 많이 들고 인증/보안 이슈가 있으므로, 이번 MVP에서는 필수 기능이 아니라 **향후 개선 기능**으로 둔다.
+eCampus 자동 크롤링은 개발 시간이 많이 들고 인증/보안 이슈가 있으므로 향후 개선 기능으로 둔다. Google Calendar 연동은 foundation과 OAuth 경로를 구현하되, 제출 전 live OAuth smoke 가능 여부를 별도로 기록한다.
 
 ---
 

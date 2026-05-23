@@ -77,6 +77,7 @@
 | 2026-05-22 | 김성빈 | Codex | 홈서버 데모/운영 전략 문서화 | 라즈베리파이 홈서버 운영은 Docker Compose 기반 후속 배포로 두고, 발표 데모는 노트북 로컬 실행을 1순위로 유지하도록 dev guide, demo scenario, 제출 체크리스트를 갱신 | 네트워크, DDNS, HTTPS, OAuth 변수 때문에 홈서버 URL을 주 데모 경로로 과장하지 않고, 보조 시연과 녹화 백업을 함께 준비하는 기준으로 정리 |
 | 2026-05-23 | 김성빈 | Codex | 데모 UI polish 구현 | live smoke가 외부 키 부족으로 막힌 상태를 확인한 뒤, 외부 API 계약을 바꾸지 않는 `streamdown`, `@streamdown/cjk`, `sonner` 기반 답변 렌더링/토스트 개선 spec과 plan을 작성하고 구현 | assistant 답변은 markdown으로 표시하고 주요 성공/실패 액션은 toast로 피드백하며, `pnpm build:frontend`로 TypeScript/Vite build를 검증 |
 | 2026-05-23 | 김성빈 | Codex | 로컬 데모 Supabase schema fallback 보강 | Supabase Direct key는 있으나 `google_oauth_tokens`, `user_memories` 등 live table이 schema cache에 없어 `/api/chat`이 500을 내는 문제를 확인하고 dependency schema probe와 in-memory/local fallback 테스트를 추가 | 실제 Supabase live smoke는 `supabase/schema.sql` 적용과 live key가 필요하다고 분리했고, API 직접 호출과 브라우저 smoke로 로컬 데모 채팅 응답을 검증 |
+| 2026-05-23 | 김성빈 | Codex | SaaS 제출 목표 문서 재정렬 | 사용자가 로컬 데모 수준이 아니라 실제 SaaS형 학업 내비게이터를 목표로 한다고 명확히 한 뒤 PRD, roadmap, 보고서 목차, 제출 체크리스트, 데모 시나리오를 수정 | 로컬 fallback은 보조 경로로만 남기고 Supabase live 연결, Python 핵심 로직 설명, LLM 사용 기록, 6-10페이지 보고서/20-25분 발표영상 기준으로 제출 전략을 재정리 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

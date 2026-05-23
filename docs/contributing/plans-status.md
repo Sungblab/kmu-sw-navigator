@@ -41,6 +41,7 @@
 | 2026-05-16 | 에이전트 기반 코딩 증거 문서 보강 | 교수님 평가 포인트에 맞춰 Codex/Superpowers/Gemini Code Assist/Gemini API 역할, 하네스, 직접 검토 기준, 발표/보고서 연결 문서화 | `docs/llm/agent-coding-evidence.md`, `docs/llm/codex-workflow.md`, `docs/report/` |
 | 2026-05-23 | 데모 UI polish | assistant 답변 Streamdown markdown 렌더링, CJK plugin, Sonner toast, Streamdown vendor chunk 분리 구현/검증 완료 | `docs/superpowers/specs/2026-05-23-demo-ui-polish-design.md`, `docs/superpowers/plans/2026-05-23-demo-ui-polish.md`, `frontend/src/App.tsx`, `frontend/src/styles.css`, `frontend/vite.config.ts` |
 | 2026-05-23 | Supabase schema readiness fallback | 로컬 `.env`에 Supabase key가 있어도 live schema가 미적용이면 `/api/chat` 등 API가 인메모리/local retriever로 fallback하도록 수정하고 브라우저 데모 smoke 통과 | `backend/app/api/dependencies.py`, `backend/tests/api/test_dependency_fallbacks.py` |
+| 2026-05-23 | SaaS 제출 목표 재정렬 | 로컬 fallback을 보조 경로로 낮추고 Supabase live 연결, Python 핵심 로직 설명 가능성, LLM 활용 기록을 최종 제출 기준으로 문서화 | `docs/product/prd-dev-plan.md`, `docs/contributing/roadmap.md`, `docs/report/report-outline.md`, `docs/report/submission-checklist.md`, `docs/product/demo-scenario.md` |
 
 ## 다음 작업 후보
 

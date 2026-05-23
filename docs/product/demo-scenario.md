@@ -10,9 +10,9 @@ pnpm dev:backend
 pnpm dev:frontend
 ```
 
-- Supabase/Gemini/Google 키가 없으면 앱은 in-memory fallback과 deterministic 응답으로 실행한다.
+- Supabase/Gemini/Google 키가 없으면 앱은 in-memory fallback과 deterministic 응답으로 실행할 수 있지만, 최종 발표 설명은 실제 Supabase 연결과 live smoke 결과를 우선한다.
 - live 검증을 할 때는 `backend/.env`, `frontend/.env`를 채우고 Supabase Auth user를 만든 뒤 `pnpm env:check:strict`, `pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>`, `pnpm supabase:login-smoke -- --email <email> --password <password>`, `pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>`, `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`, `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke` 순서로 확인한다.
-- 발표에서는 외부 키가 없는 경우도 과제 평가자가 실행할 수 있도록 fallback 경로를 먼저 보여준다.
+- 발표에서는 실제 로그인 사용자 데이터가 저장되는 SaaS 경로를 먼저 보여주고, 외부 서비스 장애 시 평가자가 재현할 수 있는 fallback 경로를 보조로 설명한다.
 - 라즈베리파이 홈서버 배포는 Docker Compose 기반 후속 운영 경로로 설명하되, 발표 당일 주 데모는 네트워크 변수에 덜 흔들리는 노트북 로컬 실행으로 한다.
 - 홈서버 URL을 보여줄 경우에는 로컬 데모와 화면이 같다는 보조 시연으로만 사용하고, 장애 시 녹화/스크린샷 백업으로 전환한다.
 
