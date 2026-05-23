@@ -38,7 +38,16 @@ values
   )
 on conflict (slug) do nothing;
 
-insert into document_chunks (source_type, title, source, category, heading_path, chunk_index, content)
+insert into document_chunks (
+  source_type,
+  title,
+  source,
+  category,
+  heading_path,
+  chunk_index,
+  content_hash,
+  content
+)
 values
   (
     'wiki_page',
@@ -47,6 +56,7 @@ values
     'freshman',
     '신입생 안내',
     0,
+    'seed-freshman-wiki-001',
     '포털, eCampus, 수강신청, 학사 공지를 먼저 확인한다.'
   ),
   (
@@ -56,6 +66,7 @@ values
     'track',
     '트랙 안내',
     0,
+    'seed-track-wiki-001',
     'AI, 웹, 정보보호 관심사에 따라 첫 학기 학습 방향을 고른다.'
   ),
   (
@@ -65,8 +76,10 @@ values
     'track',
     '소프트웨어학부 트랙 안내',
     0,
+    'seed-track-raw-001',
     'AI와 데이터 분석에 관심이 있는 학생은 Python, 수학/통계, 자료구조, 머신러닝 관련 학습 방향을 우선 탐색한다.'
-  );
+  )
+on conflict (source_type, title, heading_path, chunk_index, content_hash) do nothing;
 
 insert into wiki_logs (action, summary, affected_pages)
 values ('build', 'seed 데이터 기준 wiki page 2개 생성', array['freshman', 'track']);
