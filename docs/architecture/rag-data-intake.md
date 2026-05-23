@@ -23,14 +23,16 @@
 2. `data/inbox/source-intake-template.md`에 출처, 대상 학부/학년, category, 핵심 필드를 채운다.
 3. 개인정보나 학생 개인 자료가 섞였는지 확인하고 제거한다.
 4. 텍스트/Markdown으로 바꾼다.
-5. `pnpm rag:prepare-raw`로 frontmatter가 있는 raw 문서를 만든다.
-6. `pnpm wiki:build`로 `data/wiki`를 재생성한다.
-7. `pnpm rag:ingest:dry`로 chunk 수와 category 구성을 확인한다.
-8. Supabase schema가 준비되면 `pnpm rag:ingest:embeddings`로 live DB에 넣는다.
+5. `pnpm rag:intake-check`로 필수 출처/category와 개인정보 위험을 검사한다.
+6. `pnpm rag:prepare-raw`로 frontmatter가 있는 raw 문서를 만든다.
+7. `pnpm wiki:build`로 `data/wiki`를 재생성한다.
+8. `pnpm rag:ingest:dry`로 chunk 수와 category 구성을 확인한다.
+9. Supabase schema가 준비되면 `pnpm rag:ingest:embeddings`로 live DB에 넣는다.
 
 예시:
 
 ```powershell
+pnpm rag:intake-check
 pnpm rag:prepare-raw --input ../data/inbox/ai-curriculum.txt --title "인공지능학부 교과과정" --category curriculum --source "국민대학교 학부 홈페이지"
 pnpm wiki:build
 pnpm rag:ingest:dry

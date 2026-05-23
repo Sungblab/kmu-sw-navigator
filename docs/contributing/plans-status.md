@@ -61,6 +61,7 @@
 | 2026-05-23 | Supabase SQL bundle validation gate | SQL Editor 적용 bundle에 필수 schema/seed marker가 포함되고 비밀값 marker가 섞이지 않도록 검증을 추가하고 `verify:local`에 포함 | `scripts/build_supabase_sql_bundle.py`, `tests/test_build_supabase_sql_bundle.py`, `package.json` |
 | 2026-05-23 | Live readiness report | env, SQL bundle validation, live Supabase schema 상태와 next action을 비밀값 없이 한 번에 출력하는 `pnpm live:readiness` 추가 | `scripts/live_readiness_report.py`, `tests/test_live_readiness_report_script.py`, `package.json` |
 | 2026-05-23 | Live smoke failure classification | schema 적용 뒤 개별 live smoke가 실패할 때 첫 실패를 `schema`/`auth`/`env`/`code`로 분류하고 다음 점검 명령을 출력 | `backend/app/scripts/live_smoke_run.py`, `backend/tests/test_live_smoke_run_script.py` |
+| 2026-05-23 | RAG intake validation gate | 사용자 제공 PDF/사진/텍스트 전사 자료를 raw 변환하기 전에 출처/category/개인정보 위험을 검사하는 `pnpm rag:intake-check` 추가 | `scripts/check_rag_intake.py`, `tests/test_rag_intake_check_script.py`, `data/inbox/README.md` |
 
 ## 다음 작업 후보
 

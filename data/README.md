@@ -33,10 +33,17 @@ collected_at: 2026-05-13
 텍스트나 Markdown으로 받은 자료는 아래 명령으로 `data/raw` 규격에 맞춥니다.
 
 ```powershell
+pnpm rag:intake-check
 pnpm rag:prepare-raw --input ../data/inbox/ai-curriculum.txt --title "인공지능학부 교과과정" --category curriculum --source "국민대학교 학부 홈페이지"
 ```
 
 PDF, 사진, 캡처 이미지는 먼저 텍스트로 추출하거나 사람이 읽어 `.txt`/`.md`로 정리한 뒤 같은 명령을 사용합니다. 원본은 `data/inbox/`에 두고, RAG 검색에는 `data/raw/*.md`만 사용합니다.
+
+정형화 전에 아래 명령으로 접수 파일의 출처, category, 개인정보 위험을 확인합니다. `data/inbox`의 실제 접수 파일은 `source-intake-template.md`의 기본 정보 항목을 채운 `.md` 또는 `.txt` 파일이어야 합니다.
+
+```powershell
+pnpm rag:intake-check
+```
 
 권장 제공 자료:
 

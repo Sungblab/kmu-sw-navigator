@@ -192,6 +192,7 @@ pnpm verify:local
 ```
 
 `verify:local`은 문서 검사, product mode 검사, Supabase SQL bundle 검증/생성, Mini Wiki 생성, RAG dry-run, 제출 조건 증거 검사, 루트 테스트, 백엔드 테스트/린트, 프론트엔드 빌드를 순서대로 실행합니다.
+사용자 제공 자료가 `data/inbox`에 들어오면 `verify:local`은 `pnpm rag:intake-check`도 함께 실행해 출처/category/개인정보 위험을 먼저 확인합니다.
 
 개별 명령을 직접 실행하려면 아래 목록을 사용합니다.
 

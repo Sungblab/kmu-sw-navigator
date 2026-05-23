@@ -98,6 +98,7 @@
 | 2026-05-23 | 김성빈 | Codex | Supabase SQL bundle 검증 gate 추가 | Supabase Dashboard에 붙여넣는 SQL bundle이 schema/seed 필수 marker를 포함하고 비밀값 marker를 포함하지 않는지 자동 검증하도록 보강 | TDD로 `validate_sql_bundle` 테스트를 먼저 실패시킨 뒤 구현했고, `python -m pytest tests/test_build_supabase_sql_bundle.py`로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Live readiness report 추가 | Supabase schema 적용 전 env, SQL bundle validation, live schema 상태와 next action을 한 번에 확인하는 `pnpm live:readiness` 명령을 추가 | TDD로 report formatting 테스트를 먼저 실패시킨 뒤 구현했고, `python -m pytest tests/test_live_readiness_report_script.py`로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Live smoke 실패 분류 보강 | schema 적용 뒤 Supabase/Gemini/Google smoke 중 첫 실패를 `schema`/`auth`/`env`/`code`로 분류하고 다음 점검 명령을 출력하도록 보강 | TDD로 `print_failure_guidance` 테스트를 먼저 실패시킨 뒤 구현했고, `pnpm test:backend -- tests/test_live_smoke_run_script.py`로 검증 |
+| 2026-05-23 | 김성빈 | Codex | RAG intake validation gate 추가 | 사용자가 파일/사진/텍스트로 준 학부 자료가 출처, 수집일, 대상, category, 개인정보 위험 검사를 통과한 뒤 raw/wiki/embedding으로 들어가도록 `pnpm rag:intake-check` 추가 | TDD로 intake parser와 개인정보 위험 테스트를 먼저 실패시킨 뒤 구현했고, `python -m pytest tests/test_rag_intake_check_script.py`로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
