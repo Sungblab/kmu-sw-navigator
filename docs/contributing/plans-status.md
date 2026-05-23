@@ -72,6 +72,7 @@
 | 2026-05-23 | Official KMU RAG source expansion 2 | 공식 페이지 기반으로 인공지능학부 2025 교과과정, 소프트웨어학부 트랙 선택 구조, 졸업요건 상담 기준, K-StarTrack 현장실습 자료를 추가하고 초기 raw 자료의 출처도 공식 확인 경로로 정리 | `data/raw/`, `data/wiki/` |
 | 2026-05-23 | Runtime missing detail UI | 로그인/복구/설정 화면의 live status에서 Supabase schema missing table/function 전체와 Google Calendar missing env 이름을 비밀값 없이 펼쳐 표시 | `frontend/src/App.tsx` |
 | 2026-05-23 | Live smoke API health preflight | schema 적용 뒤 login/API smoke 전에 `--api-base`의 `/health`를 먼저 확인하고 서버 미실행 시 8001 backend 실행 명령을 안내 | `backend/app/scripts/live_smoke_run.py`, `backend/tests/test_live_smoke_run_script.py`, `docs/contributing/supabase-live-apply.md` |
+| 2026-05-23 | Live readiness API health report | `pnpm live:readiness`가 schema 준비 뒤 `--api-base` `/health` 상태까지 보여주고 서버 미실행 시 backend 실행 명령을 다음 액션으로 안내 | `scripts/live_readiness_report.py`, `tests/test_live_readiness_report_script.py`, `docs/contributing/supabase-live-apply.md` |
 
 ## 다음 작업 후보
 

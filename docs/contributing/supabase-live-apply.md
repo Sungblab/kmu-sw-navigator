@@ -26,7 +26,7 @@ pnpm supabase:sql-bundle -- --include-seed
 pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001
 ```
 
-이 명령은 비밀값을 출력하지 않고 missing 변수 이름, SQL bundle 검증 결과, Supabase schema missing 항목, 다음 실행 명령만 보여준다.
+이 명령은 비밀값을 출력하지 않고 missing 변수 이름, SQL bundle 검증 결과, Supabase schema missing 항목, schema 준비 뒤의 API `/health` 상태, 다음 실행 명령만 보여준다.
 
 4. 생성된 `supabase/live-schema-bundle.sql` 전체 내용을 새 query에 붙여넣는다.
 5. Run을 실행한다.

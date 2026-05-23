@@ -4,6 +4,8 @@ import argparse
 import sys
 from pathlib import Path
 from typing import Any
+from urllib import request
+from urllib.error import URLError
 
 try:
     from scripts.build_supabase_sql_bundle import build_sql_bundle, validate_sql_bundle
@@ -23,6 +25,7 @@ def build_readiness_report(
     bundle_errors: list[str],
     schema_ready: bool | None,
     missing_schema_items: list[str],
+    api_ready: bool | None,
     include_seed: bool,
     api_base: str,
 ) -> tuple[list[str], int]:
@@ -56,6 +59,16 @@ def build_readiness_report(
             lines.append(f"  - {item}")
         exit_code = max(exit_code, 1)
 
+    if schema_ready is not True or api_ready is None:
+        lines.append("- API health: skipped")
+        lines.append("  reason: Supabase schema or core env is not ready.")
+    elif api_ready:
+        lines.append(f"- API health: ready ({api_base}/health)")
+    else:
+        lines.append(f"- API health: blocker ({api_base}/health)")
+        lines.append("  action: start FastAPI on the same port before live smoke.")
+        exit_code = max(exit_code, 1)
+
     lines.extend(
         [
             "",
@@ -70,6 +83,10 @@ def build_readiness_report(
         lines.append("2. Open supabase/live-schema-bundle.sql and paste it into the Supabase SQL Editor.")
         lines.append("3. Run the SQL in project abbwnqwvvtxrizutswws.")
         lines.append(f"4. pnpm live:smoke-run --api-base {api_base}")
+    elif api_ready is False:
+        lines.append("1. cd backend")
+        lines.append("2. uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001")
+        lines.append(f"3. pnpm live:smoke-run --api-base {api_base}")
     elif schema_ready:
         lines.append(f"1. pnpm live:smoke-run --api-base {api_base}")
     else:
@@ -84,6 +101,14 @@ def collect_missing_schema_items(schema_items: list[Any]) -> list[str]:
         for item in schema_items
         if not item.ready
     ]
+
+
+def check_api_health(api_base: str) -> bool:
+    try:
+        response = request.urlopen(f"{api_base.rstrip('/')}/health", timeout=2)
+    except (OSError, URLError):
+        return False
+    return getattr(response, "status", 200) == 200
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -119,17 +144,21 @@ def main() -> int:
 
     schema_ready: bool | None = None
     missing_schema_items: list[str] = []
+    api_ready: bool | None = None
     settings = get_settings()
     if settings.has_supabase_backend and not env_missing_core:
         schema_items = check_supabase_schema(get_supabase_client())
         missing_schema_items = collect_missing_schema_items(schema_items)
         schema_ready = not missing_schema_items
+        if schema_ready:
+            api_ready = check_api_health(args.api_base)
 
     lines, exit_code = build_readiness_report(
         env_missing_core=env_missing_core,
         bundle_errors=bundle_errors,
         schema_ready=schema_ready,
         missing_schema_items=missing_schema_items,
+        api_ready=api_ready,
         include_seed=args.include_seed,
         api_base=args.api_base,
     )

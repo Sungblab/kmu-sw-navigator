@@ -109,6 +109,7 @@
 | 2026-05-23 | 김성빈 | Codex | 공식 KMU RAG 자료 보강 2 | 공식 페이지 기반으로 인공지능학부 2025 교과과정, 소프트웨어학부 트랙 선택 구조, 졸업요건 상담 기준, K-StarTrack 현장실습 자료를 raw/wiki에 추가하고 초기 raw 자료의 출처 표현도 공식 확인 경로로 정리 | 웹으로 공식 출처를 확인한 뒤 raw 문서를 직접 요약/구조화했고, `pnpm wiki:build`, `pnpm rag:source-check`, `pnpm rag:ingest:dry`로 19 documents / 118 chunks 준비를 검증 |
 | 2026-05-23 | 김성빈 | Codex | Runtime missing detail UI 보강 | live status 화면에서 Supabase schema missing table/function 전체와 Google Calendar missing env 이름을 비밀값 없이 표시 | `RuntimeComponentStatus`의 기존 `missing_schema`/`missing_env` 계약을 활용했고, `pnpm build:frontend`로 타입/번들 검증 |
 | 2026-05-23 | 김성빈 | Codex | Live smoke API health preflight 추가 | Supabase schema 적용 후 login/API smoke를 실행하기 전에 `--api-base`의 FastAPI `/health`를 먼저 확인하도록 보강 | TDD로 health endpoint 호출, 연결 실패 처리, backend 실행 안내 출력을 먼저 실패시킨 뒤 구현했고, focused test와 전체 local gate로 검증 |
+| 2026-05-23 | 김성빈 | Codex | Live readiness API health report 추가 | `pnpm live:readiness`가 schema 준비 뒤 `--api-base`의 FastAPI `/health` 상태를 함께 출력하도록 보강 | TDD로 API ready/blocker/skipped 분기를 먼저 실패시킨 뒤 구현했고, 현재 live에서는 schema blocker 때문에 API health가 skipped로 남는 것을 확인 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
