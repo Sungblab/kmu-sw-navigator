@@ -58,3 +58,4 @@ pnpm live:smoke-run --api-base http://127.0.0.1:8001
 - functions: `search_document_chunks_text`, `match_document_chunks`
 
 이 상태에서는 로그인은 가능해도 profile write가 `503 supabase_schema_missing`으로 실패한다.
+`pnpm live:smoke-run --api-base http://127.0.0.1:8001`도 같은 경우에는 `pnpm supabase:sql-bundle -- --include-seed`부터 다시 실행하라는 next action을 출력한다.

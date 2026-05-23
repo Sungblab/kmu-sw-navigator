@@ -56,6 +56,7 @@
 | 2026-05-23 | Official KMU RAG source expansion | 공개 공식 페이지 기반으로 인공지능학부 개요, 소프트웨어학부 교육 구조, 동아리 활동, 교학팀 문의 경로 raw 문서를 추가 | `data/raw/kmu-ai-major-official.md`, `data/raw/kmu-sw-curriculum-official.md`, `data/raw/kmu-sw-clubs-official.md`, `data/raw/kmu-sw-office-contact-official.md` |
 | 2026-05-23 | Supabase seed idempotency | 초기 확인용 `supabase/seed.sql`의 `document_chunks` insert를 `content_hash`와 unique conflict key 기준으로 중복 방지 | `supabase/seed.sql`, `backend/tests/test_supabase_seed_sql_contract.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Supabase SQL Editor bundle | Dashboard SQL Editor에 붙여넣을 schema-only 또는 schema+seed bundle 생성 명령 추가 | `scripts/build_supabase_sql_bundle.py`, `tests/test_build_supabase_sql_bundle.py`, `package.json`, `docs/contributing/supabase-live-apply.md` |
+| 2026-05-23 | Live smoke schema blocker next actions | schema 미적용으로 live smoke가 멈출 때 SQL bundle 생성, SQL Editor 적용, 재실행 명령을 바로 출력 | `backend/app/scripts/live_smoke_run.py`, `backend/tests/test_live_smoke_run_script.py`, `docs/contributing/supabase-live-apply.md` |
 
 ## 다음 작업 후보
 

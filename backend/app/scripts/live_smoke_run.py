@@ -78,6 +78,17 @@ def print_result_summary(results: list[SmokeCommandResult]) -> None:
         print(f"- [{status}] {result.name}")
 
 
+def print_schema_blocker_next_actions() -> None:
+    print("")
+    print("Live smoke run stopped: Supabase schema is not ready.")
+    print("")
+    print("Next actions:")
+    print("1. pnpm supabase:sql-bundle -- --include-seed")
+    print("2. Open supabase/live-schema-bundle.sql and paste it into the Supabase SQL Editor.")
+    print("3. Run the SQL in project abbwnqwvvtxrizutswws.")
+    print("4. Rerun pnpm live:smoke-run --api-base http://127.0.0.1:8001")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Run live Supabase/Gemini smoke checks in dependency order."
@@ -98,8 +109,7 @@ def main() -> int:
     schema_items = check_supabase_schema(get_supabase_client())
     print("\n".join(format_schema_report(schema_items)))
     if not all(item.ready for item in schema_items):
-        print("")
-        print("Live smoke run stopped: Supabase schema is not ready.")
+        print_schema_blocker_next_actions()
         return 1
 
     results = run_smoke_commands(

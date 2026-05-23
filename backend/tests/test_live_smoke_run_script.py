@@ -5,6 +5,7 @@ from app.scripts.live_smoke_run import (
     SmokeCommandResult,
     build_smoke_commands,
     print_result_summary,
+    print_schema_blocker_next_actions,
     run_smoke_commands,
 )
 
@@ -55,3 +56,13 @@ def test_print_result_summary_marks_failed_result(capsys) -> None:
     output = capsys.readouterr().out
     assert "[passed] ok" in output
     assert "[failed:1] bad" in output
+
+
+def test_print_schema_blocker_next_actions_names_bundle_command(capsys) -> None:
+    print_schema_blocker_next_actions()
+
+    output = capsys.readouterr().out
+    assert "Supabase schema is not ready" in output
+    assert "pnpm supabase:sql-bundle -- --include-seed" in output
+    assert "supabase/live-schema-bundle.sql" in output
+    assert "pnpm live:smoke-run --api-base http://127.0.0.1:8001" in output
