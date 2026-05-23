@@ -4,6 +4,8 @@ import argparse
 import subprocess
 import sys
 from dataclasses import dataclass
+from urllib import request
+from urllib.error import URLError
 
 from app.core.config import get_settings
 from app.db.supabase_client import get_supabase_client
@@ -152,6 +154,25 @@ def print_schema_blocker_next_actions() -> None:
     print("4. Rerun pnpm live:smoke-run --api-base http://127.0.0.1:8001")
 
 
+def check_api_health(api_base: str) -> bool:
+    try:
+        response = request.urlopen(f"{api_base.rstrip('/')}/health", timeout=2)
+    except (OSError, URLError):
+        return False
+    return getattr(response, "status", 200) == 200
+
+
+def print_api_health_blocker(api_base: str) -> None:
+    print("")
+    print(f"FastAPI server is not reachable: {api_base}/health")
+    print("")
+    print("Next actions:")
+    print("1. Start a live-check backend on the same port used by --api-base.")
+    print("2. cd backend")
+    print("3. uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001")
+    print("4. Rerun pnpm live:smoke-run --api-base http://127.0.0.1:8001")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Run live Supabase/Gemini smoke checks in dependency order."
@@ -173,6 +194,10 @@ def main() -> int:
     print("\n".join(format_schema_report(schema_items)))
     if not all(item.ready for item in schema_items):
         print_schema_blocker_next_actions()
+        return 1
+
+    if not check_api_health(args.api_base):
+        print_api_health_blocker(args.api_base)
         return 1
 
     results = run_smoke_commands(

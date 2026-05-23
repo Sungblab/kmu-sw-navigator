@@ -108,6 +108,7 @@
 | 2026-05-23 | 김성빈 | Codex | Live app data failure recovery 보강 | Supabase Auth 로그인 후 app data 로딩이 schema 503 등으로 실패할 때 무한 로딩 대신 live 상태와 schema 다음 액션을 보여주는 복구 화면을 추가 | 프론트엔드 전용 테스트 하네스가 없어 `pnpm build:frontend`로 TypeScript/Vite 빌드를 검증했고, 문서에는 live schema blocker가 남아 있음을 과장 없이 기록 |
 | 2026-05-23 | 김성빈 | Codex | 공식 KMU RAG 자료 보강 2 | 공식 페이지 기반으로 인공지능학부 2025 교과과정, 소프트웨어학부 트랙 선택 구조, 졸업요건 상담 기준, K-StarTrack 현장실습 자료를 raw/wiki에 추가하고 초기 raw 자료의 출처 표현도 공식 확인 경로로 정리 | 웹으로 공식 출처를 확인한 뒤 raw 문서를 직접 요약/구조화했고, `pnpm wiki:build`, `pnpm rag:source-check`, `pnpm rag:ingest:dry`로 19 documents / 118 chunks 준비를 검증 |
 | 2026-05-23 | 김성빈 | Codex | Runtime missing detail UI 보강 | live status 화면에서 Supabase schema missing table/function 전체와 Google Calendar missing env 이름을 비밀값 없이 표시 | `RuntimeComponentStatus`의 기존 `missing_schema`/`missing_env` 계약을 활용했고, `pnpm build:frontend`로 타입/번들 검증 |
+| 2026-05-23 | 김성빈 | Codex | Live smoke API health preflight 추가 | Supabase schema 적용 후 login/API smoke를 실행하기 전에 `--api-base`의 FastAPI `/health`를 먼저 확인하도록 보강 | TDD로 health endpoint 호출, 연결 실패 처리, backend 실행 안내 출력을 먼저 실패시킨 뒤 구현했고, focused test와 전체 local gate로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

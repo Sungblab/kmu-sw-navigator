@@ -46,6 +46,13 @@ pnpm rag:ingest:embeddings
 pnpm live:smoke-run --api-base http://127.0.0.1:8001
 ```
 
+`--api-base`에 맞는 FastAPI 서버가 켜져 있어야 login/API smoke가 실행된다. 서버가 꺼져 있으면 `live:smoke-run`은 `/health` preflight에서 멈추고 아래 실행 명령을 안내한다.
+
+```powershell
+cd backend
+uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
+```
+
 `supabase:create-smoke-user --write-root-env`는 이미 실행되어 root `.env`에 smoke user UUID/email/password가 준비되어 있다. root `.env`는 gitignored 파일이므로 커밋하지 않는다.
 
 `supabase/live-schema-bundle.sql`은 적용 편의를 위한 생성 파일이므로 커밋하지 않는다. 원본은 `supabase/schema.sql`과 `supabase/seed.sql`이다.
@@ -59,6 +66,7 @@ pnpm live:smoke-run --api-base http://127.0.0.1:8001
 - `pnpm rag:ingest:embeddings`: `document_chunks` upsert와 Gemini embedding 생성 완료. 같은 자료를 다시 실행해도 `source_type,title,heading_path,chunk_index,content_hash` 기준으로 중복 chunk를 만들지 않는다.
 - `supabase/seed.sql`: 초기 확인용 seed를 반복 실행해도 `document_chunks`가 같은 conflict key 기준으로 중복되지 않는다.
 - `pnpm live:smoke-run --api-base http://127.0.0.1:8001`: 위 필수 smoke를 dependency 순서대로 모두 통과
+- schema 적용 뒤 `--api-base` 서버가 꺼져 있으면 `/health` preflight에서 멈추고 8001 backend 실행 명령을 출력
 - schema 적용 뒤 개별 smoke가 실패하면 `live:smoke-run`은 첫 실패를 `schema`, `auth`, `env`, `code` 중 하나로 분류하고 다음 점검 명령을 출력한다.
 
 ## 현재 blocker

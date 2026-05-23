@@ -1,9 +1,12 @@
 import subprocess
+from urllib.error import URLError
 
 from app.scripts.live_smoke_run import (
     SmokeCommand,
     SmokeCommandResult,
     build_smoke_commands,
+    check_api_health,
+    print_api_health_blocker,
     print_failure_guidance,
     print_result_summary,
     print_schema_blocker_next_actions,
@@ -85,3 +88,36 @@ def test_print_schema_blocker_next_actions_names_bundle_command(capsys) -> None:
     assert "pnpm supabase:sql-bundle -- --include-seed" in output
     assert "supabase/live-schema-bundle.sql" in output
     assert "pnpm live:smoke-run --api-base http://127.0.0.1:8001" in output
+
+
+def test_check_api_health_calls_health_endpoint(monkeypatch) -> None:
+    requested: list[str] = []
+
+    class Response:
+        status = 200
+
+    def fake_urlopen(url: str, timeout: int) -> Response:
+        requested.append(f"{url} timeout={timeout}")
+        return Response()
+
+    monkeypatch.setattr("app.scripts.live_smoke_run.request.urlopen", fake_urlopen)
+
+    assert check_api_health("http://127.0.0.1:8001") is True
+    assert requested == ["http://127.0.0.1:8001/health timeout=2"]
+
+
+def test_check_api_health_returns_false_on_connection_error(monkeypatch) -> None:
+    def fake_urlopen(url: str, timeout: int) -> object:
+        raise URLError("connection refused")
+
+    monkeypatch.setattr("app.scripts.live_smoke_run.request.urlopen", fake_urlopen)
+
+    assert check_api_health("http://127.0.0.1:8001") is False
+
+
+def test_print_api_health_blocker_names_backend_command(capsys) -> None:
+    print_api_health_blocker("http://127.0.0.1:8001")
+
+    output = capsys.readouterr().out
+    assert "FastAPI server is not reachable" in output
+    assert "uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001" in output
