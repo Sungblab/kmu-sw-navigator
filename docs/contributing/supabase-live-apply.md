@@ -12,6 +12,8 @@
 pnpm supabase:sql-bundle
 ```
 
+이 명령은 bundle 생성 전에 `profiles`, `document_chunks`, `google_oauth_tokens`, `search_document_chunks_text`, `match_document_chunks` 같은 필수 schema marker와 비밀값 marker 포함 여부를 검사한다. 검증에 실패하면 파일을 쓰지 않고 실패한다.
+
 초기 확인용 seed까지 함께 붙여넣고 싶으면 아래 명령을 사용한다.
 
 ```powershell

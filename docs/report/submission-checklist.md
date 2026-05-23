@@ -76,10 +76,10 @@ pnpm build:frontend
 - `pnpm gemini:grounding-smoke`: 실제 Gemini Google Search grounding 통과
 - Browser smoke: `http://127.0.0.1:5173`에서 로그인 세션 없을 때 로그인 화면으로 gate 확인, Gemini key 설정 뒤 채팅 응답이 live Gemini 문구로 렌더링되는 것 확인
 - Python 핵심 로직 주석 점검: `recommendation_service.py`, `retrieval_service.py`, `assignment_service.py`, `memory_service.py`, `chat_contract_service.py`의 판단 기준 주석은 충분해 코드 주석 변경은 하지 않음
-- `pnpm verify:local`: docs/product/wiki/RAG source/RAG dry-run/submission check/root test/backend test/backend lint/frontend build 전체 통과
+- `pnpm verify:local`: docs/product/Supabase SQL bundle/wiki/RAG source/RAG dry-run/submission check/root test/backend test/backend lint/frontend build 전체 통과
 - `pnpm docs:check`: 필수 문서 20개 확인 완료
 - `pnpm product:check`: `frontend/src`, `backend/app` 런타임에 `demo-user`, `X-User-Id`, `mock`, `목업`, `데모` fallback 표현이 남아 있지 않음
-- `pnpm supabase:sql-bundle`: SQL Editor 적용용 `supabase/live-schema-bundle.sql` 생성 완료. 생성 파일은 gitignored
+- `pnpm supabase:sql-bundle`: SQL Editor 적용용 `supabase/live-schema-bundle.sql` 생성 전 필수 schema marker와 비밀값 marker 검증 후 생성 완료. 생성 파일은 gitignored
 - `pnpm wiki:build`: raw_documents=8, wiki_pages=6 생성 완료
 - `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 demo/mock 출처 표현 없음
 - `pnpm rag:ingest:dry`: documents=14, chunks=80, wiki_chunks=50, raw_chunks=30 준비 완료

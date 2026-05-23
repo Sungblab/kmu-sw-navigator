@@ -95,6 +95,7 @@
 | 2026-05-23 | 김성빈 | Codex | Supabase seed 중복 방지 | schema 적용 뒤 초기 확인용 seed를 반복 실행해도 `document_chunks`가 중복되지 않도록 `content_hash`와 conflict key를 추가 | seed SQL contract test를 먼저 실패시킨 뒤 수정하고 focused/backend tests로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Supabase SQL Editor bundle 생성 명령 추가 | Supabase Dashboard에서 schema 적용 시 파일 순서 실수를 줄이기 위해 `pnpm supabase:sql-bundle` 명령을 추가 | schema-only와 schema+seed bundle 생성을 테스트하고 docs에 적용 절차를 갱신 |
 | 2026-05-23 | 김성빈 | Codex | Live smoke blocker 안내 보강 | schema 미적용으로 `pnpm live:smoke-run`이 멈출 때 SQL bundle 생성, SQL Editor 적용, live smoke 재실행 명령을 출력하도록 개선 | 출력 helper 테스트와 전체 backend tests로 검증 |
+| 2026-05-23 | 김성빈 | Codex | Supabase SQL bundle 검증 gate 추가 | Supabase Dashboard에 붙여넣는 SQL bundle이 schema/seed 필수 marker를 포함하고 비밀값 marker를 포함하지 않는지 자동 검증하도록 보강 | TDD로 `validate_sql_bundle` 테스트를 먼저 실패시킨 뒤 구현했고, `python -m pytest tests/test_build_supabase_sql_bundle.py`로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
