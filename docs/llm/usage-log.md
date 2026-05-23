@@ -100,7 +100,7 @@
 | 2026-05-23 | 김성빈 | Codex | Live smoke 실패 분류 보강 | schema 적용 뒤 Supabase/Gemini/Google smoke 중 첫 실패를 `schema`/`auth`/`env`/`code`로 분류하고 다음 점검 명령을 출력하도록 보강 | TDD로 `print_failure_guidance` 테스트를 먼저 실패시킨 뒤 구현했고, `pnpm test:backend -- tests/test_live_smoke_run_script.py`로 검증 |
 | 2026-05-23 | 김성빈 | Codex | RAG intake validation gate 추가 | 사용자가 파일/사진/텍스트로 준 학부 자료가 출처, 수집일, 대상, category, 개인정보 위험 검사를 통과한 뒤 raw/wiki/embedding으로 들어가도록 `pnpm rag:intake-check` 추가 | TDD로 intake parser와 개인정보 위험 테스트를 먼저 실패시킨 뒤 구현했고, `python -m pytest tests/test_rag_intake_check_script.py`로 검증 |
 | 2026-05-23 | 김성빈 | Codex | RAG intake prepare command hint 추가 | 접수 템플릿을 채운 자료가 검사를 통과하면 사람이 title/category/source를 다시 입력하지 않아도 되도록 `pnpm rag:prepare-raw` 명령을 출력 | TDD로 prepare command 출력 테스트를 먼저 실패시킨 뒤 구현했고, `python -m pytest tests/test_rag_intake_check_script.py`로 검증 |
-| 2026-05-23 | 김성빈 | Codex | 앱 내 live runtime status 추가 | 설정 화면에서 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 확인하는 `/api/runtime/status`와 UI 표시를 추가 | TDD로 runtime status service/API 테스트를 먼저 실패시킨 뒤 구현했고, schema 미적용은 env/Gemini 성공과 분리해 blocker로 표시하도록 검증 |
+| 2026-05-23 | 김성빈 | Codex | 앱 내 live runtime status 추가 | 설정 화면에서 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 확인하는 `/api/runtime/status`와 UI 표시를 추가 | TDD로 runtime status service/API 테스트를 먼저 실패시킨 뒤 구현했고, schema 미적용은 env/Gemini 성공과 분리해 blocker로 표시하도록 검증. 이후 app data 503과 runtime status 표시를 분리해 schema blocker 상황에서도 진단 상태를 볼 수 있게 수정 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

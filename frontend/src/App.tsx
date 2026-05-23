@@ -163,19 +163,30 @@ export default function App() {
         setRuntimeStatus(null);
         return;
       }
-      const [profileData, memoryData, sessionsData, calendarStatusData, runtimeStatusData, llmLogData] = await Promise.all([
-        getProfile(),
-        getMemories(),
-        getChatSessions(),
-        getGoogleCalendarStatus(),
+      const [runtimeStatusResult, appDataResult] = await Promise.allSettled([
         getRuntimeStatus(),
-        getLLMUsageLogs(),
+        Promise.all([
+          getProfile(),
+          getMemories(),
+          getChatSessions(),
+          getGoogleCalendarStatus(),
+          getLLMUsageLogs(),
+        ]),
       ]);
+      if (runtimeStatusResult.status === "fulfilled") {
+        setRuntimeStatus(runtimeStatusResult.value);
+      } else {
+        setRuntimeStatus(null);
+      }
+      if (appDataResult.status === "rejected") {
+        throw appDataResult.reason;
+      }
+      const [profileData, memoryData, sessionsData, calendarStatusData, llmLogData] =
+        appDataResult.value;
       setProfile(profileData);
       setMemories(memoryData);
       setChatSessions(sessionsData);
       setGoogleCalendarStatus(calendarStatusData);
-      setRuntimeStatus(runtimeStatusData);
       setLlmUsageLogs(llmLogData);
       setAssignments(await getAssignments());
     } catch (apiError) {

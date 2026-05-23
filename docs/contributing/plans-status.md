@@ -63,7 +63,7 @@
 | 2026-05-23 | Live smoke failure classification | schema 적용 뒤 개별 live smoke가 실패할 때 첫 실패를 `schema`/`auth`/`env`/`code`로 분류하고 다음 점검 명령을 출력 | `backend/app/scripts/live_smoke_run.py`, `backend/tests/test_live_smoke_run_script.py` |
 | 2026-05-23 | RAG intake validation gate | 사용자 제공 PDF/사진/텍스트 전사 자료를 raw 변환하기 전에 출처/category/개인정보 위험을 검사하는 `pnpm rag:intake-check` 추가 | `scripts/check_rag_intake.py`, `tests/test_rag_intake_check_script.py`, `data/inbox/README.md` |
 | 2026-05-23 | RAG intake prepare command hint | intake 검사를 통과한 파일에 대해 title/category/source/collected_at 기반 `pnpm rag:prepare-raw` 명령을 자동 출력 | `scripts/check_rag_intake.py`, `tests/test_rag_intake_check_script.py` |
-| 2026-05-23 | 앱 내 live runtime status | 로그인 후 설정 화면에서 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 표시. 현재 schema 미적용은 `schema_sql_not_applied` blocker로 보이게 연결 | `backend/app/api/runtime.py`, `backend/app/services/runtime_status_service.py`, `frontend/src/App.tsx`, `backend/tests/api/test_runtime_status_api.py` |
+| 2026-05-23 | 앱 내 live runtime status | 로그인 후 설정 화면에서 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 표시. 일반 app data 로딩이 schema 503으로 실패해도 runtime status는 별도로 반영 | `backend/app/api/runtime.py`, `backend/app/services/runtime_status_service.py`, `frontend/src/App.tsx`, `backend/tests/api/test_runtime_status_api.py` |
 
 ## 다음 작업 후보
 
