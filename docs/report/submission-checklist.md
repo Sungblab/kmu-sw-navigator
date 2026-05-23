@@ -84,11 +84,12 @@ pnpm build:frontend
 - `pnpm rag:intake-check`: `data/inbox`의 사용자 제공 자료가 출처/category/개인정보 위험 검사를 통과해야 raw/wiki 변환으로 진행
 - `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`: env, SQL bundle, Supabase schema 상태를 비밀값 없이 한 번에 요약. 현재 live blocker는 schema 미적용
 - `pnpm live:smoke-run --api-base http://127.0.0.1:8001`: schema 적용 뒤 개별 smoke 실패 시 `schema`/`auth`/`env`/`code` 분류와 다음 액션 출력
+- 앱 설정 화면 live runtime status: 로그인 후 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 표시. Gemini env는 ready로 보이고, Supabase schema는 SQL 적용 전 `schema_sql_not_applied` blocker로 분리됨
 - `pnpm wiki:build`: raw_documents=8, wiki_pages=6 생성 완료
 - `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 demo/mock 출처 표현 없음
 - `pnpm rag:ingest:dry`: documents=14, chunks=80, wiki_chunks=50, raw_chunks=30 준비 완료
-- `pnpm test:backend`: 158 passed
-- `python -m pytest tests`: 6 passed
+- `pnpm test:backend`: 165 passed
+- `python -m pytest tests`: 24 passed
 - `pnpm lint:backend`: All checks passed
 - `pnpm build:frontend`: Vite production build 통과
 - `pnpm submission:check`: 제출 조건 증거 9개 확인 완료

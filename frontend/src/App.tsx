@@ -25,6 +25,7 @@ import {
   getGoogleCalendarStatus,
   getLLMUsageLogs,
   getProfile,
+  getRuntimeStatus,
   previewAssignment,
   recommendActivity,
   recommendTrack,
@@ -59,6 +60,8 @@ import type {
   Memory,
   MissingProfile,
   Profile,
+  RuntimeComponentStatus,
+  RuntimeStatus,
   Department,
   CurriculumYear,
   TrackRecommendResponse,
@@ -104,6 +107,7 @@ export default function App() {
   const [assignmentDraft, setAssignmentDraft] = useState("자료구조 과제 다음주 금요일까지");
   const [assignmentPreview, setAssignmentPreview] = useState<AssignmentPreview | null>(null);
   const [googleCalendarStatus, setGoogleCalendarStatus] = useState<GoogleCalendarStatus | null>(null);
+  const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus | null>(null);
   const [llmUsageLogs, setLlmUsageLogs] = useState<LLMUsageLog[]>([]);
   const [trackResult, setTrackResult] = useState<TrackRecommendResponse | null>(null);
   const [activityResult, setActivityResult] = useState<ActivityRecommendResponse | null>(null);
@@ -156,19 +160,22 @@ export default function App() {
         setAssignments([]);
         setLlmUsageLogs([]);
         setGoogleCalendarStatus(null);
+        setRuntimeStatus(null);
         return;
       }
-      const [profileData, memoryData, sessionsData, calendarStatusData, llmLogData] = await Promise.all([
+      const [profileData, memoryData, sessionsData, calendarStatusData, runtimeStatusData, llmLogData] = await Promise.all([
         getProfile(),
         getMemories(),
         getChatSessions(),
         getGoogleCalendarStatus(),
+        getRuntimeStatus(),
         getLLMUsageLogs(),
       ]);
       setProfile(profileData);
       setMemories(memoryData);
       setChatSessions(sessionsData);
       setGoogleCalendarStatus(calendarStatusData);
+      setRuntimeStatus(runtimeStatusData);
       setLlmUsageLogs(llmLogData);
       setAssignments(await getAssignments());
     } catch (apiError) {
@@ -221,6 +228,8 @@ export default function App() {
       setMemories([]);
       setChatSessions([]);
       setAssignments([]);
+      setGoogleCalendarStatus(null);
+      setRuntimeStatus(null);
       setMessages([]);
       setActiveSessionId(null);
       setAuthStatus("로그아웃되었습니다.");
@@ -607,6 +616,7 @@ export default function App() {
               onAuthSubmit={(mode) => void handleAuthSubmit(mode)}
               profile={profile}
               googleCalendarStatus={googleCalendarStatus}
+              runtimeStatus={runtimeStatus}
               onSeedProfile={() => void saveOnboardingProfile()}
               onSignOut={() => void handleSignOut()}
               onRefresh={() => void refresh()}
@@ -1538,6 +1548,7 @@ function SettingsPage({
   onAuthSubmit,
   profile,
   googleCalendarStatus,
+  runtimeStatus,
   onSeedProfile,
   onSignOut,
   onRefresh,
@@ -1553,6 +1564,7 @@ function SettingsPage({
   onAuthSubmit: (mode: "signin" | "signup") => void;
   profile: Profile | MissingProfile | null;
   googleCalendarStatus: GoogleCalendarStatus | null;
+  runtimeStatus: RuntimeStatus | null;
   onSeedProfile: () => void;
   onSignOut: () => void;
   onRefresh: () => void;
@@ -1563,8 +1575,29 @@ function SettingsPage({
       <div className="mx-auto max-w-[760px] rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-5">
         <h2 className="text-xl font-semibold tracking-normal">설정</h2>
         <p className="mt-2 text-sm leading-6 text-[#716c63]">
-          프로필, 메모리, Calendar 연동 상태를 관리하는 화면입니다.
+          프로필, 메모리, API live 연결 상태를 관리하는 화면입니다.
         </p>
+        <div className="mt-5 rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4">
+          <h3 className="text-sm font-semibold">Live API 상태</h3>
+          <div className="mt-3 grid gap-2">
+            <RuntimeStatusRow
+              label="Supabase backend"
+              status={runtimeStatus?.supabase_backend}
+              readyText="env 연결됨"
+            />
+            <RuntimeStatusRow
+              label="Supabase schema"
+              status={runtimeStatus?.supabase_schema}
+              readyText="schema.sql 적용됨"
+            />
+            <RuntimeStatusRow label="Gemini" status={runtimeStatus?.gemini} readyText="API 키 연결됨" />
+            <RuntimeStatusRow
+              label="Google Calendar"
+              status={runtimeStatus?.google_calendar}
+              readyText="OAuth env 연결됨"
+            />
+          </div>
+        </div>
         <div className="mt-5 rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4">
           <h3 className="text-sm font-semibold">Supabase 로그인</h3>
           <p className="mt-1 text-xs leading-5 text-[#716c63]">
@@ -1659,6 +1692,37 @@ function SettingsPage({
         </div>
       </div>
     </section>
+  );
+}
+
+function RuntimeStatusRow({
+  label,
+  status,
+  readyText,
+}: {
+  label: string;
+  status?: RuntimeComponentStatus | null;
+  readyText: string;
+}) {
+  const problemItems = status ? [...status.missing_env, ...status.missing_schema] : [];
+  const detail = status?.ready
+    ? readyText
+    : problemItems.length
+      ? problemItems.slice(0, 3).join(", ")
+      : status?.blocker ?? "확인 전";
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#ded7cb] bg-[#fffdf8] px-3 py-2">
+      <span className="text-xs font-semibold text-[#191817]">{label}</span>
+      <span className="text-xs text-[#716c63]">{detail}</span>
+      <span
+        className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+          status?.ready ? "bg-[#dff1df] text-[#1f6b36]" : "bg-[#f8e1d8] text-[#9b3f24]"
+        }`}
+      >
+        {status?.ready ? "live" : "blocked"}
+      </span>
+    </div>
   );
 }
 

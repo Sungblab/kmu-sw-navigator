@@ -124,6 +124,22 @@ export interface GoogleCalendarConnectResponse {
   reason: string | null;
 }
 
+export interface RuntimeComponentStatus {
+  configured: boolean;
+  ready: boolean;
+  missing_env: string[];
+  missing_schema: string[];
+  blocker: string | null;
+}
+
+export interface RuntimeStatus {
+  mode: "live";
+  supabase_backend: RuntimeComponentStatus;
+  supabase_schema: RuntimeComponentStatus;
+  gemini: RuntimeComponentStatus;
+  google_calendar: RuntimeComponentStatus;
+}
+
 export interface RecommendationItem {
   id: string;
   title: string;

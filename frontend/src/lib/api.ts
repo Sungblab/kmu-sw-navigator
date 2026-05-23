@@ -14,6 +14,7 @@ import type {
   Memory,
   MissingProfile,
   Profile,
+  RuntimeStatus,
   TrackRecommendResponse,
 } from "../types/api";
 import { getSupabaseAccessToken } from "./supabase";
@@ -176,6 +177,10 @@ export function getGoogleCalendarStatus(): Promise<GoogleCalendarStatus> {
 
 export function getGoogleCalendarConnectUrl(): Promise<GoogleCalendarConnectResponse> {
   return request<GoogleCalendarConnectResponse>("/api/integrations/google-calendar/connect");
+}
+
+export function getRuntimeStatus(): Promise<RuntimeStatus> {
+  return request<RuntimeStatus>("/api/runtime/status");
 }
 
 export function recommendTrack(input: {

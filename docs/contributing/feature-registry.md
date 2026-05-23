@@ -13,7 +13,7 @@
 | Feature ID | 상태 | 소유 경로 | 설명 | 중복 방지 |
 | --- | --- | --- | --- | --- |
 | repo-docs-foundation | active | `README.md`, `AGENTS.md`, `docs/` | 문서 인덱스, 개발 가이드, LLM 활용 기록 구조 | 문서 구조 변경 전 `docs/README.md`를 먼저 수정 |
-| backend-api-foundation | active | `backend/app/` | FastAPI 앱, `/api` 라우터, Supabase Bearer 인증 dependency, Auth API/JWT token 검증, 저장소 protocol | API 계약 변경은 schema/test/docs를 함께 갱신 |
+| backend-api-foundation | active | `backend/app/` | FastAPI 앱, `/api` 라우터, Supabase Bearer 인증 dependency, Auth API/JWT token 검증, 저장소 protocol, live runtime status API | API 계약 변경은 schema/test/docs를 함께 갱신 |
 | supabase-schema | active | `supabase/schema.sql`, `backend/app/services/supabase_stores.py`, `backend/app/scripts/check_env.py`, `backend/app/scripts/supabase_schema_check.py` | profiles, document_chunks, assignments, chat/memory/log/calendar token schema, profile/memory persistence adapter, env check, schema readiness probe, schema missing API classification | schema 변경은 SQL 파일과 docs를 함께 갱신하고 live DB smoke를 별도 기록 |
 | mini-llm-wiki | active | `data/raw/`, `data/wiki/`, `backend/app/services/wiki_compiler.py`, `backend/app/services/markdown_chunker.py` | 원문 자료를 wiki page로 컴파일하고 RAG 우선 검색 계층으로 사용 | LangGraph/worker 없이 Python script 중심으로 유지 |
 | rag-ingest | active | `backend/app/services/document_ingest.py`, `backend/app/services/embedding_service.py`, `backend/app/scripts/ingest_documents.py`, `backend/app/scripts/prepare_raw_document.py`, `backend/app/scripts/gemini_smoke.py`, `data/` | 사용자 제공 자료 inbox, raw Markdown 정형화, raw/wiki chunk payload 생성, Gemini embedding adapter, dry-run, Supabase insert script, Gemini smoke | live embedding ingest는 `GEMINI_API_KEY`와 Supabase env 설정 후 실행 |

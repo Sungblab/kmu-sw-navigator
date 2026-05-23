@@ -3,7 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from postgrest.exceptions import APIError
 
-from app.api import assignments, chat, integrations, llm_logs, memories, profile, recommendations
+from app.api import (
+    assignments,
+    chat,
+    integrations,
+    llm_logs,
+    memories,
+    profile,
+    recommendations,
+    runtime,
+)
 from app.core.config import get_settings
 from app.core.supabase_errors import is_schema_cache_error
 
@@ -22,6 +31,7 @@ app.include_router(assignments.router, prefix="/api")
 app.include_router(integrations.router, prefix="/api")
 app.include_router(recommendations.router, prefix="/api")
 app.include_router(llm_logs.router, prefix="/api")
+app.include_router(runtime.router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
