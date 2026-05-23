@@ -43,6 +43,7 @@
 | 2026-05-23 | Supabase live auth gate | 프론트/백엔드 런타임에서 `demo-user`/`X-User-Id` fallback을 제거하고 Supabase session Bearer token이 있어야 앱과 API를 사용할 수 있게 변경 | `frontend/src/App.tsx`, `frontend/src/lib/api.ts`, `backend/app/api/dependencies.py`, `backend/app/api/auth.py`, `backend/tests/api/test_auth_dependency.py` |
 | 2026-05-23 | SaaS 제출 목표 재정렬 | 로컬 fallback을 보조 경로로 낮추고 Supabase live 연결, Python 핵심 로직 설명 가능성, LLM 활용 기록을 최종 제출 기준으로 문서화 | `docs/product/prd-dev-plan.md`, `docs/contributing/roadmap.md`, `docs/report/report-outline.md`, `docs/report/submission-checklist.md`, `docs/product/demo-scenario.md` |
 | 2026-05-23 | Supabase/Gemini live readiness 점검 | backend Direct/frontend Framework/Gemini env는 ready, Gemini live smoke 3종은 통과. Supabase DB/login/LLM smoke는 `schema_ready=False`와 smoke user id/email/password 미준비로 blocker 유지 | `pnpm env:check:strict`, `pnpm live:smoke-plan`, `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`, `docs/architecture/python-core-logic.md`, `docs/report/submission-checklist.md` |
+| 2026-05-23 | RAG 자료 접수/정형화 경로 | 사용자가 제공할 교과과정/트랙/동아리/학교 시스템 자료를 `data/inbox`로 받고 `pnpm rag:prepare-raw`로 `data/raw` Markdown에 정형화하는 흐름 추가 | `backend/app/scripts/prepare_raw_document.py`, `data/inbox/README.md`, `data/README.md`, `docs/architecture/rag-data-intake.md` |
 
 ## 다음 작업 후보
 

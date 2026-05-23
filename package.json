@@ -14,6 +14,7 @@
     "rag:ingest:dry": "cd backend && uv run python -m app.scripts.ingest_documents --raw-dir ../data/raw --wiki-dir ../data/wiki --dry-run",
     "rag:ingest": "cd backend && uv run python -m app.scripts.ingest_documents --raw-dir ../data/raw --wiki-dir ../data/wiki",
     "rag:ingest:embeddings": "cd backend && uv run python -m app.scripts.ingest_documents --raw-dir ../data/raw --wiki-dir ../data/wiki --with-embeddings",
+    "rag:prepare-raw": "cd backend && uv run python -m app.scripts.prepare_raw_document",
     "env:check": "cd backend && uv run python -m app.scripts.check_env --repo-root ..",
     "env:check:strict": "cd backend && uv run python -m app.scripts.check_env --repo-root .. --strict",
     "live:smoke-plan": "cd backend && uv run python -m app.scripts.live_smoke_plan --repo-root ..",

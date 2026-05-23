@@ -133,6 +133,14 @@ pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>
 
 ## RAG 문서 ingest
 
+사용자가 제공한 국민대 교과과정/트랙/동아리/학교 시스템 자료는 먼저 `data/inbox/`에 두고 `data/raw/*.md`로 정형화합니다. 텍스트나 Markdown 파일은 아래 명령으로 frontmatter를 붙일 수 있습니다.
+
+```powershell
+pnpm rag:prepare-raw --input ../data/inbox/ai-curriculum.txt --title "인공지능학부 교과과정" --category curriculum --source "국민대학교 학부 홈페이지"
+```
+
+PDF, 사진, 캡처는 텍스트로 추출한 뒤 같은 명령을 사용합니다. 자세한 기준은 `docs/architecture/rag-data-intake.md`를 확인합니다.
+
 먼저 로컬 dry-run으로 chunk 수를 확인합니다.
 
 ```powershell

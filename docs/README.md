@@ -27,6 +27,7 @@
 | --- | --- |
 | 전체 데이터 흐름 | `architecture/data-flow.md` |
 | RAG 설계 | `architecture/rag-design.md` |
+| RAG 자료 접수/정형화 | `architecture/rag-data-intake.md` |
 | Mini LLM Wiki 설계 | `architecture/mini-llm-wiki.md` |
 | 핵심 Python 로직 설명 | `architecture/python-core-logic.md` |
 

@@ -8,6 +8,9 @@
 data/raw/
   팀원이 직접 정리하거나 출처를 표시한 원문 markdown
 
+data/inbox/
+  사용자가 준 PDF/사진/캡처/텍스트 원본을 임시로 두는 접수 폴더
+
 data/wiki/
   Python wiki compiler가 생성한 신입생용 wiki markdown
 ```
@@ -19,11 +22,29 @@ data/wiki/
 ```md
 ---
 title: 문서 제목
-category: freshman | track | club | roadmap | system | general
+category: freshman | track | curriculum | club | roadmap | system | career | startup | general
 source: 출처 또는 팀 정리
 collected_at: 2026-05-13
 ---
 ```
+
+## 사용자 제공 자료 정형화
+
+텍스트나 Markdown으로 받은 자료는 아래 명령으로 `data/raw` 규격에 맞춥니다.
+
+```powershell
+pnpm rag:prepare-raw --input ../data/inbox/ai-curriculum.txt --title "인공지능학부 교과과정" --category curriculum --source "국민대학교 학부 홈페이지"
+```
+
+PDF, 사진, 캡처 이미지는 먼저 텍스트로 추출하거나 사람이 읽어 `.txt`/`.md`로 정리한 뒤 같은 명령을 사용합니다. 원본은 `data/inbox/`에 두고, RAG 검색에는 `data/raw/*.md`만 사용합니다.
+
+권장 제공 자료:
+
+- 소프트웨어학부/인공지능학부 교과과정, 전공필수/선택, 선수과목, 졸업 요건
+- 트랙별 로드맵, 추천 과목, 관련 프로젝트/포트폴리오 예시
+- 소프트웨어융합대학 동아리, 학회, 스터디, 해커톤/공모전 활동 안내
+- 수강신청, 학사공지, 장학, 상담, 비교과 시스템 사용 방법
+- 진로/취업/창업 지원 프로그램, 현장실습, 인턴십 안내
 
 ## 위키 생성
 
