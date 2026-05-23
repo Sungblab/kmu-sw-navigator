@@ -2,15 +2,19 @@ import json
 from datetime import UTC, datetime
 
 import httpx
+import pytest
 
 from app.core.config import Settings
 from app.schemas.assignment import AssignmentCreateRequest
 from app.services.assignment_service import InMemoryAssignmentStore
-from app.services.calendar_service import export_assignment_to_calendar
+from app.services.calendar_service import (
+    CalendarExportRequiresGoogleTokenError,
+    export_assignment_to_calendar,
+)
 from app.services.google_oauth_token_service import InMemoryGoogleOAuthTokenStore
 
 
-def test_export_assignment_builds_google_event_payload_and_marks_assignment() -> None:
+def test_export_assignment_requires_google_token_before_marking_assignment() -> None:
     store = InMemoryAssignmentStore()
     assignment = store.create_assignment(
         "user-1",
@@ -22,15 +26,13 @@ def test_export_assignment_builds_google_event_payload_and_marks_assignment() ->
         ),
     )
 
-    exported = export_assignment_to_calendar("user-1", assignment.id, store=store)
+    with pytest.raises(CalendarExportRequiresGoogleTokenError):
+        export_assignment_to_calendar("user-1", assignment.id, store=store)
+
     updated = store.get_assignment("user-1", assignment.id)
 
-    assert exported.calendar_event_id == f"kmu-{assignment.id}"
-    assert exported.already_exported is False
-    assert exported.google_event["summary"] == "문제해결코딩 · 기말 프로젝트"
-    assert exported.google_event["start"]["dateTime"] == "2026-06-10T23:29:00"
-    assert exported.google_event["end"]["dateTime"] == "2026-06-10T23:59:00"
-    assert updated.calendar_event_id == exported.calendar_event_id
+    assert updated.calendar_event_id is None
+    assert updated.calendar_synced_at is None
 
 
 def test_export_assignment_is_idempotent_when_calendar_event_exists() -> None:
@@ -43,7 +45,21 @@ def test_export_assignment_is_idempotent_when_calendar_event_exists() -> None:
         ),
     )
 
-    first = export_assignment_to_calendar("user-1", assignment.id, store=store)
+    token_store = InMemoryGoogleOAuthTokenStore()
+    settings = Settings(google_oauth_client_secret="client-secret")
+    token_store.save_plain_token_for_test("user-1", "access-token", settings)
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"id": "google-event-1"})
+
+    first = export_assignment_to_calendar(
+        "user-1",
+        assignment.id,
+        store=store,
+        token_store=token_store,
+        settings=settings,
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
     second = export_assignment_to_calendar("user-1", assignment.id, store=store)
 
     assert second.already_exported is True

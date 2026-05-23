@@ -23,7 +23,10 @@ from app.schemas.assignment import (
 from app.schemas.calendar import CalendarExportResponse
 from app.schemas.llm_usage import LLMUsageLogCreateRequest
 from app.services.assignment_service import AssignmentParser, preview_assignment_from_text
-from app.services.calendar_service import export_assignment_to_calendar
+from app.services.calendar_service import (
+    CalendarExportRequiresGoogleTokenError,
+    export_assignment_to_calendar,
+)
 from app.services.google_oauth_token_service import GoogleOAuthTokenStore
 from app.services.store_protocols import AssignmentStore, LLMUsageLogStore
 
@@ -127,3 +130,8 @@ def export_calendar(
         )
     except KeyError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "일정을 찾을 수 없습니다.") from exc
+    except CalendarExportRequiresGoogleTokenError as exc:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Google Calendar 연결이 필요합니다.",
+        ) from exc

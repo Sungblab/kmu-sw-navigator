@@ -15,6 +15,8 @@
 
 파일 형식은 PDF, 이미지, 캡처, 엑셀, 텍스트 모두 받을 수 있다. 다만 현재 RAG 파이프라인의 입력은 `data/raw/*.md`이므로, PDF/사진은 텍스트로 읽어낸 뒤 Markdown으로 정리한다.
 
+가능하면 자료마다 원본 파일이나 URL과 함께 “이 자료로 답해야 하는 질문”을 2-3개 적는다. 예를 들어 “AI 전공 1학년이 먼저 들어야 할 과목은?”, “개발 동아리는 어떤 학생에게 맞나?”처럼 실제 상담 질문을 같이 받으면 chunk 제목, heading, category를 RAG 검색 우선순위에 맞춰 정리할 수 있다.
+
 ## 정형화 흐름
 
 1. 원본 파일을 `data/inbox/`에 둔다.
@@ -62,6 +64,27 @@ collected_at: 2026-05-23
 | 진로/취업/창업 | 프로그램명, 대상, 신청 기간, 얻을 수 있는 결과, 추천 준비, 연결 과목/프로젝트 |
 
 이 필드는 JSON 파일로 바로 저장하지 않아도 된다. 먼저 사람이 읽을 수 있는 Markdown으로 정리하고, ingest 단계에서 `category`, `source_type`, `title`, `heading_path`, `chunk_index`, `content_hash`와 함께 Supabase chunk로 변환한다.
+
+필요하면 정형화 중간 산출물을 JSON으로도 만들 수 있다. 단, live RAG에 넣는 기준 데이터는 최종적으로 `data/raw/*.md`, `data/wiki/*.md`, Supabase `document_chunks`와 출처 URL/파일명이 서로 맞아야 한다.
+
+```json
+{
+  "title": "소프트웨어학부 1학년 권장 수강",
+  "department": "소프트웨어학부",
+  "category": "curriculum",
+  "audience": ["1학년"],
+  "source": "국민대학교 소프트웨어융합대학 공식 페이지",
+  "source_url": "https://...",
+  "verified_at": "2026-05-23",
+  "facts": [
+    {
+      "topic": "전공 기초",
+      "content": "1학년은 프로그래밍 기초와 수학 기초를 우선 확인한다.",
+      "answer_when": "신입생이 첫 학기 과목 선택을 질문할 때"
+    }
+  ]
+}
+```
 
 ## 사진과 PDF 처리 원칙
 

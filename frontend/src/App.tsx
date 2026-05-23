@@ -309,7 +309,7 @@ export default function App() {
             : assignment,
         ),
       );
-      toast.success("Calendar 내보내기를 기록했습니다.");
+      toast.success("Google Calendar에 일정을 내보냈습니다.");
     } catch (apiError) {
       const message = getErrorMessage(apiError, "Calendar 내보내기에 실패했습니다.");
       setError(message);

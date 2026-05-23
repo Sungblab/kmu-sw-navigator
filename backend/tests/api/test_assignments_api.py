@@ -106,7 +106,7 @@ def test_update_and_delete_assignments_api() -> None:
     assert missing_response.status_code == 404
 
 
-def test_export_assignment_to_calendar_api_marks_assignment() -> None:
+def test_export_assignment_to_calendar_api_requires_google_connection() -> None:
     store = InMemoryAssignmentStore()
     app.dependency_overrides[get_current_user_id] = lambda: "user-1"
     app.dependency_overrides[get_assignment_store] = lambda: store
@@ -122,14 +122,12 @@ def test_export_assignment_to_calendar_api_marks_assignment() -> None:
     )
     assignment_id = create_response.json()["id"]
     export_response = client.post(f"/api/assignments/{assignment_id}/export-calendar")
-    second_response = client.post(f"/api/assignments/{assignment_id}/export-calendar")
     missing_response = client.post("/api/assignments/missing/export-calendar")
 
     app.dependency_overrides.clear()
-    assert export_response.status_code == 200
-    assert export_response.json()["calendar_event_id"] == f"kmu-{assignment_id}"
-    assert export_response.json()["already_exported"] is False
-    assert second_response.json()["already_exported"] is True
+    assert export_response.status_code == 409
+    assert export_response.json()["detail"] == "Google Calendar 연결이 필요합니다."
+    assert store.get_assignment("user-1", assignment_id).calendar_event_id is None
     assert missing_response.status_code == 404
 
 

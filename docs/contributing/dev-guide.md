@@ -46,7 +46,7 @@ Copy-Item frontend\.env.example frontend\.env
 
 로그인 UI는 앱 첫 화면입니다. Supabase Auth에서 이메일/비밀번호 로그인을 켠 뒤 `frontend/.env`와 `backend/.env`를 채우면 가입, 로그인, 로그아웃, 온보딩, 채팅 흐름을 같은 live session으로 확인할 수 있습니다.
 
-Google Calendar 연결도 `설정` 화면에서 확인합니다. Google OAuth env가 없으면 연결 버튼은 비활성화되고, env가 있으면 백엔드가 consent URL을 만들어 프론트를 이동시킵니다. callback은 authorization code를 Google token endpoint로 교환하고 token을 server-only 저장소에 둡니다. token이 있으면 일정 내보내기 API가 Google `events.insert`를 호출하고, token이 없으면 로컬 데모용 synthetic event id로 앱 내부 export 상태를 저장합니다.
+Google Calendar 연결도 `설정` 화면에서 확인합니다. Google OAuth env가 없으면 연결 버튼은 비활성화되고, env가 있으면 백엔드가 consent URL을 만들어 프론트를 이동시킵니다. callback은 authorization code를 Google token endpoint로 교환하고 token을 server-only 저장소에 둡니다. token이 있으면 일정 내보내기 API가 Google `events.insert`를 호출하고, token이 없으면 export 성공으로 저장하지 않고 Google Calendar 연결 필요 오류를 반환합니다.
 
 환경 변수 상태를 값 노출 없이 확인하려면 아래 명령을 실행합니다.
 
@@ -93,9 +93,9 @@ pnpm dev:frontend
 - Supabase Auth/Postgres/pgvector는 외부 Supabase 프로젝트를 계속 사용한다.
 - Raspberry Pi에는 앱 서버와 reverse proxy만 올리고, 비밀값은 서버의 `.env`에만 둔다.
 - ARM64 환경에서 backend image build와 Node/Vite build가 되는지 별도로 확인한다.
-- HTTPS, DDNS, 포트포워딩, 학교/발표장 네트워크 차단 가능성이 있으므로 발표 당일 주 데모 경로는 로컬 노트북 실행으로 둔다.
+- HTTPS, DDNS, 포트포워딩, 학교/발표장 네트워크 차단 가능성이 있으므로 발표 당일 주 시연 경로는 로컬 노트북 실행으로 둔다.
 
-발표 데모 우선순위:
+발표 시연 우선순위:
 
 1. 노트북 로컬 실행: `pnpm dev:backend`, `pnpm dev:frontend`
 2. 홈서버 URL: Docker Compose 배포가 미리 검증된 경우 보조 시연

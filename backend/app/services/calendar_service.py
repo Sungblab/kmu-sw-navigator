@@ -20,6 +20,10 @@ DEFAULT_TIMEZONE = "Asia/Seoul"
 GOOGLE_CALENDAR_EVENTS_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
 
 
+class CalendarExportRequiresGoogleTokenError(RuntimeError):
+    """Raised when live Google Calendar export cannot be performed."""
+
+
 def export_assignment_to_calendar(
     user_id: str,
     assignment_id: str,
@@ -50,7 +54,11 @@ def export_assignment_to_calendar(
         settings=settings,
         client=client,
         now=synced_at,
-    ) or f"kmu-{assignment.id}"
+    )
+    if calendar_event_id is None:
+        raise CalendarExportRequiresGoogleTokenError(
+            "Google Calendar OAuth token is required for live export."
+        )
     updated = store.mark_calendar_exported(
         user_id,
         assignment_id,
