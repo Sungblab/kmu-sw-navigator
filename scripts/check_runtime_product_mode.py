@@ -58,7 +58,7 @@ def main() -> int:
             print(f"- {match.path}:{match.line_number} contains {match.term!r}: {match.line}")
         return 1
 
-    print("런타임 product mode 체크 완료: demo/mock auth fallback 표현 없음")
+    print("런타임 product mode 체크 완료: 우회 인증/샘플 전용 fallback 표현 없음")
     return 0
 
 

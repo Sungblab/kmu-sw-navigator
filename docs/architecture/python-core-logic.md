@@ -2,7 +2,7 @@
 
 이 문서는 발표와 보고서에서 설명할 수 있어야 하는 Python 판단 로직을 정리한다. 목표는 LLM이 만든 코드를 그대로 제출한 것이 아니라, 구현자가 수업에서 배운 Python 요소를 사용해 직접 설명, 수정, 검증할 수 있는 핵심 로직을 남기는 것이다.
 
-현재 제품 목표는 단순 로컬 데모가 아니라 **Supabase Auth/Postgres에 사용자별 데이터가 저장되는 SaaS형 학업 내비게이터**다. 따라서 in-memory fallback은 외부 키 누락, live schema 미적용, 발표 장애에 대비한 보조 경로로만 설명하고, 핵심 구현 설명은 Python FastAPI 서비스가 실제 사용자 입력을 받아 Supabase 저장소와 RAG/Gemini 경로로 처리하는 흐름에 맞춘다.
+현재 제품 목표는 **Supabase Auth/Postgres에 사용자별 데이터가 저장되는 SaaS형 학업 내비게이터**다. 따라서 in-memory fallback은 외부 키 누락, live schema 미적용, 발표 장애에 대비한 보조 경로로만 설명하고, 핵심 구현 설명은 Python FastAPI 서비스가 실제 사용자 입력을 받아 Supabase 저장소와 RAG/Gemini 경로로 처리하는 흐름에 맞춘다.
 
 ## 과제 조건 충족 매핑
 

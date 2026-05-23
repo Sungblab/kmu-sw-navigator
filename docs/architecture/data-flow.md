@@ -68,7 +68,7 @@ Mini LLM Wiki는 원문 자료와 답변 사이의 중간 지식 계층입니다
 -> 사용자 확인
 -> FastAPI /api/assignments 저장
 -> due_at 기준 D-day 계산
--> 사용자가 원하면 Google Calendar event 생성 또는 demo export 상태 저장
+-> 사용자가 원하면 Google Calendar event 생성 또는 연결 필요 상태 반환
 -> 일정 목록 반환
 ```
 

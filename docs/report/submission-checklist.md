@@ -78,9 +78,10 @@ pnpm build:frontend
 - `pnpm gemini:grounding-smoke`: 실제 Gemini Google Search grounding 통과
 - Browser smoke: `http://127.0.0.1:5173`에서 로그인 세션 없을 때 로그인 화면으로 gate 확인, Gemini key 설정 뒤 채팅 응답이 live Gemini 문구로 렌더링되는 것 확인
 - Python 핵심 로직 주석 점검: `recommendation_service.py`, `retrieval_service.py`, `assignment_service.py`, `memory_service.py`, `chat_contract_service.py`의 판단 기준 주석은 충분해 코드 주석 변경은 하지 않음
-- `pnpm verify:local`: docs/product/Supabase SQL bundle/wiki/RAG source/RAG dry-run/submission check/root test/backend test/backend lint/frontend build 전체 통과
+- `pnpm verify:local`: docs/live-language/product/Supabase SQL bundle/wiki/RAG source/RAG dry-run/submission check/root test/backend test/backend lint/frontend build 전체 통과
 - `pnpm docs:check`: 필수 문서 20개 확인 완료
-- `pnpm product:check`: `frontend/src`, `backend/app` 런타임에 `demo-user`, `X-User-Id`, `mock`, `목업`, `데모` fallback 표현이 남아 있지 않음
+- `pnpm live-language:check`: 활성 제출/제품/아키텍처/기여 문서가 live 로그인, 온보딩, 채팅 흐름 기준으로 정렬됨
+- `pnpm product:check`: `frontend/src`, `backend/app` 런타임에 예전 우회 인증이나 샘플 전용 fallback 표현이 남아 있지 않음
 - `pnpm supabase:sql-bundle`: SQL Editor 적용용 `supabase/live-schema-bundle.sql` 생성 전 필수 schema marker와 비밀값 marker 검증 후 생성 완료. 생성 파일은 gitignored
 - `pnpm supabase:sql-copy`: 검증된 schema+seed SQL bundle을 클립보드에 복사하고 Supabase SQL Editor URL과 적용 뒤 smoke 명령을 출력
 - `pnpm rag:intake-check`: `data/inbox`의 사용자 제공 자료가 출처/category/placeholder/개인정보 위험 검사를 통과해야 raw/wiki 변환으로 진행
@@ -95,10 +96,10 @@ pnpm build:frontend
 - live status는 Supabase schema missing table/function 전체와 Google Calendar missing env 이름을 표시하되 비밀값은 출력하지 않음
 - login/API smoke는 profile write/read 전에 `/api/runtime/public-status`를 확인해 stale backend와 실제 auth/schema 실패를 분리
 - `pnpm wiki:build`: raw_documents=12, wiki_pages=7 생성 완료
-- `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 demo/mock 출처 표현 없음
+- `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 샘플 전용 출처 표현 없음
 - `pnpm rag:ingest:dry`: documents=19, chunks=118, wiki_chunks=72, raw_chunks=46 준비 완료
-- `pnpm test:backend`: 166 passed
-- `python -m pytest tests`: 31 passed
+- `pnpm test:backend`: 177 passed
+- `python -m pytest tests`: 38 passed
 - `pnpm lint:backend`: All checks passed
 - `pnpm build:frontend`: Vite production build 통과
 - `pnpm submission:check`: 제출 조건 증거 9개 확인 완료

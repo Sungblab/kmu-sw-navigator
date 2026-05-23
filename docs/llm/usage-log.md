@@ -118,6 +118,7 @@
 | 2026-05-23 | 김성빈 | Codex | Live onboarding memory 확장 | 첫 로그인 온보딩에서 관심 분야, 목표, 코딩 경험, 학습 선호, 활동 방식을 받아 기존 `user_memories` active memory로 저장하고 첫 채팅 질문/추천 입력에 반영 | TDD로 `POST /api/memories`가 onboarding memory와 memory event를 생성하는 API 테스트를 먼저 실패시킨 뒤 구현했고, frontend build와 focused backend test로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Login smoke onboarding memory 검증 추가 | Supabase email/password login smoke가 Bearer profile write/read뿐 아니라 `/api/memories` onboarding memory 생성까지 확인하도록 확장 | TDD로 smoke helper와 login smoke mock transport 기대 요청 수를 먼저 실패시킨 뒤 구현했고 focused smoke script tests로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Login smoke stale backend 분류 추가 | `supabase:login-smoke`가 401로만 실패해 auth/schema/code 원인이 흐려지는 문제를 줄이기 위해 profile write 전에 `/api/runtime/public-status` contract preflight를 추가 | TDD로 contract success/stale 404 테스트를 먼저 실패시킨 뒤 구현했고, 실제 8000 stale backend에서 재시작 안내 메시지로 분류되는 것을 확인 |
+| 2026-05-23 | 김성빈 | Codex | 활성 문서 live language gate 추가 | 제출/제품/아키텍처/기여 문서가 실제 로그인, 온보딩, 채팅 live 흐름을 기준으로 설명되도록 `pnpm live-language:check`와 회귀 테스트를 추가 | TDD로 현재 활성 문서의 비-live 표현을 먼저 실패시킨 뒤 문서를 정리했고, historical LLM 기록과 archived 설계 문서는 보존 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

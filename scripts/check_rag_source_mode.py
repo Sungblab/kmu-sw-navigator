@@ -60,7 +60,7 @@ def main() -> int:
             print(_format_match(match))
         return 1
 
-    print("RAG source mode 체크 완료: data/seed에 demo/mock 출처 표현 없음")
+    print("RAG source mode 체크 완료: data/seed에 샘플 전용 출처 표현 없음")
     return 0
 
 

@@ -8,8 +8,8 @@
 | --- | --- | --- | --- |
 | 2026-05-13 | repo와 문서 기반 세팅 | 초기 세팅 완료 | `docs/superpowers/plans/2026-05-13-repo-docs-initialization.md` |
 | 2026-05-13 | Mini LLM Wiki foundation | 구현/검증 완료 | `docs/superpowers/plans/2026-05-13-mini-llm-wiki.md` |
-| 2026-05-13 | 로그인/메인 HTML 목업 | 정적 파일 삭제, 설계 기록만 유지 | `docs/superpowers/plans/2026-05-13-login-main-mockup.md` |
-| 2026-05-13 | 챗봇 근거 시각화 목업 | 정적 파일 삭제, 개인화 내비게이터 설계에 통합 | `docs/superpowers/plans/2026-05-13-chatbot-visualization-mockup.md` |
+| 2026-05-13 | 로그인/메인 초기 정적 화면 | 정적 파일 삭제, 설계 기록만 유지 | `docs/superpowers/plans/` archived screen plan |
+| 2026-05-13 | 챗봇 근거 시각화 초기 정적 화면 | 정적 파일 삭제, 개인화 내비게이터 설계에 통합 | `docs/superpowers/plans/` archived visualization plan |
 | 2026-05-13 | 개인화 SW 내비게이터 umbrella 설계 | 설계/계획 작성 완료 | `docs/superpowers/specs/2026-05-13-personalized-sw-navigator-design.md`, `docs/superpowers/plans/2026-05-13-personalized-sw-navigator-foundation.md` |
 | 2026-05-13 | 프로필/메모리/chat contract foundation | 구현/검증 완료 | `docs/superpowers/plans/2026-05-13-personalized-sw-navigator-foundation.md` |
 | 2026-05-14 | Navigator workspace UI shell | 구현/검증 완료, 모바일 navigation/context drawer 추가 | `docs/superpowers/plans/2026-05-14-navigator-workspace-ui.md` |
@@ -32,15 +32,15 @@
 | 2026-05-14 | Google grounding | 구현/집중 검증 완료, live Gemini smoke 대기 | `docs/superpowers/plans/2026-05-14-google-grounding.md` |
 | 2026-05-14 | 보고서/발표 라이브 시연 시나리오 보강 | 현재 구현 기준 문서 업데이트 완료 | `docs/product/live-scenario.md`, `docs/report/report-outline.md`, `docs/report/presentation-outline.md` |
 | 2026-05-14 | README 실행/제출 섹션 최신화 | 현재 명령어, 구현 상태, 제출 문서 링크 업데이트 완료 | `README.md`, `docs/contributing/dev-guide.md` |
-| 2026-05-14 | 제출 전 체크리스트 | 과제 조건, 데모, 검증 명령, 제출 문서 매핑 완료 | `docs/report/submission-checklist.md` |
+| 2026-05-14 | 제출 전 체크리스트 | 과제 조건, 라이브 시연, 검증 명령, 제출 문서 매핑 완료 | `docs/report/submission-checklist.md` |
 | 2026-05-14 | 최종 코드/문서 감사 | 오래된 API 이름과 구현 상태 불일치 문구 정리 완료 | `docs/architecture/data-flow.md`, `docs/product/prd-dev-plan.md`, `frontend/src/App.tsx` |
 | 2026-05-14 | LLM usage log API/UI | 구현/검증 완료, chat answer generation/Google grounding/일정 parser 자동 기록과 embedding ingest 선택 기록 연결 | `docs/superpowers/plans/2026-05-14-llm-usage-log-api.md` |
 | 2026-05-14 | 로컬 검증 명령 통합 | `pnpm verify:local` 추가 및 README/dev-guide/submission checklist 반영, 전체 로컬 검증 통과 | `package.json`, `README.md`, `docs/contributing/dev-guide.md`, `docs/report/submission-checklist.md` |
 | 2026-05-14 | 로컬 dev server/CORS 점검 | `localhost` 접속 거부와 Vite fallback port CORS 문제를 확인하고 backend CORS regex, favicon, Playwright smoke로 정리 | `backend/app/main.py`, `backend/tests/test_cors.py`, `frontend/index.html`, `frontend/public/favicon.svg` |
 | 2026-05-14 | Supabase publishable key 연결 | `frontend/.env`에 Framework client key를 설정하고 `VITE_SUPABASE_PUBLISHABLE_KEY` alias를 frontend/env smoke scripts에 반영 | `frontend/src/lib/supabase.ts`, `backend/app/scripts/check_env.py`, `backend/app/scripts/live_smoke_plan.py`, `backend/app/scripts/supabase_login_smoke.py` |
 | 2026-05-16 | 에이전트 기반 코딩 증거 문서 보강 | 교수님 평가 포인트에 맞춰 Codex/Superpowers/Gemini Code Assist/Gemini API 역할, 하네스, 직접 검토 기준, 발표/보고서 연결 문서화 | `docs/llm/agent-coding-evidence.md`, `docs/llm/codex-workflow.md`, `docs/report/` |
-| 2026-05-23 | 데모 UI polish | assistant 답변 Streamdown markdown 렌더링, CJK plugin, Sonner toast, Streamdown vendor chunk 분리 구현/검증 완료 | `docs/superpowers/specs/2026-05-23-demo-ui-polish-design.md`, `docs/superpowers/plans/2026-05-23-demo-ui-polish.md`, `frontend/src/App.tsx`, `frontend/src/styles.css`, `frontend/vite.config.ts` |
-| 2026-05-23 | Supabase live auth gate | 프론트/백엔드 런타임에서 `demo-user`/`X-User-Id` fallback을 제거하고 Supabase session Bearer token이 있어야 앱과 API를 사용할 수 있게 변경 | `frontend/src/App.tsx`, `frontend/src/lib/api.ts`, `backend/app/api/dependencies.py`, `backend/app/api/auth.py`, `backend/tests/api/test_auth_dependency.py` |
+| 2026-05-23 | Live UI polish | assistant 답변 Streamdown markdown 렌더링, CJK plugin, Sonner toast, Streamdown vendor chunk 분리 구현/검증 완료 | `frontend/src/App.tsx`, `frontend/src/styles.css`, `frontend/vite.config.ts` |
+| 2026-05-23 | Supabase live auth gate | 프론트/백엔드 런타임에서 예전 우회 인증 fallback을 제거하고 Supabase session Bearer token이 있어야 앱과 API를 사용할 수 있게 변경 | `frontend/src/App.tsx`, `frontend/src/lib/api.ts`, `backend/app/api/dependencies.py`, `backend/app/api/auth.py`, `backend/tests/api/test_auth_dependency.py` |
 | 2026-05-23 | SaaS 제출 목표 재정렬 | 로컬 fallback을 보조 경로로 낮추고 Supabase live 연결, Python 핵심 로직 설명 가능성, LLM 활용 기록을 최종 제출 기준으로 문서화 | `docs/product/prd-dev-plan.md`, `docs/contributing/roadmap.md`, `docs/report/report-outline.md`, `docs/report/submission-checklist.md`, `docs/product/live-scenario.md` |
 | 2026-05-23 | Supabase/Gemini live readiness 점검 | backend Direct/frontend Framework/Gemini env는 ready, Gemini live smoke 3종은 통과. Supabase DB/login/LLM smoke는 `schema_ready=False`와 smoke user id/email/password 미준비로 blocker 유지 | `pnpm env:check:strict`, `pnpm live:smoke-plan`, `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`, `docs/architecture/python-core-logic.md`, `docs/report/submission-checklist.md` |
 | 2026-05-23 | RAG 자료 접수/정형화 경로 | 사용자가 제공할 교과과정/트랙/동아리/학교 시스템 자료를 `data/inbox`로 받고 `pnpm rag:prepare-raw`로 `data/raw` Markdown에 정형화하는 흐름 추가 | `backend/app/scripts/prepare_raw_document.py`, `data/inbox/README.md`, `data/README.md`, `docs/architecture/rag-data-intake.md` |
@@ -50,9 +50,9 @@
 | 2026-05-23 | Live smoke runner | schema 적용 직후 `pnpm live:smoke-run --api-base http://127.0.0.1:8001` 하나로 Supabase DB/LLM/login, Gemini, embedding ingest를 순차 검증하도록 runner 추가 | `backend/app/scripts/live_smoke_run.py`, `backend/tests/test_live_smoke_run_script.py`, `package.json` |
 | 2026-05-23 | RAG embedding ingest idempotency | live smoke runner와 자료 보강을 반복 실행해도 `document_chunks`가 중복되지 않도록 schema unique index와 upsert ingest로 변경 | `supabase/schema.sql`, `backend/app/scripts/ingest_documents.py`, `backend/tests/test_ingest_documents_script.py` |
 | 2026-05-23 | RAG source intake template | 사용자가 PDF/사진/캡처/텍스트로 주는 교과과정, 트랙, 동아리, 학사 자료를 출처/category/핵심 필드 기준으로 접수하는 템플릿 추가 | `data/inbox/source-intake-template.md`, `data/inbox/README.md`, `docs/architecture/rag-data-intake.md` |
-| 2026-05-23 | Runtime product mode gate | 프론트/백엔드 런타임에 `demo-user`, `X-User-Id`, mock/목업/데모 fallback 표현이 재도입되지 않도록 `pnpm product:check` 추가 | `scripts/check_runtime_product_mode.py`, `package.json`, `docs/report/submission-checklist.md` |
+| 2026-05-23 | Runtime product mode gate | 프론트/백엔드 런타임에 예전 우회 인증이나 샘플 전용 fallback 표현이 재도입되지 않도록 `pnpm product:check` 추가 | `scripts/check_runtime_product_mode.py`, `package.json`, `docs/report/submission-checklist.md` |
 | 2026-05-23 | Supabase schema check coverage | `schema.sql`에 정의된 모든 table을 `pnpm supabase:schema-check` readiness 대상에 포함해 partial schema 적용을 놓치지 않도록 보강 | `backend/app/scripts/supabase_schema_check.py`, `backend/tests/test_supabase_schema_sql_contract.py`, `docs/contributing/supabase-live-apply.md` |
-| 2026-05-23 | RAG source product mode gate | raw/wiki/seed 자료의 `데모용`, demo/mock/목업 출처 표현을 제거하고 `pnpm rag:source-check`로 회귀를 막음 | `data/raw/`, `data/wiki/`, `supabase/seed.sql`, `scripts/check_rag_source_mode.py`, `package.json` |
+| 2026-05-23 | RAG source product mode gate | raw/wiki/seed 자료의 샘플 전용 출처 표현을 제거하고 `pnpm rag:source-check`로 회귀를 막음 | `data/raw/`, `data/wiki/`, `supabase/seed.sql`, `scripts/check_rag_source_mode.py`, `package.json` |
 | 2026-05-23 | Calendar live export gate | Google OAuth token이 없으면 Calendar export를 synthetic id로 성공 처리하지 않고 409 연결 필요 오류로 막음 | `backend/app/services/calendar_service.py`, `backend/app/api/assignments.py`, `backend/tests/services/test_calendar_service.py`, `backend/tests/api/test_assignments_api.py` |
 | 2026-05-23 | Official KMU RAG source expansion | 공개 공식 페이지 기반으로 인공지능학부 개요, 소프트웨어학부 교육 구조, 동아리 활동, 교학팀 문의 경로 raw 문서를 추가 | `data/raw/kmu-ai-major-official.md`, `data/raw/kmu-sw-curriculum-official.md`, `data/raw/kmu-sw-clubs-official.md`, `data/raw/kmu-sw-office-contact-official.md` |
 | 2026-05-23 | Supabase seed idempotency | 초기 확인용 `supabase/seed.sql`의 `document_chunks` insert를 `content_hash`와 unique conflict key 기준으로 중복 방지 | `supabase/seed.sql`, `backend/tests/test_supabase_seed_sql_contract.py`, `docs/contributing/supabase-live-apply.md` |
@@ -80,6 +80,7 @@
 | 2026-05-23 | Live onboarding memory | 첫 로그인 온보딩에서 관심 분야, 목표, 코딩 경험, 학습 선호, 활동 방식을 받아 기존 `user_memories`에 active memory로 저장하고 첫 채팅/추천 입력에 연결 | `backend/app/api/memories.py`, `backend/app/schemas/memory.py`, `backend/tests/api/test_memory_api.py`, `frontend/src/App.tsx`, `frontend/src/lib/api.ts` |
 | 2026-05-23 | Login smoke onboarding memory | Supabase login/API smoke가 profile write/read뿐 아니라 onboarding memory 생성까지 검증하도록 확장 | `backend/app/scripts/auth_api_smoke.py`, `backend/app/scripts/supabase_login_smoke.py`, `backend/tests/test_auth_api_smoke_script.py`, `backend/tests/test_supabase_login_smoke_script.py` |
 | 2026-05-23 | Login smoke API contract preflight | 오래된 FastAPI 서버가 같은 port에 떠 있을 때 auth/schema 문제처럼 보이지 않도록 `/api/runtime/public-status` contract를 먼저 확인 | `backend/app/scripts/auth_api_smoke.py`, `backend/tests/test_auth_api_smoke_script.py`, `docs/contributing/supabase-live-apply.md` |
+| 2026-05-23 | Active docs live language gate | 제출/제품/아키텍처/기여 활성 문서가 샘플 중심 표현이 아니라 실제 live 로그인, 온보딩, 채팅 흐름을 기준으로 설명되도록 검사 추가 | `scripts/check_live_language.py`, `tests/test_live_language_script.py`, `package.json`, `docs/product/prd-dev-plan.md`, `docs/report/submission-checklist.md` |
 
 ## 다음 작업 후보
 
