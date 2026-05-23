@@ -32,6 +32,13 @@ PERSONAL_INFO_PATTERNS = (
     ("possible personal email", re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")),
     ("possible student id", re.compile(r"\b20\d{6,8}\b")),
 )
+PLACEHOLDER_VALUES = {"확인 필요", "TODO", "TBD", "미정"}
+PLACEHOLDER_FIELD_LABELS = (
+    "핵심 사실",
+    "학생에게 추천할 상황",
+    "근거 문장 또는 표 위치",
+)
+TRANSCRIPT_PLACEHOLDER = "원본 PDF/사진/캡처라면 여기부터 사람이 확인한 텍스트만 옮긴다."
 
 
 @dataclass(frozen=True)
@@ -72,8 +79,17 @@ def check_intake_file(path: Path) -> IntakeCheckResult:
         value = extract_field(text, field)
         if value:
             fields[field] = value
+            if value in PLACEHOLDER_VALUES:
+                errors.append(f"placeholder remains: {field}")
         else:
             errors.append(f"missing or empty field: {field}")
+
+    for field in PLACEHOLDER_FIELD_LABELS:
+        if extract_field(text, field) in PLACEHOLDER_VALUES:
+            errors.append(f"placeholder remains: {field}")
+
+    if TRANSCRIPT_PLACEHOLDER in text:
+        errors.append("transcript placeholder remains")
 
     category = fields.get("RAG category")
     if category and category not in VALID_CATEGORIES:

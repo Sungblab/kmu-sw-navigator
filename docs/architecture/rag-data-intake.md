@@ -24,7 +24,7 @@
 3. 생성된 stub에 출처, 대상 학부/학년, category, 핵심 필드를 채운다.
 4. 개인정보나 학생 개인 자료가 섞였는지 확인하고 제거한다.
 5. 텍스트/Markdown으로 바꾼다.
-6. `pnpm rag:intake-check`로 필수 출처/category와 개인정보 위험을 검사한다. 통과한 접수 파일은 `pnpm rag:prepare-raw ...` 명령을 함께 출력한다.
+6. `pnpm rag:intake-check`로 필수 출처/category, placeholder 잔존 여부, 개인정보 위험을 검사한다. `확인 필요`, `TODO`, 기본 전사 안내문이 남아 있으면 blocked 처리하고, 통과한 접수 파일만 `pnpm rag:prepare-raw ...` 명령을 함께 출력한다.
 7. `pnpm rag:prepare-raw`로 frontmatter가 있는 raw 문서를 만든다.
 8. `pnpm wiki:build`로 `data/wiki`를 재생성한다.
 9. `pnpm rag:ingest:dry`로 chunk 수와 category 구성을 확인한다.

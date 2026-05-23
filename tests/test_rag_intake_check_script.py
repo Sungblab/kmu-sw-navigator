@@ -65,6 +65,23 @@ def test_check_intake_file_flags_personal_info_risk(tmp_path: Path) -> None:
     assert "possible personal phone number" in result.errors
 
 
+def test_check_intake_file_rejects_unfilled_stub_placeholders(tmp_path: Path) -> None:
+    intake = tmp_path / "stub.md"
+    intake.write_text(
+        VALID_INTAKE
+        .replace("적용 대상: 인공지능학부", "적용 대상: 확인 필요")
+        .replace("- 과목명: 프로그래밍", "- 핵심 사실: 확인 필요")
+        + "\n원본 PDF/사진/캡처라면 여기부터 사람이 확인한 텍스트만 옮긴다.\n",
+        encoding="utf-8",
+    )
+
+    result = check_intake_file(intake)
+
+    assert "placeholder remains: 적용 대상" in result.errors
+    assert "placeholder remains: 핵심 사실" in result.errors
+    assert "transcript placeholder remains" in result.errors
+
+
 def test_check_intake_tree_skips_templates(tmp_path: Path) -> None:
     inbox = tmp_path / "inbox"
     inbox.mkdir()
