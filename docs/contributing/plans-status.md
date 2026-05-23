@@ -53,6 +53,7 @@
 | 2026-05-23 | Runtime product mode gate | 프론트/백엔드 런타임에 `demo-user`, `X-User-Id`, mock/목업/데모 fallback 표현이 재도입되지 않도록 `pnpm product:check` 추가 | `scripts/check_runtime_product_mode.py`, `package.json`, `docs/report/submission-checklist.md` |
 | 2026-05-23 | Supabase schema check coverage | `schema.sql`에 정의된 모든 table을 `pnpm supabase:schema-check` readiness 대상에 포함해 partial schema 적용을 놓치지 않도록 보강 | `backend/app/scripts/supabase_schema_check.py`, `backend/tests/test_supabase_schema_sql_contract.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | RAG source product mode gate | raw/wiki/seed 자료의 `데모용`, demo/mock/목업 출처 표현을 제거하고 `pnpm rag:source-check`로 회귀를 막음 | `data/raw/`, `data/wiki/`, `supabase/seed.sql`, `scripts/check_rag_source_mode.py`, `package.json` |
+| 2026-05-23 | Official KMU RAG source expansion | 공개 공식 페이지 기반으로 인공지능학부 개요, 소프트웨어학부 교육 구조, 동아리 활동, 교학팀 문의 경로 raw 문서를 추가 | `data/raw/kmu-ai-major-official.md`, `data/raw/kmu-sw-curriculum-official.md`, `data/raw/kmu-sw-clubs-official.md`, `data/raw/kmu-sw-office-contact-official.md` |
 
 ## 다음 작업 후보
 
