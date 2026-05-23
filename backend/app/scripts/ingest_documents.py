@@ -78,12 +78,19 @@ def main() -> int:
 
     client = get_supabase_client()
     if payloads:
-        # 1차 ingest는 embedding 없이 text search 근거를 먼저 채운다.
-        # embedding 재생성 slice에서 같은 content_hash 기준으로 vector를 업데이트한다.
-        client.table("document_chunks").insert(payloads).execute()
+        upsert_document_chunks(client, payloads)
 
-    print(f"Document ingest inserted: chunks={len(payloads)}")
+    print(f"Document ingest upserted: chunks={len(payloads)}")
     return 0
+
+
+def upsert_document_chunks(client: object, payloads: list[dict[str, object]]) -> None:
+    # Live smoke와 자료 보강을 반복 실행해도 같은 chunk가 중복 저장되지 않도록
+    # schema.sql의 document_chunks_unique_chunk_idx와 같은 key로 upsert한다.
+    client.table("document_chunks").upsert(
+        payloads,
+        on_conflict="source_type,title,heading_path,chunk_index,content_hash",
+    ).execute()
 
 
 def _count_by_source_type(payloads: list[dict[str, object]]) -> dict[str, int]:

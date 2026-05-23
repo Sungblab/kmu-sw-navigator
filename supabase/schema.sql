@@ -71,6 +71,13 @@ create index if not exists wiki_pages_category_idx on wiki_pages(category);
 create index if not exists wiki_logs_created_at_idx on wiki_logs(created_at desc);
 create index if not exists document_chunks_source_idx on document_chunks(source_type, source_id);
 create index if not exists document_chunks_category_idx on document_chunks(category);
+create unique index if not exists document_chunks_unique_chunk_idx on document_chunks(
+  source_type,
+  title,
+  heading_path,
+  chunk_index,
+  content_hash
+);
 create index if not exists document_chunks_text_idx on document_chunks
   using gin (to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(heading_path, '') || ' ' || content));
 create index if not exists document_chunks_embedding_idx on document_chunks

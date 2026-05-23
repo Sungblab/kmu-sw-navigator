@@ -29,3 +29,4 @@ def test_schema_sql_contains_all_live_smoke_tables_and_functions() -> None:
 
     assert "create or replace function search_document_chunks_text" in sql
     assert "create or replace function match_document_chunks" in sql
+    assert "create unique index if not exists document_chunks_unique_chunk_idx" in sql

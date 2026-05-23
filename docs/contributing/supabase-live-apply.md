@@ -32,7 +32,7 @@ pnpm live:smoke-run --api-base http://127.0.0.1:8001
 - `pnpm supabase:smoke`: `profile_exists=True`, `memory_status=active`
 - `pnpm supabase:llm-smoke`: `created_feature=llm_usage_smoke`
 - `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`: `profile_exists=True`
-- `pnpm rag:ingest:embeddings`: `document_chunks` insert와 Gemini embedding 생성 완료
+- `pnpm rag:ingest:embeddings`: `document_chunks` upsert와 Gemini embedding 생성 완료. 같은 자료를 다시 실행해도 `source_type,title,heading_path,chunk_index,content_hash` 기준으로 중복 chunk를 만들지 않는다.
 - `pnpm live:smoke-run --api-base http://127.0.0.1:8001`: 위 필수 smoke를 dependency 순서대로 모두 통과
 
 ## 현재 blocker
