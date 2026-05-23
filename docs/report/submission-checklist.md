@@ -49,6 +49,7 @@ pnpm verify:local
 pnpm docs:check
 pnpm product:check
 pnpm wiki:build
+pnpm rag:source-check
 pnpm rag:ingest:dry
 pnpm submission:check
 python -m pytest tests
@@ -74,13 +75,14 @@ pnpm build:frontend
 - `pnpm gemini:grounding-smoke`: 실제 Gemini Google Search grounding 통과
 - Browser smoke: `http://127.0.0.1:5173`에서 로그인 세션 없을 때 로그인 화면으로 gate 확인, Gemini key 설정 뒤 채팅 응답이 live Gemini 문구로 렌더링되는 것 확인
 - Python 핵심 로직 주석 점검: `recommendation_service.py`, `retrieval_service.py`, `assignment_service.py`, `memory_service.py`, `chat_contract_service.py`의 판단 기준 주석은 충분해 코드 주석 변경은 하지 않음
-- `pnpm verify:local`: docs/product/wiki/RAG dry-run/submission check/root test/backend test/backend lint/frontend build 전체 통과
+- `pnpm verify:local`: docs/product/wiki/RAG source/RAG dry-run/submission check/root test/backend test/backend lint/frontend build 전체 통과
 - `pnpm docs:check`: 필수 문서 20개 확인 완료
 - `pnpm product:check`: `frontend/src`, `backend/app` 런타임에 `demo-user`, `X-User-Id`, `mock`, `목업`, `데모` fallback 표현이 남아 있지 않음
 - `pnpm wiki:build`: raw_documents=4, wiki_pages=4 생성 완료
+- `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 demo/mock 출처 표현 없음
 - `pnpm rag:ingest:dry`: documents=8, chunks=36, wiki_chunks=24, raw_chunks=12 준비 완료
 - `pnpm test:backend`: 158 passed
-- `python -m pytest tests`: 1 passed
+- `python -m pytest tests`: 3 passed
 - `pnpm lint:backend`: All checks passed
 - `pnpm build:frontend`: Vite production build 통과
 - `pnpm submission:check`: 제출 조건 증거 9개 확인 완료

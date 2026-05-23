@@ -52,6 +52,7 @@
 | 2026-05-23 | RAG source intake template | 사용자가 PDF/사진/캡처/텍스트로 주는 교과과정, 트랙, 동아리, 학사 자료를 출처/category/핵심 필드 기준으로 접수하는 템플릿 추가 | `data/inbox/source-intake-template.md`, `data/inbox/README.md`, `docs/architecture/rag-data-intake.md` |
 | 2026-05-23 | Runtime product mode gate | 프론트/백엔드 런타임에 `demo-user`, `X-User-Id`, mock/목업/데모 fallback 표현이 재도입되지 않도록 `pnpm product:check` 추가 | `scripts/check_runtime_product_mode.py`, `package.json`, `docs/report/submission-checklist.md` |
 | 2026-05-23 | Supabase schema check coverage | `schema.sql`에 정의된 모든 table을 `pnpm supabase:schema-check` readiness 대상에 포함해 partial schema 적용을 놓치지 않도록 보강 | `backend/app/scripts/supabase_schema_check.py`, `backend/tests/test_supabase_schema_sql_contract.py`, `docs/contributing/supabase-live-apply.md` |
+| 2026-05-23 | RAG source product mode gate | raw/wiki/seed 자료의 `데모용`, demo/mock/목업 출처 표현을 제거하고 `pnpm rag:source-check`로 회귀를 막음 | `data/raw/`, `data/wiki/`, `supabase/seed.sql`, `scripts/check_rag_source_mode.py`, `package.json` |
 
 ## 다음 작업 후보
 

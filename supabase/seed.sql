@@ -4,7 +4,7 @@ values
     'freshman-guide',
     '신입생 학교생활 안내',
     'freshman',
-    '팀이 직접 정리한 데모용 샘플 자료',
+    '팀 정리 초안 - 공식 출처 확인 필요',
     '2026-05-13',
     '신입생은 포털, eCampus, 수강신청 시스템, 학사 공지 확인 방법을 익혀야 한다.'
   ),
@@ -12,7 +12,7 @@ values
     'kmu-sw-tracks',
     '소프트웨어학부 트랙 안내',
     'track',
-    '팀이 직접 정리한 데모용 샘플 자료',
+    '팀 정리 초안 - 공식 출처 확인 필요',
     '2026-05-13',
     'AI, 웹, 정보보호 관심사별로 Python, React, 네트워크, 운영체제 등을 학습한다.'
   )
@@ -70,4 +70,3 @@ values
 
 insert into wiki_logs (action, summary, affected_pages)
 values ('build', 'seed 데이터 기준 wiki page 2개 생성', array['freshman', 'track']);
-

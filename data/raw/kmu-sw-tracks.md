@@ -1,7 +1,7 @@
 ---
 title: 소프트웨어학부 트랙 안내
 category: track
-source: 팀이 직접 정리한 데모용 샘플 자료
+source: 팀 정리 초안 - 공식 출처 확인 필요
 collected_at: 2026-05-13
 ---
 

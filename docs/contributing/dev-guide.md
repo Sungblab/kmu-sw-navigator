@@ -105,7 +105,7 @@ pnpm dev:frontend
 
 1. Supabase 프로젝트를 생성합니다.
 2. SQL Editor에서 `supabase/schema.sql`을 실행합니다.
-3. 데모용 샘플이 필요하면 `supabase/seed.sql`을 실행합니다.
+3. 초기 확인용 seed 자료가 필요하면 `supabase/seed.sql`을 실행합니다.
 4. `document_chunks.embedding`은 실제 ingest script가 추가된 뒤 채웁니다.
 5. `SUPABASE_URL`과 `SUPABASE_SERVICE_ROLE_KEY`가 있으면 백엔드는 profile/memory를 Supabase에 저장합니다.
 6. live smoke에는 Supabase Auth에서 생성된 실제 사용자 UUID가 필요합니다.
