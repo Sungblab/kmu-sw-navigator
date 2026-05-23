@@ -62,6 +62,7 @@ pnpm live:smoke-run --api-base http://127.0.0.1:8001
 ```
 
 `--api-base`에 맞는 최신 FastAPI 서버가 켜져 있어야 login/API smoke가 실행된다. 서버가 꺼져 있으면 `live:smoke-run`은 `/health` preflight에서 멈추고, 오래된 서버가 같은 port에 떠 있으면 `supabase:login-smoke`가 `/api/runtime/public-status` contract preflight에서 멈춘다. 이 경우 아래 명령으로 현재 repo 코드를 다시 띄운다.
+`pnpm live:readiness -- --include-seed --api-base <url>`도 schema 적용 전부터 `/api/runtime/public-status` contract를 확인하므로, Supabase schema blocker와 stale backend blocker를 한 번에 구분할 수 있다.
 
 ```powershell
 cd backend

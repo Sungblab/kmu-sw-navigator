@@ -81,6 +81,7 @@
 | 2026-05-23 | Login smoke onboarding memory | Supabase login/API smoke가 profile write/read뿐 아니라 onboarding memory 생성까지 검증하도록 확장 | `backend/app/scripts/auth_api_smoke.py`, `backend/app/scripts/supabase_login_smoke.py`, `backend/tests/test_auth_api_smoke_script.py`, `backend/tests/test_supabase_login_smoke_script.py` |
 | 2026-05-23 | Login smoke API contract preflight | 오래된 FastAPI 서버가 같은 port에 떠 있을 때 auth/schema 문제처럼 보이지 않도록 `/api/runtime/public-status` contract를 먼저 확인 | `backend/app/scripts/auth_api_smoke.py`, `backend/tests/test_auth_api_smoke_script.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Active docs live language gate | 제출/제품/아키텍처/기여 활성 문서가 샘플 중심 표현이 아니라 실제 live 로그인, 온보딩, 채팅 흐름을 기준으로 설명되도록 검사 추가 | `scripts/check_live_language.py`, `tests/test_live_language_script.py`, `package.json`, `docs/product/prd-dev-plan.md`, `docs/report/submission-checklist.md` |
+| 2026-05-23 | Live readiness API contract preflight | schema 적용 전에도 `live:readiness`가 `/api/runtime/public-status`를 확인해 Supabase schema blocker와 stale backend blocker를 분리 | `scripts/live_readiness_report.py`, `tests/test_live_readiness_report_script.py`, `docs/contributing/supabase-live-apply.md` |
 
 ## 다음 작업 후보
 

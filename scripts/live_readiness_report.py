@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import Any
 from urllib import request
+from urllib.error import HTTPError
 from urllib.error import URLError
 
 try:
@@ -25,6 +26,7 @@ def build_readiness_report(
     bundle_errors: list[str],
     schema_ready: bool | None,
     missing_schema_items: list[str],
+    api_contract: str,
     api_ready: bool | None,
     include_seed: bool,
     api_base: str,
@@ -59,6 +61,23 @@ def build_readiness_report(
             lines.append(f"  - {item}")
         exit_code = max(exit_code, 1)
 
+    if api_contract == "skipped":
+        lines.append("- API contract: skipped")
+        lines.append("  reason: core env is not ready.")
+    elif api_contract == "ready":
+        lines.append(f"- API contract: ready ({api_base}/api/runtime/public-status)")
+    elif api_contract == "stale":
+        lines.append(f"- API contract: blocker ({api_base}/api/runtime/public-status)")
+        lines.append("  action: Restart FastAPI with the current repo code before live smoke.")
+        exit_code = max(exit_code, 1)
+    elif api_contract == "unreachable":
+        lines.append(f"- API contract: blocker ({api_base}/api/runtime/public-status)")
+        lines.append("  action: Start FastAPI on the same port before live smoke.")
+        exit_code = max(exit_code, 1)
+    else:
+        lines.append(f"- API contract: unknown ({api_contract})")
+        exit_code = max(exit_code, 1)
+
     if schema_ready is not True or api_ready is None:
         lines.append("- API health: skipped")
         lines.append("  reason: Supabase schema or core env is not ready.")
@@ -86,6 +105,14 @@ def build_readiness_report(
             lines.append("1. pnpm supabase:sql-copy -- --schema-only")
             lines.append("2. Paste the copied schema SQL into the Supabase SQL Editor and run it.")
             lines.append(f"3. pnpm live:smoke-run --api-base {api_base}")
+    elif api_contract == "stale":
+        lines.append("1. cd backend")
+        lines.append("2. uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001")
+        lines.append(f"3. pnpm live:smoke-run --api-base {api_base}")
+    elif api_contract == "unreachable":
+        lines.append("1. cd backend")
+        lines.append("2. uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001")
+        lines.append(f"3. pnpm live:smoke-run --api-base {api_base}")
     elif api_ready is False:
         lines.append("1. cd backend")
         lines.append("2. uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001")
@@ -112,6 +139,21 @@ def check_api_health(api_base: str) -> bool:
     except (OSError, URLError):
         return False
     return getattr(response, "status", 200) == 200
+
+
+def check_api_contract(api_base: str) -> str:
+    try:
+        response = request.urlopen(f"{api_base.rstrip('/')}/api/runtime/public-status", timeout=2)
+    except HTTPError as exc:
+        return "stale" if exc.code == 404 else "unreachable"
+    except (OSError, URLError):
+        return "unreachable"
+    status = getattr(response, "status", 200)
+    if status == 200:
+        return "ready"
+    if status == 404:
+        return "stale"
+    return "unreachable"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -147,9 +189,11 @@ def main() -> int:
 
     schema_ready: bool | None = None
     missing_schema_items: list[str] = []
+    api_contract = "skipped"
     api_ready: bool | None = None
     settings = get_settings()
     if settings.has_supabase_backend and not env_missing_core:
+        api_contract = check_api_contract(args.api_base)
         schema_items = check_supabase_schema(get_supabase_client())
         missing_schema_items = collect_missing_schema_items(schema_items)
         schema_ready = not missing_schema_items
@@ -161,6 +205,7 @@ def main() -> int:
         bundle_errors=bundle_errors,
         schema_ready=schema_ready,
         missing_schema_items=missing_schema_items,
+        api_contract=api_contract,
         api_ready=api_ready,
         include_seed=args.include_seed,
         api_base=args.api_base,

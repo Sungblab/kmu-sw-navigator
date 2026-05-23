@@ -87,6 +87,7 @@ pnpm build:frontend
 - `pnpm rag:intake-check`: `data/inbox`의 사용자 제공 자료가 출처/category/placeholder/개인정보 위험 검사를 통과해야 raw/wiki 변환으로 진행
 - `pnpm rag:intake-stub`: PDF/사진/캡처/텍스트 원본을 받으면 `data/inbox/*-intake.md` 접수 stub을 생성해 출처/category/전사 상태를 먼저 기록
 - `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`: env, SQL bundle, Supabase schema 상태를 비밀값 없이 한 번에 요약. 현재 live blocker는 schema 미적용
+- `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8000`: schema 적용 전에도 `/api/runtime/public-status` contract를 확인해 같은 port의 오래된 FastAPI 서버를 stale backend blocker로 표시
 - `pnpm live:smoke-run --api-base http://127.0.0.1:8001`: schema 적용 뒤 profile, onboarding memory, DB, LLM smoke를 순서대로 실행하고 개별 실패 시 `schema`/`auth`/`env`/`code` 분류와 다음 액션 출력
 - 앱 설정 화면 live runtime status: 로그인 후 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 표시. 일반 app data 로딩이 schema 503으로 실패해도 runtime status는 별도로 반영되며, Supabase schema는 SQL 적용 전 `schema_sql_not_applied` blocker로 분리됨
 - 로그인 화면 live readiness: 로그인 전에도 비인증 runtime status로 Supabase backend/schema/Gemini readiness를 확인할 수 있어, Gemini key ready와 Supabase schema blocker를 같은 화면에서 구분 가능
