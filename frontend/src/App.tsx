@@ -794,6 +794,20 @@ function LiveStatusPanel({
           />
         ) : null}
       </div>
+      {runtimeStatus?.supabase_schema.next_actions.length ? (
+        <div className="mt-3 rounded-lg border border-[#e3c8bd] bg-[#fff7f2] p-3">
+          <p className="text-xs font-semibold text-[#9b3f24]">Supabase schema 다음 액션</p>
+          <ol className="mt-2 list-decimal space-y-1 pl-4 text-xs leading-5 text-[#716c63]">
+            {runtimeStatus.supabase_schema.next_actions.map((action) => (
+              <li key={action}>
+                <code className="break-all rounded bg-[#fffdf8] px-1 py-0.5 text-[#191817]">
+                  {action}
+                </code>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
     </div>
   );
 }

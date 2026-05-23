@@ -42,5 +42,10 @@ def test_runtime_status_separates_supabase_schema_blocker_from_env() -> None:
     assert status.supabase_schema.ready is False
     assert status.supabase_schema.blocker == "schema_sql_not_applied"
     assert status.supabase_schema.missing_schema == ["function: match_document_chunks"]
+    assert status.supabase_schema.next_actions == [
+        "pnpm supabase:sql-bundle -- --include-seed",
+        "Supabase SQL Editor에서 supabase/live-schema-bundle.sql 실행",
+        "pnpm live:smoke-run --api-base http://127.0.0.1:8001",
+    ]
     assert status.gemini.ready is True
     assert status.google_calendar.ready is True

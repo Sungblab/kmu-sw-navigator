@@ -129,6 +129,7 @@ export interface RuntimeComponentStatus {
   ready: boolean;
   missing_env: string[];
   missing_schema: string[];
+  next_actions: string[];
   blocker: string | null;
 }
 

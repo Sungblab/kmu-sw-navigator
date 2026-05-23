@@ -6,6 +6,7 @@ class RuntimeComponentStatus(BaseModel):
     ready: bool
     missing_env: list[str] = Field(default_factory=list)
     missing_schema: list[str] = Field(default_factory=list)
+    next_actions: list[str] = Field(default_factory=list)
     blocker: str | None = None
 
 

@@ -64,10 +64,18 @@ def _schema_status(
         return RuntimeComponentStatus(configured=True, ready=False, blocker="schema_not_checked")
 
     missing_schema = [f"{item.kind}: {item.name}" for item in schema_items if not item.ready]
+    next_actions = []
+    if missing_schema:
+        next_actions = [
+            "pnpm supabase:sql-bundle -- --include-seed",
+            "Supabase SQL Editor에서 supabase/live-schema-bundle.sql 실행",
+            "pnpm live:smoke-run --api-base http://127.0.0.1:8001",
+        ]
     return RuntimeComponentStatus(
         configured=True,
         ready=not missing_schema,
         missing_schema=missing_schema,
+        next_actions=next_actions,
         blocker=None if not missing_schema else "schema_sql_not_applied",
     )
 

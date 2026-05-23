@@ -65,6 +65,7 @@
 | 2026-05-23 | RAG intake prepare command hint | intake 검사를 통과한 파일에 대해 title/category/source/collected_at 기반 `pnpm rag:prepare-raw` 명령을 자동 출력 | `scripts/check_rag_intake.py`, `tests/test_rag_intake_check_script.py` |
 | 2026-05-23 | 앱 내 live runtime status | 로그인 후 설정 화면에서 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 표시. 일반 app data 로딩이 schema 503으로 실패해도 runtime status는 별도로 반영 | `backend/app/api/runtime.py`, `backend/app/services/runtime_status_service.py`, `frontend/src/App.tsx`, `backend/tests/api/test_runtime_status_api.py` |
 | 2026-05-23 | 로그인 전 live readiness 표시 | 로그인 화면에서도 비인증 `/api/runtime/public-status`로 Supabase backend/schema/Gemini readiness를 보여줘 키와 schema blocker를 바로 확인 가능하게 보강 | `backend/app/api/runtime.py`, `frontend/src/App.tsx`, `frontend/src/lib/api.ts`, `backend/tests/api/test_runtime_status_api.py` |
+| 2026-05-23 | Runtime schema blocker next action | Supabase schema blocker가 있을 때 runtime status API와 로그인/설정 화면에 SQL bundle 생성, SQL Editor 적용, live smoke 재실행 순서를 표시 | `backend/app/services/runtime_status_service.py`, `backend/app/schemas/runtime_status.py`, `frontend/src/App.tsx` |
 
 ## 다음 작업 후보
 
