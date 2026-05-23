@@ -77,7 +77,7 @@ uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 - `pnpm supabase:schema-check`: 모든 table/function이 `[ready]`. 기본 3회 retry 뒤에도 missing이면 SQL Editor 적용 여부를 다시 확인
 - `pnpm supabase:smoke`: `profile_exists=True`, `memory_status=active`
 - `pnpm supabase:llm-smoke`: `created_feature=llm_usage_smoke`
-- `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`: `profile_exists=True`
+- `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`: `profile_exists=True`, `onboarding_memory_status=active`
 - `pnpm rag:ingest:embeddings`: `document_chunks` upsert와 Gemini embedding 생성 완료. 같은 자료를 다시 실행해도 `source_type,title,heading_path,chunk_index,content_hash` 기준으로 중복 chunk를 만들지 않는다.
 - `supabase/seed.sql`: 초기 확인용 seed를 반복 실행해도 `document_chunks`가 같은 conflict key 기준으로 중복되지 않는다.
 - `pnpm live:smoke-run --api-base http://127.0.0.1:8001`: 위 필수 smoke를 dependency 순서대로 모두 통과

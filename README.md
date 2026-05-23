@@ -168,7 +168,7 @@ pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>
 
 `--user-id`에는 Supabase Auth에서 실제 생성된 사용자 UUID를 넣습니다. `profiles.id`, `assignments.user_id`, `user_memories.user_id`가 `auth.users(id)`를 참조하므로 임의 문자열은 live DB에서 실패합니다.
 `--access-token`은 설정 화면에서 실제 로그인한 Supabase session의 access token입니다. 이 smoke는 FastAPI가 `Authorization: Bearer` 토큰을 검증하고 `/api/profile` write/read를 수행하는지 확인합니다.
-`login-smoke`는 Supabase email/password login으로 access token을 받은 뒤 같은 Bearer API smoke를 실행하므로 수동 token 복사 없이 가입/로그인/API 요청을 한 번에 확인할 때 사용합니다.
+`login-smoke`는 Supabase email/password login으로 access token을 받은 뒤 profile과 onboarding memory API smoke를 실행하므로 수동 token 복사 없이 가입/로그인/API 요청을 한 번에 확인할 때 사용합니다.
 `llm-smoke`는 `llm_usage_logs`에 smoke row를 쓰고 같은 사용자 범위로 다시 조회되는지 확인합니다.
 `google:calendar-smoke`는 같은 사용자에게 저장된 Google Calendar token이 있을 때 실제 `events.insert` 경로를 검증합니다.
 `live:smoke-plan`은 비밀값을 출력하지 않고 어떤 smoke가 준비됐고 무엇이 빠졌는지 순서대로 보여줍니다.

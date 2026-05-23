@@ -32,6 +32,25 @@ def build_profile_smoke_payload() -> dict[str, Any]:
     }
 
 
+def build_onboarding_memory_smoke_payload() -> dict[str, Any]:
+    return {
+        "natural_text": (
+            "온보딩 관심사: AI, 백엔드. 목표: AI 서비스 개발. "
+            "코딩 경험: beginner. 학습 선호: project. 활동 방식: team. 주간 가능 시간: 4시간."
+        ),
+        "category": "onboarding",
+        "key": "learning_context",
+        "value_json": {
+            "interests": ["AI", "백엔드"],
+            "goal": "AI 서비스 개발",
+            "coding_level": "beginner",
+            "preference": "project",
+            "activity_style": "team",
+            "weekly_hours": 4,
+        },
+    }
+
+
 def run_auth_api_smoke(client: httpx.Client, api_base: str, access_token: str) -> dict[str, Any]:
     headers = {"Authorization": f"Bearer {access_token}"}
     # Bearer token smoke는 인증된 user_id로 profile upsert/read가 이어지는지 확인한다.
@@ -41,6 +60,14 @@ def run_auth_api_smoke(client: httpx.Client, api_base: str, access_token: str) -
         headers=headers,
     )
     write_response.raise_for_status()
+
+    memory_response = client.post(
+        f"{normalize_api_base(api_base)}/api/memories",
+        json=build_onboarding_memory_smoke_payload(),
+        headers=headers,
+    )
+    memory_response.raise_for_status()
+    memory_payload = memory_response.json()
 
     read_response = client.get(
         f"{normalize_api_base(api_base)}/api/profile",
@@ -53,6 +80,7 @@ def run_auth_api_smoke(client: httpx.Client, api_base: str, access_token: str) -
         "profile_department": read_payload.get("department"),
         "profile_grade": read_payload.get("grade"),
         "profile_exists": read_payload.get("exists") is not False,
+        "onboarding_memory_status": memory_payload.get("status"),
     }
 
 
@@ -102,6 +130,7 @@ def main() -> int:
     print(f"profile_exists={result['profile_exists']}")
     print(f"profile_department={result['profile_department']}")
     print(f"profile_grade={result['profile_grade']}")
+    print(f"onboarding_memory_status={result['onboarding_memory_status']}")
     return 0
 
 

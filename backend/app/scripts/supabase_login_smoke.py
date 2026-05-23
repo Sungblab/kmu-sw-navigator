@@ -161,6 +161,7 @@ def main() -> int:
     print(f"profile_exists={result['profile_exists']}")
     print(f"profile_department={result['profile_department']}")
     print(f"profile_grade={result['profile_grade']}")
+    print(f"onboarding_memory_status={result['onboarding_memory_status']}")
     return 0
 
 

@@ -78,6 +78,7 @@
 | 2026-05-23 | Supabase schema-check retry option | 적용 직후 `pnpm supabase:schema-check`도 기본 3회 retry를 수행하고 `--retries`, `--retry-delay`로 조정 가능하게 보강 | `backend/app/scripts/supabase_schema_check.py`, `backend/tests/test_supabase_schema_check_script.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Supabase SQL Editor copy helper | Supabase CLI/psql 없이 Dashboard SQL Editor에 붙여넣을 schema+seed bundle을 검증 후 클립보드로 복사하고 다음 smoke 명령을 출력 | `scripts/copy_supabase_sql_bundle.py`, `tests/test_copy_supabase_sql_bundle.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Live onboarding memory | 첫 로그인 온보딩에서 관심 분야, 목표, 코딩 경험, 학습 선호, 활동 방식을 받아 기존 `user_memories`에 active memory로 저장하고 첫 채팅/추천 입력에 연결 | `backend/app/api/memories.py`, `backend/app/schemas/memory.py`, `backend/tests/api/test_memory_api.py`, `frontend/src/App.tsx`, `frontend/src/lib/api.ts` |
+| 2026-05-23 | Login smoke onboarding memory | Supabase login/API smoke가 profile write/read뿐 아니라 onboarding memory 생성까지 검증하도록 확장 | `backend/app/scripts/auth_api_smoke.py`, `backend/app/scripts/supabase_login_smoke.py`, `backend/tests/test_auth_api_smoke_script.py`, `backend/tests/test_supabase_login_smoke_script.py` |
 
 ## 다음 작업 후보
 

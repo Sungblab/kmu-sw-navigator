@@ -142,6 +142,21 @@ def test_run_login_auth_api_smoke_fetches_token_then_calls_profile_api() -> None
         requests.append(request)
         if request.url.host == "project.supabase.co":
             return httpx.Response(200, json={"access_token": "access-token"})
+        if request.url.path == "/api/memories":
+            return httpx.Response(
+                200,
+                json={
+                    "id": "memory-id",
+                    "category": "onboarding",
+                    "key": "learning_context",
+                    "value_json": {"interests": ["AI", "백엔드"]},
+                    "natural_text": "온보딩 관심사: AI, 백엔드",
+                    "confidence": 0.7,
+                    "sensitivity": "low",
+                    "status": "active",
+                    "embedding_status": "pending",
+                },
+            )
         return httpx.Response(
             200,
             json={"department": "software", "grade": 1, "curriculum_year": "2025"},
@@ -162,5 +177,7 @@ def test_run_login_auth_api_smoke_fetches_token_then_calls_profile_api() -> None
         "project.supabase.co",
         "api.test",
         "api.test",
+        "api.test",
     ]
     assert result["profile_exists"] is True
+    assert result["onboarding_memory_status"] == "active"
