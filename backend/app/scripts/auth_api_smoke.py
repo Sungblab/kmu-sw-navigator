@@ -6,9 +6,17 @@ from typing import Any
 
 import httpx
 
+from app.scripts.smoke_env import resolve_smoke_value
+
 
 def resolve_access_token(cli_token: str | None, env_token: str | None = None) -> str | None:
-    token = (cli_token or env_token or getenv("SUPABASE_SMOKE_ACCESS_TOKEN") or "").strip()
+    token = (
+        cli_token
+        or env_token
+        or getenv("SUPABASE_SMOKE_ACCESS_TOKEN")
+        or resolve_smoke_value("SUPABASE_SMOKE_ACCESS_TOKEN")
+        or ""
+    ).strip()
     return token or None
 
 
@@ -54,7 +62,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--api-base",
-        default=getenv("API_BASE_URL", "http://127.0.0.1:8000"),
+        default=getenv("API_BASE_URL") or resolve_smoke_value("API_BASE_URL") or "http://127.0.0.1:8000",
         help="FastAPI base URL. Defaults to API_BASE_URL or http://127.0.0.1:8000.",
     )
     parser.add_argument(

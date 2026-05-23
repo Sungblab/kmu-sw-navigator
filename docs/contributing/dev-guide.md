@@ -117,12 +117,16 @@ Supabase 연결 확인:
 ```powershell
 pnpm env:check
 pnpm live:smoke-plan -- --user-id <supabase-auth-user-uuid> --email <email> --password <password>
+pnpm supabase:schema-check
+pnpm supabase:create-smoke-user --write-root-env
 pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>
 pnpm supabase:auth-smoke -- --access-token <supabase-access-token>
 pnpm supabase:login-smoke -- --email <email> --password <password>
 pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>
 pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>
 ```
+
+`supabase:schema-check`는 `supabase/schema.sql`의 필수 table/function이 live 프로젝트에 적용됐는지 확인합니다. `supabase:create-smoke-user --write-root-env`는 service role key로 Supabase Auth 테스트 사용자를 만들고, UUID/email/password를 gitignored root `.env`에 저장합니다. 출력에는 password를 표시하지 않습니다.
 
 성공하면 `profiles`, `user_memories`, `memory_events`에 smoke user 기준 row가 생성되고 `profile_exists=True`, `memory_status=active`가 출력됩니다.
 `auth-smoke`는 실제 로그인 session access token으로 `/api/profile`을 write/read해 Supabase Auth boundary와 API Bearer token 전달을 함께 확인합니다.
@@ -202,6 +206,8 @@ pnpm submission:check
 Supabase live 검증은 키가 있을 때 별도로 실행합니다.
 
 ```powershell
+pnpm supabase:schema-check
+pnpm supabase:create-smoke-user --write-root-env
 pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>
 pnpm supabase:auth-smoke -- --access-token <supabase-access-token>
 pnpm supabase:login-smoke -- --email <email> --password <password>

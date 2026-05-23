@@ -81,6 +81,7 @@
 | 2026-05-23 | 김성빈 | Codex | Supabase live readiness와 Python 핵심 로직 주석 점검 | `pnpm env:check`, `pnpm live:smoke-plan`, `pnpm env:check:strict`, Supabase DB/login/LLM smoke, schema readiness probe를 실행하고 Python 핵심 서비스 5개 주석을 검토 | `SUPABASE_JWT_SECRET`, smoke user id/email/password, `GEMINI_API_KEY` 누락과 `schema_ready=False`를 local fallback 완성으로 과장하지 않고 live blocker로 문서화했으며, 판단 기준 주석은 충분해 코드 churn 없이 문서만 갱신 |
 | 2026-05-23 | 김성빈 | Codex | live auth gate와 Gemini smoke 정리 | 프론트 `demo-user` fallback과 백엔드 `X-User-Id` 런타임 fallback을 제거하고, `GEMINI_API_KEY` 설정 후 Gemini embedding/answer/grounding smoke를 실행 | 비밀값은 `.env`에만 두고 출력/커밋하지 않았으며, Supabase schema/user blocker와 Gemini live 성공을 분리해 테스트와 문서로 검증 |
 | 2026-05-23 | 김성빈 | Codex | RAG 자료 접수/정형화 흐름 추가 | 사용자가 교과과정, 트랙, 동아리, 학교 시스템 자료를 파일/사진/텍스트로 제공할 때 `data/inbox`와 `pnpm rag:prepare-raw`를 거쳐 raw Markdown으로 정리하는 경로를 추가 | 사진/PDF는 곧바로 vector DB에 넣지 않고 텍스트화, 출처, 수집일, category를 확인한 뒤 wiki build와 ingest dry-run으로 검증하도록 정리 |
+| 2026-05-23 | 김성빈 | Codex | Supabase live smoke blocker 세분화 | service role로 Supabase Auth smoke user를 생성하고 `pnpm supabase:schema-check`와 schema missing API handler를 추가 | password는 출력하지 않고 gitignored root `.env`에만 저장했으며, DB/login/LLM smoke 실패 원인을 env/user가 아니라 `supabase/schema.sql` 미적용으로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

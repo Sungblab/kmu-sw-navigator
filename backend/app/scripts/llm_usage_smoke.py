@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import argparse
-from os import getenv
 from uuid import UUID
 
 from app.core.config import get_settings
+from app.core.supabase_errors import schema_blocker_message
 from app.db.supabase_client import get_supabase_client
 from app.schemas.llm_usage import LLMUsageLogCreateRequest
+from app.scripts.smoke_env import resolve_smoke_value
 from app.services.store_protocols import LLMUsageLogStore
 from app.services.supabase_stores import SupabaseLLMUsageLogStore
 
@@ -15,7 +16,7 @@ def resolve_llm_smoke_user_id(
     cli_user_id: str | None,
     env_user_id: str | None = None,
 ) -> str | None:
-    raw_user_id = (cli_user_id or env_user_id or getenv("SUPABASE_SMOKE_USER_ID") or "").strip()
+    raw_user_id = (cli_user_id or env_user_id or "").strip()
     if not raw_user_id:
         return None
 
@@ -76,7 +77,10 @@ def main() -> int:
         return 2
 
     try:
-        user_id = resolve_llm_smoke_user_id(args.user_id)
+        user_id = resolve_llm_smoke_user_id(
+            args.user_id,
+            resolve_smoke_value("SUPABASE_SMOKE_USER_ID"),
+        )
     except ValueError as exc:
         print(f"LLM usage smoke skipped: {exc}")
         return 2
@@ -88,7 +92,11 @@ def main() -> int:
         return 2
 
     store = SupabaseLLMUsageLogStore(get_supabase_client())
-    result = run_llm_usage_smoke(store, user_id=user_id)
+    try:
+        result = run_llm_usage_smoke(store, user_id=user_id)
+    except Exception as exc:
+        print(schema_blocker_message("LLM usage smoke", exc))
+        return 1
 
     print("LLM usage smoke completed")
     print(f"user_id={user_id}")

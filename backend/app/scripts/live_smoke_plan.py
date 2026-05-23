@@ -51,6 +51,16 @@ def build_live_smoke_steps(
             ),
         ),
         _step(
+            "Supabase schema check",
+            "pnpm supabase:schema-check",
+            missing_env(backend_env, "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"),
+        ),
+        _step(
+            "Supabase smoke user create",
+            "pnpm supabase:create-smoke-user --write-root-env",
+            missing_env(backend_env, "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"),
+        ),
+        _step(
             "Supabase DB smoke",
             "pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>",
             missing_value(smoke_user_id, "--user-id or SUPABASE_SMOKE_USER_ID"),

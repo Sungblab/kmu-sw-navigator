@@ -8,6 +8,8 @@ from os import environ
 import httpx
 
 from app.scripts.auth_api_smoke import normalize_api_base, run_auth_api_smoke
+from app.scripts.check_env import read_env_file
+from app.scripts.smoke_env import default_repo_root, read_root_smoke_env
 
 
 @dataclass(frozen=True)
@@ -28,19 +30,46 @@ def resolve_login_config(
     api_base: str | None,
     env: Mapping[str, str] = environ,
 ) -> SupabaseLoginSmokeConfig | None:
+    if env is environ:
+        repo_root = default_repo_root()
+        root_env = read_root_smoke_env(repo_root)
+        frontend_env = read_env_file(repo_root / "frontend" / ".env")
+    else:
+        root_env = {}
+        frontend_env = {}
     resolved_supabase_url = (
-        supabase_url or env.get("VITE_SUPABASE_URL") or env.get("SUPABASE_URL") or ""
+        supabase_url
+        or env.get("VITE_SUPABASE_URL")
+        or env.get("SUPABASE_URL")
+        or frontend_env.get("VITE_SUPABASE_URL")
+        or root_env.get("SUPABASE_URL")
+        or ""
     ).strip()
     resolved_anon_key = (
         anon_key
         or env.get("VITE_SUPABASE_PUBLISHABLE_KEY")
         or env.get("VITE_SUPABASE_ANON_KEY")
         or env.get("SUPABASE_ANON_KEY")
+        or frontend_env.get("VITE_SUPABASE_PUBLISHABLE_KEY")
+        or frontend_env.get("VITE_SUPABASE_ANON_KEY")
+        or root_env.get("SUPABASE_ANON_KEY")
         or ""
     ).strip()
-    resolved_email = (email or env.get("SUPABASE_SMOKE_EMAIL") or "").strip()
-    resolved_password = (password or env.get("SUPABASE_SMOKE_PASSWORD") or "").strip()
-    resolved_api_base = (api_base or env.get("API_BASE_URL") or "http://127.0.0.1:8000").strip()
+    resolved_email = (
+        email or env.get("SUPABASE_SMOKE_EMAIL") or root_env.get("SUPABASE_SMOKE_EMAIL") or ""
+    ).strip()
+    resolved_password = (
+        password
+        or env.get("SUPABASE_SMOKE_PASSWORD")
+        or root_env.get("SUPABASE_SMOKE_PASSWORD")
+        or ""
+    ).strip()
+    resolved_api_base = (
+        api_base
+        or env.get("API_BASE_URL")
+        or root_env.get("API_BASE_URL")
+        or "http://127.0.0.1:8000"
+    ).strip()
 
     if not (
         resolved_supabase_url and resolved_anon_key and resolved_email and resolved_password

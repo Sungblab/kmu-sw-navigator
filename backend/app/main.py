@@ -1,8 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from postgrest.exceptions import APIError
 
 from app.api import assignments, chat, integrations, llm_logs, memories, profile, recommendations
 from app.core.config import get_settings
+from app.core.supabase_errors import is_schema_cache_error
 
 settings = get_settings()
 
@@ -28,6 +31,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(APIError)
+async def postgrest_api_error_handler(_: Request, exc: APIError) -> JSONResponse:
+    if is_schema_cache_error(exc):
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": "Supabase schema is not applied. Apply supabase/schema.sql.",
+                "code": "supabase_schema_missing",
+            },
+        )
+    return JSONResponse(status_code=502, content={"detail": "Supabase request failed."})
 
 
 @app.get("/health")

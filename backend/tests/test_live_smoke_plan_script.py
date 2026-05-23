@@ -46,10 +46,12 @@ def test_build_live_smoke_steps_marks_missing_inputs(tmp_path: Path) -> None:
         ready=True,
         missing=[],
     )
-    assert steps[1].ready is False
-    assert steps[1].missing == ["--user-id or SUPABASE_SMOKE_USER_ID"]
-    assert steps[4].ready is False
-    assert "GEMINI_API_KEY" in steps[4].missing
+    assert steps[1].name == "Supabase schema check"
+    assert steps[1].ready is True
+    assert steps[3].ready is False
+    assert steps[3].missing == ["--user-id or SUPABASE_SMOKE_USER_ID"]
+    assert steps[6].ready is False
+    assert "GEMINI_API_KEY" in steps[6].missing
 
 
 def test_build_live_smoke_steps_accepts_publishable_key_alias(tmp_path: Path) -> None:
@@ -123,3 +125,4 @@ def test_format_live_smoke_plan_hides_secret_values(tmp_path: Path) -> None:
     assert "anon-secret" not in report
     assert "[ready] Supabase DB smoke" in report
     assert "pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>" in report
+    assert "pnpm supabase:create-smoke-user --write-root-env" in report

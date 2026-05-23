@@ -18,6 +18,8 @@
     "env:check": "cd backend && uv run python -m app.scripts.check_env --repo-root ..",
     "env:check:strict": "cd backend && uv run python -m app.scripts.check_env --repo-root .. --strict",
     "live:smoke-plan": "cd backend && uv run python -m app.scripts.live_smoke_plan --repo-root ..",
+    "supabase:schema-check": "cd backend && uv run python -m app.scripts.supabase_schema_check",
+    "supabase:create-smoke-user": "cd backend && uv run python -m app.scripts.create_smoke_user",
     "supabase:smoke": "cd backend && uv run python -m app.scripts.supabase_smoke",
     "supabase:auth-smoke": "cd backend && uv run python -m app.scripts.auth_api_smoke",
     "supabase:login-smoke": "cd backend && uv run python -m app.scripts.supabase_login_smoke",

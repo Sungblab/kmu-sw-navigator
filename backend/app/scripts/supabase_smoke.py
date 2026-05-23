@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 import argparse
-from os import getenv
 from uuid import UUID
 
 from app.core.config import get_settings
+from app.core.supabase_errors import schema_blocker_message
 from app.db.supabase_client import get_supabase_client
 from app.schemas.profile import ProfileUpsertRequest
+from app.scripts.smoke_env import resolve_smoke_value
 from app.services.memory_service import create_memory_candidate
 from app.services.supabase_stores import SupabaseMemoryStore, SupabaseProfileStore
 
 
 def resolve_smoke_user_id(cli_user_id: str | None, env_user_id: str | None = None) -> str | None:
-    raw_user_id = (cli_user_id or env_user_id or getenv("SUPABASE_SMOKE_USER_ID") or "").strip()
+    raw_user_id = (cli_user_id or env_user_id or "").strip()
     if not raw_user_id:
         return None
 
@@ -46,7 +47,7 @@ def main() -> int:
         return 2
 
     try:
-        user_id = resolve_smoke_user_id(args.user_id)
+        user_id = resolve_smoke_user_id(args.user_id, resolve_smoke_value("SUPABASE_SMOKE_USER_ID"))
     except ValueError as exc:
         print(f"Supabase smoke skipped: {exc}")
         return 2
@@ -61,27 +62,31 @@ def main() -> int:
     profile_store = SupabaseProfileStore(client)
     memory_store = SupabaseMemoryStore(client)
 
-    profile = profile_store.upsert_profile(
-        user_id,
-        ProfileUpsertRequest(
-            department="software",
-            grade=1,
-            curriculum_year="2025",
-        ),
-    )
-    saved_profile = profile_store.get_profile(user_id)
+    try:
+        profile = profile_store.upsert_profile(
+            user_id,
+            ProfileUpsertRequest(
+                department="software",
+                grade=1,
+                curriculum_year="2025",
+            ),
+        )
+        saved_profile = profile_store.get_profile(user_id)
 
-    # 실제 DB smoke는 사용자 입력 -> 정책 분류 -> 메모리/event 저장까지 한 번에 확인한다.
-    memory = create_memory_candidate(
-        store=memory_store,
-        user_id=user_id,
-        natural_text="AI와 백엔드 프로젝트에 관심 있어",
-        category="interest",
-        key="smoke_topic",
-        value_json={"topics": ["AI", "백엔드"], "source": "supabase_smoke"},
-    )
-    active_memories = memory_store.list_active_memories(user_id)
-    events = memory_store.list_events(user_id)
+        # 실제 DB smoke는 사용자 입력 -> 정책 분류 -> 메모리/event 저장까지 한 번에 확인한다.
+        memory = create_memory_candidate(
+            store=memory_store,
+            user_id=user_id,
+            natural_text="AI와 백엔드 프로젝트에 관심 있어",
+            category="interest",
+            key="smoke_topic",
+            value_json={"topics": ["AI", "백엔드"], "source": "supabase_smoke"},
+        )
+        active_memories = memory_store.list_active_memories(user_id)
+        events = memory_store.list_events(user_id)
+    except Exception as exc:
+        print(schema_blocker_message("Supabase smoke", exc))
+        return 1
 
     print("Supabase smoke completed")
     print(f"user_id={user_id}")
