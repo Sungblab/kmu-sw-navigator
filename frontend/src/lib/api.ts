@@ -26,6 +26,18 @@ interface ProfileInput {
   curriculum_year: CurriculumYear;
 }
 
+export class ApiError extends Error {
+  status: number;
+  code: string | null;
+
+  constructor(message: string, options: { status: number; code?: string | null }) {
+    super(message);
+    this.name = "ApiError";
+    this.status = options.status;
+    this.code = options.code ?? null;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const accessToken = await getSupabaseAccessToken();
   if (!accessToken) {
@@ -42,7 +54,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`);
+    throw await buildApiError(response);
   }
 
   if (response.status === 204) {
@@ -50,6 +62,18 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return response.json() as Promise<T>;
+}
+
+async function buildApiError(response: Response): Promise<ApiError> {
+  const fallback = `API 요청 실패: ${response.status}`;
+  try {
+    const payload = await response.json();
+    const detail = typeof payload.detail === "string" ? payload.detail : fallback;
+    const code = typeof payload.code === "string" ? payload.code : null;
+    return new ApiError(detail, { status: response.status, code });
+  } catch {
+    return new ApiError(fallback, { status: response.status });
+  }
 }
 
 export function getProfile(): Promise<Profile | MissingProfile> {

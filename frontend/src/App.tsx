@@ -13,6 +13,7 @@ import { Toaster, toast } from "sonner";
 import { Sidebar, MobileDrawer } from "./components/navigation";
 import { TopBar } from "./components/TopBar";
 import {
+  ApiError,
   getChatMessages,
   getChatSessions,
   createAssignment,
@@ -70,6 +71,9 @@ import type {
 } from "./types/navigator";
 
 function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError && error.code === "supabase_schema_missing") {
+    return "Supabase schema.sql이 아직 적용되지 않아 live 저장소를 사용할 수 없습니다.";
+  }
   return error instanceof Error ? error.message : fallback;
 }
 
