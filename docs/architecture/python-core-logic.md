@@ -335,7 +335,7 @@ Calendar OAuth는 앱 로그인과 분리한다. Supabase Auth는 앱 사용자 
 | --- | --- |
 | `pnpm env:check` | backend/frontend/env 누락 여부를 비밀값 출력 없이 확인 |
 | `pnpm env:check:strict` | Supabase core 값이 없으면 실패해 배포 전 gate로 사용 |
-| `pnpm supabase:schema-check` | live Supabase에 필수 table/function이 적용됐는지 확인 |
+| `pnpm supabase:schema-check` | live Supabase에 `schema.sql`의 table/function이 적용됐는지 확인 |
 | `pnpm supabase:create-smoke-user --write-root-env` | service role로 Auth 테스트 유저를 만들고 root `.env`에 smoke 값 저장 |
 | `pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>` | 실제 Supabase에 profile/memory/event를 write/read |
 | `pnpm supabase:auth-smoke -- --access-token <supabase-access-token>` | 실제 Supabase access token으로 FastAPI Bearer 인증과 profile API write/read |
@@ -348,7 +348,7 @@ Calendar OAuth는 앱 로그인과 분리한다. Supabase Auth는 앱 사용자 
 
 현재 구조에서는 Supabase Dashboard의 Direct/backend 값과 Framework/frontend 값을 분리해서 사용한다. `SUPABASE_SERVICE_ROLE_KEY`는 backend 전용이며 frontend env에 넣지 않는다.
 
-2026-05-23 live 점검에서는 backend Supabase Direct 값, frontend Supabase Framework 값, Gemini API key가 존재해 `pnpm env:check:strict`, `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`가 통과했다. service role로 Supabase Auth smoke user를 생성해 UUID/email/password를 gitignored root `.env`에 저장했고, `pnpm supabase:schema-check`는 live 프로젝트에서 모든 필수 table/function이 schema cache에 없다고 확인했다. `pnpm supabase:smoke`, `pnpm supabase:llm-smoke`, `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`은 입력/env가 아니라 schema 미적용 때문에 실패한다. 필요한 schema 구성은 `profiles`, `user_memories`, `memory_events`, `chat_sessions`, `chat_messages`, `assignments`, `google_oauth_tokens`, `llm_usage_logs`, `document_chunks`, `search_document_chunks_text`, `match_document_chunks`다.
+2026-05-23 live 점검에서는 backend Supabase Direct 값, frontend Supabase Framework 값, Gemini API key가 존재해 `pnpm env:check:strict`, `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`가 통과했다. service role로 Supabase Auth smoke user를 생성해 UUID/email/password를 gitignored root `.env`에 저장했고, `pnpm supabase:schema-check`는 live 프로젝트에서 `schema.sql`의 table/function이 schema cache에 없다고 확인했다. `pnpm supabase:smoke`, `pnpm supabase:llm-smoke`, `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`은 입력/env가 아니라 schema 미적용 때문에 실패한다. 필요한 schema 구성은 `profiles`, `raw_documents`, `wiki_pages`, `wiki_logs`, `document_chunks`, `assignments`, `chat_sessions`, `chat_messages`, `chat_logs`, `llm_usage_logs`, `user_memories`, `memory_events`, `google_oauth_tokens`, `search_document_chunks_text`, `match_document_chunks`다.
 
 Python 핵심 로직 주석은 이번 점검에서 `recommendation_service.py`, `retrieval_service.py`, `assignment_service.py`, `memory_service.py`, `chat_contract_service.py`를 다시 확인했다. 추천 점수, Mini Wiki 우선 RAG 검색, Gemini 일정 parser fallback, 메모리 민감도 차단, 일정 intent 우선 분류처럼 발표에서 질문받을 판단 기준에는 이미 의도 주석이 있고, 단순 문법 설명 주석은 추가하지 않았다.
 

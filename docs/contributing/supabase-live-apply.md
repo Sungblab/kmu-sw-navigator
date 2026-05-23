@@ -39,7 +39,7 @@ pnpm live:smoke-run --api-base http://127.0.0.1:8001
 
 2026-05-23 기준 live schema check는 아래 항목을 모두 missing으로 보고한다.
 
-- tables: `profiles`, `user_memories`, `memory_events`, `chat_sessions`, `chat_messages`, `assignments`, `google_oauth_tokens`, `llm_usage_logs`, `document_chunks`
+- tables: `profiles`, `raw_documents`, `wiki_pages`, `wiki_logs`, `document_chunks`, `assignments`, `chat_sessions`, `chat_messages`, `chat_logs`, `llm_usage_logs`, `user_memories`, `memory_events`, `google_oauth_tokens`
 - functions: `search_document_chunks_text`, `match_document_chunks`
 
 이 상태에서는 로그인은 가능해도 profile write가 `503 supabase_schema_missing`으로 실패한다.

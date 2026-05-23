@@ -51,10 +51,11 @@
 | 2026-05-23 | RAG embedding ingest idempotency | live smoke runner와 자료 보강을 반복 실행해도 `document_chunks`가 중복되지 않도록 schema unique index와 upsert ingest로 변경 | `supabase/schema.sql`, `backend/app/scripts/ingest_documents.py`, `backend/tests/test_ingest_documents_script.py` |
 | 2026-05-23 | RAG source intake template | 사용자가 PDF/사진/캡처/텍스트로 주는 교과과정, 트랙, 동아리, 학사 자료를 출처/category/핵심 필드 기준으로 접수하는 템플릿 추가 | `data/inbox/source-intake-template.md`, `data/inbox/README.md`, `docs/architecture/rag-data-intake.md` |
 | 2026-05-23 | Runtime product mode gate | 프론트/백엔드 런타임에 `demo-user`, `X-User-Id`, mock/목업/데모 fallback 표현이 재도입되지 않도록 `pnpm product:check` 추가 | `scripts/check_runtime_product_mode.py`, `package.json`, `docs/report/submission-checklist.md` |
+| 2026-05-23 | Supabase schema check coverage | `schema.sql`에 정의된 모든 table을 `pnpm supabase:schema-check` readiness 대상에 포함해 partial schema 적용을 놓치지 않도록 보강 | `backend/app/scripts/supabase_schema_check.py`, `backend/tests/test_supabase_schema_sql_contract.py`, `docs/contributing/supabase-live-apply.md` |
 
 ## 다음 작업 후보
 
-1. Supabase 프로젝트에 `supabase/schema.sql`을 적용하고 `profiles`, `user_memories`, `memory_events`, `chat_sessions`, `chat_messages`, `assignments`, `google_oauth_tokens`, `llm_usage_logs`, `document_chunks`, `search_document_chunks_text`, `match_document_chunks`가 생성됐는지 확인
+1. Supabase 프로젝트에 `supabase/schema.sql`을 적용하고 `profiles`, `raw_documents`, `wiki_pages`, `wiki_logs`, `document_chunks`, `assignments`, `chat_sessions`, `chat_messages`, `chat_logs`, `llm_usage_logs`, `user_memories`, `memory_events`, `google_oauth_tokens`, `search_document_chunks_text`, `match_document_chunks`가 생성됐는지 확인
 2. Supabase live 검증: `pnpm env:check:strict`, `pnpm supabase:schema-check`, `pnpm supabase:smoke`, `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`, `pnpm supabase:llm-smoke`
 4. Gemini embedding ingest 검증: `pnpm rag:ingest:embeddings`
 5. Google Calendar live 검증: OAuth 연결 후 `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`

@@ -9,14 +9,18 @@ from app.db.supabase_client import get_supabase_client
 
 REQUIRED_TABLES = (
     "profiles",
-    "user_memories",
-    "memory_events",
+    "raw_documents",
+    "wiki_pages",
+    "wiki_logs",
+    "document_chunks",
+    "assignments",
     "chat_sessions",
     "chat_messages",
-    "assignments",
-    "google_oauth_tokens",
+    "chat_logs",
     "llm_usage_logs",
-    "document_chunks",
+    "user_memories",
+    "memory_events",
+    "google_oauth_tokens",
 )
 
 REQUIRED_FUNCTION_ARGS: dict[str, dict[str, Any]] = {

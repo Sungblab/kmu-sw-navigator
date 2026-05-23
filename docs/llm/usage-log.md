@@ -88,6 +88,7 @@
 | 2026-05-23 | 김성빈 | Codex | RAG embedding ingest 중복 방지 | `document_chunks`에 unique index를 추가하고 ingest script를 insert에서 upsert로 변경 | live smoke runner와 자료 보강을 반복해도 같은 chunk가 중복 저장되지 않도록 conflict key를 테스트로 검증 |
 | 2026-05-23 | 김성빈 | Codex | RAG 원천자료 접수 템플릿 보강 | 사용자가 교과과정/트랙/동아리/학사 자료를 파일이나 사진으로 줄 때 출처, 대상 학부/학년, category, 필수 필드를 함께 받는 템플릿 추가 | 바로 JSON으로 고정하지 않고 Markdown 정형화 후 chunk/embedding ingest로 넘기는 기준을 문서와 dry-run으로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Runtime product mode gate 추가 | 사용자가 우려한 목업/데모 fallback 회귀를 막기 위해 `frontend/src`, `backend/app`에서 `demo-user`, `X-User-Id`, mock/목업/데모 표현을 검사하는 `pnpm product:check` 추가 | `pnpm product:check`, backend tests, frontend build로 검증하고 `verify:local`에도 포함 |
+| 2026-05-23 | 김성빈 | Codex | Supabase schema readiness coverage 보강 | live schema check가 핵심 앱 테이블만 보는 문제를 줄이기 위해 `schema.sql`에 정의된 모든 table을 `pnpm supabase:schema-check` 대상에 포함 | contract test를 먼저 실패시킨 뒤 `raw_documents`, `wiki_pages`, `wiki_logs`, `chat_logs`까지 체크하도록 수정하고 live blocker 목록을 갱신 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
