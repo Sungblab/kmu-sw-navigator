@@ -83,6 +83,7 @@
 | 2026-05-23 | Active docs live language gate | 제출/제품/아키텍처/기여 활성 문서가 샘플 중심 표현이 아니라 실제 live 로그인, 온보딩, 채팅 흐름을 기준으로 설명되도록 검사 추가 | `scripts/check_live_language.py`, `tests/test_live_language_script.py`, `package.json`, `docs/product/prd-dev-plan.md`, `docs/report/submission-checklist.md` |
 | 2026-05-23 | Live readiness API contract preflight | schema 적용 전에도 `live:readiness`가 `/api/runtime/public-status`를 확인해 Supabase schema blocker와 stale backend blocker를 분리 | `scripts/live_readiness_report.py`, `tests/test_live_readiness_report_script.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | SQL copy api-base hint | `supabase:sql-copy`가 현재 backend port에 맞는 `live:smoke-run --api-base`를 출력하도록 `--api-base` 옵션 추가 | `scripts/copy_supabase_sql_bundle.py`, `tests/test_copy_supabase_sql_bundle.py`, `docs/contributing/supabase-live-apply.md` |
+| 2026-05-23 | Supabase Dashboard access blocker | Chrome 로그인 계정이 `abbwnqwvvtxrizutswws` 프로젝트에 접근 권한이 없어 SQL Editor 적용을 project owner/member 계정 작업으로 분리 | `docs/contributing/supabase-live-apply.md`, `docs/report/submission-checklist.md` |
 
 ## 다음 작업 후보
 

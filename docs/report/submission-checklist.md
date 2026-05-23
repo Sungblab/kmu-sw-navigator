@@ -68,6 +68,7 @@ pnpm build:frontend
 - `pnpm env:check:strict`: 통과
 - `pnpm supabase:create-smoke-user --write-root-env`: Supabase Auth 테스트 유저 생성 성공, password는 출력하지 않고 gitignored root `.env`에 저장
 - `pnpm supabase:schema-check`: `profiles`, `raw_documents`, `wiki_pages`, `wiki_logs`, `document_chunks`, `assignments`, `chat_sessions`, `chat_messages`, `chat_logs`, `llm_usage_logs`, `user_memories`, `memory_events`, `google_oauth_tokens`, `search_document_chunks_text`, `match_document_chunks` 모두 missing
+- Supabase Dashboard access: Chrome 프로필 `성빈`은 로그인되어 있으나 `abbwnqwvvtxrizutswws` 프로젝트 접근 권한이 없어 SQL Editor가 `You do not have access to this project`를 표시. schema 적용은 project owner/member 계정 또는 DB 접속 권한 필요
 - `pnpm supabase:smoke`: schema 미적용으로 실패. 원인: `profiles` table 없음
 - `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`: schema 적용 전에는 최신 FastAPI server에서 profile/onboarding memory write가 503 `supabase_schema_missing`으로 분류되어야 한다. 오래된 backend가 떠 있으면 `/api/runtime/public-status` preflight에서 재시작 안내를 출력
 - `pnpm supabase:llm-smoke`: schema 미적용으로 실패. 원인: `llm_usage_logs` table 없음

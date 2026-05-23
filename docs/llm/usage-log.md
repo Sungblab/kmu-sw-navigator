@@ -121,6 +121,7 @@
 | 2026-05-23 | 김성빈 | Codex | 활성 문서 live language gate 추가 | 제출/제품/아키텍처/기여 문서가 실제 로그인, 온보딩, 채팅 live 흐름을 기준으로 설명되도록 `pnpm live-language:check`와 회귀 테스트를 추가 | TDD로 현재 활성 문서의 비-live 표현을 먼저 실패시킨 뒤 문서를 정리했고, historical LLM 기록과 archived 설계 문서는 보존 |
 | 2026-05-23 | 김성빈 | Codex | Live readiness stale backend 진단 추가 | schema 미적용 상태에서도 `live:readiness`가 현재 `--api-base`의 `/api/runtime/public-status`를 확인해 오래된 FastAPI 서버를 별도 blocker로 표시하도록 보강 | TDD로 readiness report와 contract checker 테스트를 먼저 실패시킨 뒤 구현했고, 실제 8000 포트에서 Supabase schema blocker와 stale backend blocker가 함께 표시됨을 확인 |
 | 2026-05-23 | 김성빈 | Codex | SQL copy smoke api-base 안내 보정 | 8000번 stale backend 때문에 SQL 적용 뒤 검증 명령이 잘못된 port를 안내하지 않도록 `supabase:sql-copy -- --api-base ...` 옵션을 추가 | TDD로 copy helper 출력이 8001 smoke 명령을 포함하는지 먼저 실패시킨 뒤 구현했고, 실제 클립보드 복사 명령을 8001 기준으로 재실행 |
+| 2026-05-23 | 김성빈 | Codex | Supabase Dashboard access blocker 확인 | Chrome Supabase 세션으로 SQL Editor 접근을 시도해 schema 적용 가능 여부를 확인 | Dashboard가 `You do not have access to this project`를 반환해 env/schema/code 문제가 아니라 project owner/member 계정 또는 DB 접속 권한이 필요한 blocker로 문서화 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

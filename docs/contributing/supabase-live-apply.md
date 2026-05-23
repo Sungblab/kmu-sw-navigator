@@ -34,6 +34,12 @@ pnpm supabase:sql-copy
 pnpm supabase:sql-copy -- --api-base http://127.0.0.1:8001
 ```
 
+현재 확인된 추가 blocker:
+
+- Chrome 프로필 `성빈`은 Supabase에 로그인되어 있지만 `abbwnqwvvtxrizutswws` 프로젝트 접근 권한이 없어 Dashboard가 `You do not have access to this project`를 표시한다.
+- SQL Editor 적용은 해당 Supabase 프로젝트 owner/member 계정으로 로그인하거나, 프로젝트 owner가 직접 아래 SQL bundle을 실행해야 한다.
+- service role key만으로는 PostgREST smoke와 Auth Admin 작업은 가능하지만, 새 table/function을 만드는 DDL 적용은 Dashboard SQL Editor 또는 DB 접속 권한이 필요하다.
+
 적용 전 현재 env, SQL bundle, live schema blocker를 한 번에 보려면 아래 명령을 실행한다.
 
 ```powershell
