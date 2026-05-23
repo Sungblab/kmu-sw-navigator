@@ -47,6 +47,7 @@
 | 2026-05-23 | Supabase live smoke user/schema 분리 | service role로 Auth smoke user를 생성해 root `.env`에 저장하고, schema check command와 503 schema-missing API 응답을 추가. DB/login/LLM smoke는 모두 schema 미적용으로 분류 | `backend/app/scripts/create_smoke_user.py`, `backend/app/scripts/supabase_schema_check.py`, `backend/app/main.py`, `pnpm supabase:schema-check`, `pnpm supabase:create-smoke-user --write-root-env`, `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001` |
 | 2026-05-23 | Supabase schema apply handoff | `search_document_chunks_text` RPC 인자 계약을 backend와 schema check에 맞추고, CLI가 없는 현재 환경에서 Dashboard SQL Editor 적용 절차를 문서화 | `supabase/schema.sql`, `backend/app/scripts/supabase_schema_check.py`, `backend/tests/test_supabase_schema_sql_contract.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Supabase schema missing UX | backend의 `supabase_schema_missing` JSON error를 frontend API client가 파싱해 로그인/온보딩 중 schema 미적용 원인을 명확히 표시하도록 개선 | `frontend/src/lib/api.ts`, `frontend/src/App.tsx` |
+| 2026-05-23 | Live smoke runner | schema 적용 직후 `pnpm live:smoke-run --api-base http://127.0.0.1:8001` 하나로 Supabase DB/LLM/login, Gemini, embedding ingest를 순차 검증하도록 runner 추가 | `backend/app/scripts/live_smoke_run.py`, `backend/tests/test_live_smoke_run_script.py`, `package.json` |
 
 ## 다음 작업 후보
 

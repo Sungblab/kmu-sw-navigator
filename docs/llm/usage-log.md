@@ -84,6 +84,7 @@
 | 2026-05-23 | 김성빈 | Codex | Supabase live smoke blocker 세분화 | service role로 Supabase Auth smoke user를 생성하고 `pnpm supabase:schema-check`와 schema missing API handler를 추가 | password는 출력하지 않고 gitignored root `.env`에만 저장했으며, DB/login/LLM smoke 실패 원인을 env/user가 아니라 `supabase/schema.sql` 미적용으로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Supabase schema 적용 전 계약 점검 | `search_document_chunks_text` RPC 인자명이 backend/schema-check/schema.sql에서 일치하는지 확인하고 SQL Editor 적용 절차를 문서화 | 현재 로컬에는 Supabase CLI가 없음을 확인했고, Dashboard SQL Editor 적용 뒤 실행할 smoke 명령을 정리 |
 | 2026-05-23 | 김성빈 | Codex | Supabase schema missing UX 보강 | 백엔드 `503 supabase_schema_missing` 응답을 프론트 API client가 JSON으로 파싱해 사용자에게 schema 미적용 원인을 보여주도록 수정 | 단순 `API 요청 실패: 503` 대신 live 준비 blocker를 직접 설명하게 하고, frontend build와 backend tests로 검증 |
+| 2026-05-23 | 김성빈 | Codex | Live smoke runner 추가 | schema 적용 후 Supabase DB/LLM/login, Gemini smoke, embedding ingest를 순차 실행하는 `pnpm live:smoke-run` 명령을 추가 | schema check를 먼저 실행해 미적용이면 후속 write smoke를 막고, runner 단위 테스트와 전체 backend tests로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

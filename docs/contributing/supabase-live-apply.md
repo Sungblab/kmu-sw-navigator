@@ -18,6 +18,12 @@ pnpm supabase:login-smoke --api-base http://127.0.0.1:8001
 pnpm rag:ingest:embeddings
 ```
 
+또는 아래 명령 하나로 schema check 이후의 live smoke를 순서대로 실행할 수 있다.
+
+```powershell
+pnpm live:smoke-run --api-base http://127.0.0.1:8001
+```
+
 `supabase:create-smoke-user --write-root-env`는 이미 실행되어 root `.env`에 smoke user UUID/email/password가 준비되어 있다. root `.env`는 gitignored 파일이므로 커밋하지 않는다.
 
 ## 성공 기준
@@ -27,6 +33,7 @@ pnpm rag:ingest:embeddings
 - `pnpm supabase:llm-smoke`: `created_feature=llm_usage_smoke`
 - `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`: `profile_exists=True`
 - `pnpm rag:ingest:embeddings`: `document_chunks` insert와 Gemini embedding 생성 완료
+- `pnpm live:smoke-run --api-base http://127.0.0.1:8001`: 위 필수 smoke를 dependency 순서대로 모두 통과
 
 ## 현재 blocker
 

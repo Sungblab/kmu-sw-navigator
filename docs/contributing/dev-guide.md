@@ -124,6 +124,7 @@ pnpm supabase:auth-smoke -- --access-token <supabase-access-token>
 pnpm supabase:login-smoke -- --email <email> --password <password>
 pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>
 pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>
+pnpm live:smoke-run --api-base http://127.0.0.1:8001
 ```
 
 `supabase:schema-check`는 `supabase/schema.sql`의 필수 table/function이 live 프로젝트에 적용됐는지 확인합니다. `supabase:create-smoke-user --write-root-env`는 service role key로 Supabase Auth 테스트 사용자를 만들고, UUID/email/password를 gitignored root `.env`에 저장합니다. 출력에는 password를 표시하지 않습니다. 현재 로컬에는 Supabase CLI가 없으므로 schema 적용 자체는 `docs/contributing/supabase-live-apply.md` 순서대로 Supabase Dashboard SQL Editor에서 수행합니다.
@@ -213,6 +214,7 @@ pnpm supabase:auth-smoke -- --access-token <supabase-access-token>
 pnpm supabase:login-smoke -- --email <email> --password <password>
 pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>
 pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>
+pnpm live:smoke-run --api-base http://127.0.0.1:8001
 ```
 
 `pnpm supabase:smoke`와 `pnpm supabase:llm-smoke`는 Supabase 키와 실제 Auth user UUID가 있어야 성공합니다. `pnpm supabase:auth-smoke`는 로컬 FastAPI 서버와 실제 Supabase access token이 있어야 성공합니다. `pnpm supabase:login-smoke`는 추가로 Supabase URL, anon/publishable key, 이메일/비밀번호가 필요합니다. `pnpm google:calendar-smoke`는 같은 user에 저장된 Google OAuth token이 있어야 성공합니다. 외부 키가 필요한 검증을 실행하지 못하면 PR에 이유를 적습니다.
