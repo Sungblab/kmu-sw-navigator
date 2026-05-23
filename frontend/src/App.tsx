@@ -245,6 +245,7 @@ export default function App() {
       setMessages([]);
       setActiveSessionId(null);
       setAuthStatus("로그아웃되었습니다.");
+      await refreshPublicRuntimeStatus();
       toast.success("로그아웃되었습니다.");
     } catch (authError) {
       const message = getErrorMessage(authError, "로그아웃에 실패했습니다.");
@@ -550,6 +551,17 @@ export default function App() {
     );
   }
 
+  if (!isLoading && profile === null && error) {
+    return (
+      <DataLoadErrorPage
+        error={error}
+        runtimeStatus={runtimeStatus}
+        onRefresh={() => void refresh()}
+        onSignOut={() => void handleSignOut()}
+      />
+    );
+  }
+
   if (isLoading || profile === null) {
     return (
       <FullPageShell>
@@ -684,6 +696,57 @@ function FullPageShell({ children }: { children: ReactNode }) {
         {children}
       </div>
     </main>
+  );
+}
+
+function DataLoadErrorPage({
+  error,
+  runtimeStatus,
+  onRefresh,
+  onSignOut,
+}: {
+  error: string;
+  runtimeStatus: RuntimeStatus | null;
+  onRefresh: () => void;
+  onSignOut: () => void;
+}) {
+  return (
+    <FullPageShell>
+      <div className="space-y-5">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#938d83]">
+            KMU SW Navigator
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-normal">
+            Live 데이터 로딩 확인 필요
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-[#716c63]">
+            Supabase Auth 로그인은 유지됐지만 사용자별 저장소를 읽는 단계에서 문제가 발생했습니다.
+          </p>
+        </div>
+        <div className="rounded-lg border border-[#e3c8bd] bg-[#fff7f2] p-3 text-sm leading-6 text-[#9b3f24]">
+          {error}
+        </div>
+        <LiveStatusPanel runtimeStatus={runtimeStatus} showGoogleCalendar />
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8]"
+            type="button"
+            onClick={onRefresh}
+          >
+            상태 새로고침
+          </button>
+          <button
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold"
+            type="button"
+            onClick={onSignOut}
+          >
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+            로그아웃
+          </button>
+        </div>
+      </div>
+    </FullPageShell>
   );
 }
 

@@ -105,6 +105,7 @@
 | 2026-05-23 | 김성빈 | Codex | 앱 내 live runtime status 추가 | 설정 화면에서 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 확인하는 `/api/runtime/status`와 UI 표시를 추가 | TDD로 runtime status service/API 테스트를 먼저 실패시킨 뒤 구현했고, schema 미적용은 env/Gemini 성공과 분리해 blocker로 표시하도록 검증. 이후 app data 503과 runtime status 표시를 분리해 schema blocker 상황에서도 진단 상태를 볼 수 있게 수정 |
 | 2026-05-23 | 김성빈 | Codex | 로그인 전 live readiness 표시 | 로그인 화면에서 비인증 `/api/runtime/public-status`를 호출해 Supabase backend/schema/Gemini readiness를 비밀값 없이 표시 | public endpoint 테스트를 먼저 실패시킨 뒤 구현했고, frontend build와 브라우저 로그인 화면 확인으로 검증 |
 | 2026-05-23 | 김성빈 | Codex | Runtime schema blocker next action 표시 | Supabase schema blocker가 있을 때 runtime status API와 화면에 SQL bundle 생성, SQL Editor 적용, live smoke 재실행 순서를 표시 | TDD로 `next_actions` 기대값을 먼저 실패시킨 뒤 구현했고, API 응답과 frontend build로 검증 |
+| 2026-05-23 | 김성빈 | Codex | Live app data failure recovery 보강 | Supabase Auth 로그인 후 app data 로딩이 schema 503 등으로 실패할 때 무한 로딩 대신 live 상태와 schema 다음 액션을 보여주는 복구 화면을 추가 | 프론트엔드 전용 테스트 하네스가 없어 `pnpm build:frontend`로 TypeScript/Vite 빌드를 검증했고, 문서에는 live schema blocker가 남아 있음을 과장 없이 기록 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
