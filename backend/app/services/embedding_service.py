@@ -109,8 +109,30 @@ def attach_embeddings_to_payloads(
             for payload in batch
         ]
         embeddings = embedding_service.embed_texts(texts)
+        if len(embeddings) != len(batch):
+            # Gemini embedding API가 batch 일부만 반환하는 경우가 있어 live ingest는
+            # 해당 batch를 버리지 않고 chunk 단위로 재시도해 누락 원인을 좁힌다.
+            embeddings = [
+                _embed_single_text(embedding_service, text, batch_start=start + offset)
+                for offset, text in enumerate(texts)
+            ]
         for payload, embedding in zip(batch, embeddings, strict=True):
             enriched_payload = dict(payload)
             enriched_payload["embedding"] = embedding
             enriched.append(enriched_payload)
     return enriched
+
+
+def _embed_single_text(
+    embedding_service: EmbeddingService,
+    text: str,
+    *,
+    batch_start: int,
+) -> list[float]:
+    embeddings = embedding_service.embed_texts([text])
+    if len(embeddings) != 1:
+        raise ValueError(
+            "embedding count mismatch after single retry: "
+            f"payload index {batch_start}, expected 1, got {len(embeddings)}"
+        )
+    return embeddings[0]

@@ -84,13 +84,13 @@
 | 2026-05-23 | Live readiness API contract preflight | schema 적용 전에도 `live:readiness`가 `/api/runtime/public-status`를 확인해 Supabase schema blocker와 stale backend blocker를 분리 | `scripts/live_readiness_report.py`, `tests/test_live_readiness_report_script.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | SQL copy api-base hint | `supabase:sql-copy`가 현재 backend port에 맞는 `live:smoke-run --api-base`를 출력하도록 `--api-base` 옵션 추가 | `scripts/copy_supabase_sql_bundle.py`, `tests/test_copy_supabase_sql_bundle.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Supabase Dashboard access blocker | Chrome 로그인 계정이 `abbwnqwvvtxrizutswws` 프로젝트에 접근 권한이 없어 SQL Editor 적용을 project owner/member 계정 작업으로 분리 | `docs/contributing/supabase-live-apply.md`, `docs/report/submission-checklist.md` |
+| 2026-05-23 | Supabase live smoke passed | schema+seed 적용 뒤 Supabase DB/LLM/login, Gemini, grounding, embedding ingest live smoke 전체 통과. Google Calendar OAuth env만 남은 blocker | `pnpm supabase:schema-check`, `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`, `pnpm live:smoke-run --api-base http://127.0.0.1:8001`, `docs/report/submission-checklist.md` |
 
 ## 다음 작업 후보
 
-1. Supabase 프로젝트에 `supabase/schema.sql`을 적용하고 `profiles`, `raw_documents`, `wiki_pages`, `wiki_logs`, `document_chunks`, `assignments`, `chat_sessions`, `chat_messages`, `chat_logs`, `llm_usage_logs`, `user_memories`, `memory_events`, `google_oauth_tokens`, `search_document_chunks_text`, `match_document_chunks`가 생성됐는지 확인
-2. Supabase live 검증: `pnpm env:check:strict`, `pnpm supabase:schema-check`, `pnpm supabase:smoke`, `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`, `pnpm supabase:llm-smoke`
-4. Gemini embedding ingest 검증: `pnpm rag:ingest:embeddings`
-5. Google Calendar live 검증: OAuth 연결 후 `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`
+1. Google Calendar OAuth env 설정: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`
+2. Google Calendar live 검증: OAuth 연결 후 `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`
+3. 앱에서 실제 로그인, 온보딩, 채팅, 추천, 일정 저장, LLM 로그 조회를 화면 기준으로 리허설하고 캡처
 
 ## 상태 기록 규칙
 

@@ -22,6 +22,8 @@ def test_build_smoke_commands_uses_api_base_and_keeps_google_optional() -> None:
     login = next(command for command in commands if command.name == "Supabase login/API smoke")
     assert login.args[-1] == "http://127.0.0.1:8001"
     assert login.failure_category == "auth"
+    embedding = next(command for command in commands if command.name == "Embedding ingest")
+    assert embedding.failure_category == "code"
 
 
 def test_build_smoke_commands_can_include_google() -> None:

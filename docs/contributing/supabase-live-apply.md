@@ -99,12 +99,13 @@ uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 - 오래된 backend가 떠 있으면 login/API smoke가 `/api/runtime/public-status` preflight에서 멈추고 현재 repo 코드로 FastAPI를 재시작하라고 출력
 - schema 적용 뒤 개별 smoke가 실패하면 `live:smoke-run`은 첫 실패를 `schema`, `auth`, `env`, `code` 중 하나로 분류하고 다음 점검 명령을 출력한다.
 
-## 현재 blocker
+## 현재 상태
 
-2026-05-23 기준 live schema check는 아래 항목을 모두 missing으로 보고한다.
+2026-05-23 schema+seed SQL 적용 뒤 live schema check는 아래 항목을 모두 ready로 보고한다.
 
 - tables: `profiles`, `raw_documents`, `wiki_pages`, `wiki_logs`, `document_chunks`, `assignments`, `chat_sessions`, `chat_messages`, `chat_logs`, `llm_usage_logs`, `user_memories`, `memory_events`, `google_oauth_tokens`
 - functions: `search_document_chunks_text`, `match_document_chunks`
 
-이 상태에서는 로그인은 가능해도 profile write가 `503 supabase_schema_missing`으로 실패한다.
-`pnpm live:smoke-run --api-base http://127.0.0.1:8001`도 같은 경우에는 `pnpm supabase:sql-bundle -- --include-seed`부터 다시 실행하라는 next action을 출력한다.
+`pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`은 Core env, SQL bundle, Supabase schema, API contract, API health를 모두 ready로 표시한다. 남은 외부 blocker는 Google Calendar OAuth env뿐이다.
+
+`pnpm live:smoke-run --api-base http://127.0.0.1:8001`은 Supabase DB smoke, LLM usage smoke, login/API smoke, Gemini smoke, Gemini answer smoke, Gemini grounding smoke, embedding ingest를 모두 통과한다.

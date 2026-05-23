@@ -88,10 +88,10 @@ def build_smoke_commands(*, api_base: str, include_google: bool) -> list[SmokeCo
                 "../data/wiki",
                 "--with-embeddings",
             ],
-            failure_category="schema",
+            failure_category="code",
             next_action=(
-                "Check document_chunks schema, Gemini embedding config, and rerun "
-                "pnpm rag:ingest:embeddings."
+                "Rerun pnpm rag:ingest:embeddings and inspect the traceback. "
+                "If schema-check is ready, treat this as ingest or embedding adapter code."
             ),
         ),
     ]

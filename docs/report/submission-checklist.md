@@ -67,11 +67,10 @@ pnpm build:frontend
 - `pnpm live:smoke-plan`: Supabase env strict, schema check command, smoke user create, DB/login/API/LLM smoke, Gemini smoke는 ready. Google Calendar smoke는 OAuth/token blocker를 표시
 - `pnpm env:check:strict`: 통과
 - `pnpm supabase:create-smoke-user --write-root-env`: Supabase Auth 테스트 유저 생성 성공, password는 출력하지 않고 gitignored root `.env`에 저장
-- `pnpm supabase:schema-check`: `profiles`, `raw_documents`, `wiki_pages`, `wiki_logs`, `document_chunks`, `assignments`, `chat_sessions`, `chat_messages`, `chat_logs`, `llm_usage_logs`, `user_memories`, `memory_events`, `google_oauth_tokens`, `search_document_chunks_text`, `match_document_chunks` 모두 missing
-- Supabase Dashboard access: Chrome 프로필 `성빈`은 로그인되어 있으나 `abbwnqwvvtxrizutswws` 프로젝트 접근 권한이 없어 SQL Editor가 `You do not have access to this project`를 표시. schema 적용은 project owner/member 계정 또는 DB 접속 권한 필요
-- `pnpm supabase:smoke`: schema 미적용으로 실패. 원인: `profiles` table 없음
-- `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`: schema 적용 전에는 최신 FastAPI server에서 profile/onboarding memory write가 503 `supabase_schema_missing`으로 분류되어야 한다. 오래된 backend가 떠 있으면 `/api/runtime/public-status` preflight에서 재시작 안내를 출력
-- `pnpm supabase:llm-smoke`: schema 미적용으로 실패. 원인: `llm_usage_logs` table 없음
+- `pnpm supabase:schema-check`: `profiles`, `raw_documents`, `wiki_pages`, `wiki_logs`, `document_chunks`, `assignments`, `chat_sessions`, `chat_messages`, `chat_logs`, `llm_usage_logs`, `user_memories`, `memory_events`, `google_oauth_tokens`, `search_document_chunks_text`, `match_document_chunks` 모두 ready
+- `pnpm supabase:smoke`: live Supabase DB profile/memory/event smoke 통과
+- `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`: Supabase email/password login, FastAPI profile write/read, onboarding memory 생성 통과
+- `pnpm supabase:llm-smoke`: live `llm_usage_logs` insert/list 통과
 - Supabase CLI: 현재 로컬에 설치되어 있지 않아 schema 적용은 Dashboard SQL Editor에서 수행 필요
 - Schema contract check: `search_document_chunks_text(search_query, match_count, filter_source_type)` 인자명이 backend adapter와 schema check에 맞게 정렬됨
 - `pnpm gemini:smoke`: 실제 Gemini API로 embedding 768차원과 일정 parser 호출 통과
@@ -87,21 +86,22 @@ pnpm build:frontend
 - `pnpm supabase:sql-copy`: 검증된 schema+seed SQL bundle을 클립보드에 복사하고 Supabase SQL Editor URL과 적용 뒤 smoke 명령을 출력
 - `pnpm rag:intake-check`: `data/inbox`의 사용자 제공 자료가 출처/category/placeholder/개인정보 위험 검사를 통과해야 raw/wiki 변환으로 진행
 - `pnpm rag:intake-stub`: PDF/사진/캡처/텍스트 원본을 받으면 `data/inbox/*-intake.md` 접수 stub을 생성해 출처/category/전사 상태를 먼저 기록
-- `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`: env, SQL bundle, Supabase schema 상태를 비밀값 없이 한 번에 요약. 현재 live blocker는 schema 미적용
+- `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`: env, SQL bundle, Supabase schema, API contract, API health 모두 ready. Google OAuth env만 missing
 - `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8000`: schema 적용 전에도 `/api/runtime/public-status` contract를 확인해 같은 port의 오래된 FastAPI 서버를 stale backend blocker로 표시
-- `pnpm live:smoke-run --api-base http://127.0.0.1:8001`: schema 적용 뒤 profile, onboarding memory, DB, LLM smoke를 순서대로 실행하고 개별 실패 시 `schema`/`auth`/`env`/`code` 분류와 다음 액션 출력
-- 앱 설정 화면 live runtime status: 로그인 후 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 표시. 일반 app data 로딩이 schema 503으로 실패해도 runtime status는 별도로 반영되며, Supabase schema는 SQL 적용 전 `schema_sql_not_applied` blocker로 분리됨
+- `pnpm live:smoke-run --api-base http://127.0.0.1:8001`: Supabase DB, Supabase LLM usage, Supabase login/API, Gemini embedding/schedule, Gemini answer, Gemini grounding, embedding ingest 모두 통과
+- 앱 설정 화면 live runtime status: 로그인 후 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 표시. schema 적용 뒤 로그인 화면 live status에서 Supabase backend/schema/Gemini 모두 live로 표시 확인
 - 로그인 화면 live readiness: 로그인 전에도 비인증 runtime status로 Supabase backend/schema/Gemini readiness를 확인할 수 있어, Gemini key ready와 Supabase schema blocker를 같은 화면에서 구분 가능
 - Supabase schema blocker가 표시되면 앱 안에서도 `pnpm supabase:sql-bundle -- --include-seed`, SQL Editor 적용, `pnpm live:smoke-run --api-base http://127.0.0.1:8001` 순서를 확인 가능
 - 로그인 후 app data 로딩이 schema 503 등으로 실패하면 무한 로딩 대신 live 상태, schema 다음 액션, 새로고침/로그아웃을 표시
 - 확장 온보딩: 첫 로그인 뒤 관심 분야/목표/코딩 경험/학습 선호/활동 방식을 입력하면 `/api/profile`과 `/api/memories`를 순서대로 호출해 실제 사용자 프로필과 active onboarding memory를 저장
-- live status는 Supabase schema missing table/function 전체와 Google Calendar missing env 이름을 표시하되 비밀값은 출력하지 않음
+- live status는 Google Calendar missing env 이름을 표시하되 비밀값은 출력하지 않음
 - login/API smoke는 profile write/read 전에 `/api/runtime/public-status`를 확인해 stale backend와 실제 auth/schema 실패를 분리
 - `pnpm wiki:build`: raw_documents=12, wiki_pages=7 생성 완료
 - `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 샘플 전용 출처 표현 없음
 - `pnpm rag:ingest:dry`: documents=19, chunks=118, wiki_chunks=72, raw_chunks=46 준비 완료
-- `pnpm test:backend`: 177 passed
-- `python -m pytest tests`: 38 passed
+- `pnpm rag:ingest:embeddings`: live Gemini embedding 118개 생성 후 Supabase `document_chunks` upsert 통과
+- `pnpm test:backend`: 178 passed
+- `python -m pytest tests`: 42 passed
 - `pnpm lint:backend`: All checks passed
 - `pnpm build:frontend`: Vite production build 통과
 - `pnpm submission:check`: 제출 조건 증거 9개 확인 완료

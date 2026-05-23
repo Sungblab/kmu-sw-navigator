@@ -122,6 +122,8 @@
 | 2026-05-23 | 김성빈 | Codex | Live readiness stale backend 진단 추가 | schema 미적용 상태에서도 `live:readiness`가 현재 `--api-base`의 `/api/runtime/public-status`를 확인해 오래된 FastAPI 서버를 별도 blocker로 표시하도록 보강 | TDD로 readiness report와 contract checker 테스트를 먼저 실패시킨 뒤 구현했고, 실제 8000 포트에서 Supabase schema blocker와 stale backend blocker가 함께 표시됨을 확인 |
 | 2026-05-23 | 김성빈 | Codex | SQL copy smoke api-base 안내 보정 | 8000번 stale backend 때문에 SQL 적용 뒤 검증 명령이 잘못된 port를 안내하지 않도록 `supabase:sql-copy -- --api-base ...` 옵션을 추가 | TDD로 copy helper 출력이 8001 smoke 명령을 포함하는지 먼저 실패시킨 뒤 구현했고, 실제 클립보드 복사 명령을 8001 기준으로 재실행 |
 | 2026-05-23 | 김성빈 | Codex | Supabase Dashboard access blocker 확인 | Chrome Supabase 세션으로 SQL Editor 접근을 시도해 schema 적용 가능 여부를 확인 | Dashboard가 `You do not have access to this project`를 반환해 env/schema/code 문제가 아니라 project owner/member 계정 또는 DB 접속 권한이 필요한 blocker로 문서화 |
+| 2026-05-23 | 김성빈 | Codex | Embedding ingest live failure 수정 | schema 적용 뒤 `live:smoke-run` 마지막 단계에서 Gemini embedding batch 결과 수가 chunk 수보다 적게 반환되어 `zip(strict=True)`가 실패하는 문제를 수정 | TDD로 batch embedding 개수 부족 시 chunk 단위 재시도 regression test를 먼저 실패시킨 뒤 구현했고, `pnpm rag:ingest:embeddings`와 `pnpm live:smoke-run --api-base http://127.0.0.1:8001` 전체 통과로 검증 |
+| 2026-05-23 | 김성빈 | Codex | Supabase live smoke 전체 통과 기록 | SQL Editor schema+seed 적용 후 Supabase schema, API contract, DB/profile/memory, login/API, LLM log, Gemini, grounding, embedding ingest가 모두 live 경로에서 통과하는지 확인 | `pnpm supabase:schema-check`, `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`, `pnpm live:smoke-run --api-base http://127.0.0.1:8001`로 검증했고 Google Calendar OAuth env만 남은 blocker로 분리 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

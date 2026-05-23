@@ -46,3 +46,31 @@ def test_attach_embeddings_to_payloads_preserves_payload_metadata(tmp_path) -> N
     assert enriched[0]["metadata"] == payloads[0]["metadata"]
     assert enriched[0]["embedding"] is not None
     assert len(enriched[0]["embedding"]) == 4
+
+
+def test_attach_embeddings_retries_short_batch() -> None:
+    class ShortBatchEmbeddingService:
+        def __init__(self) -> None:
+            self.calls: list[list[str]] = []
+
+        def embed_texts(
+            self,
+            texts: list[str],
+            *,
+            task_type: str = "RETRIEVAL_DOCUMENT",
+        ) -> list[list[float]]:
+            self.calls.append(texts)
+            if len(texts) > 1:
+                return [[1.0]]
+            return [[float(len(self.calls))]]
+
+    payloads = [
+        {"title": "A", "heading_path": "", "content": "first"},
+        {"title": "B", "heading_path": "", "content": "second"},
+    ]
+    service = ShortBatchEmbeddingService()
+
+    enriched = attach_embeddings_to_payloads(payloads, service, batch_size=2)
+
+    assert [payload["embedding"] for payload in enriched] == [[2.0], [3.0]]
+    assert [len(call) for call in service.calls] == [2, 1, 1]
