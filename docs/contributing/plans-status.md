@@ -40,10 +40,11 @@
 | 2026-05-14 | Supabase publishable key 연결 | `frontend/.env`에 Framework client key를 설정하고 `VITE_SUPABASE_PUBLISHABLE_KEY` alias를 frontend/env smoke scripts에 반영 | `frontend/src/lib/supabase.ts`, `backend/app/scripts/check_env.py`, `backend/app/scripts/live_smoke_plan.py`, `backend/app/scripts/supabase_login_smoke.py` |
 | 2026-05-16 | 에이전트 기반 코딩 증거 문서 보강 | 교수님 평가 포인트에 맞춰 Codex/Superpowers/Gemini Code Assist/Gemini API 역할, 하네스, 직접 검토 기준, 발표/보고서 연결 문서화 | `docs/llm/agent-coding-evidence.md`, `docs/llm/codex-workflow.md`, `docs/report/` |
 | 2026-05-23 | 데모 UI polish | assistant 답변 Streamdown markdown 렌더링, CJK plugin, Sonner toast, Streamdown vendor chunk 분리 구현/검증 완료 | `docs/superpowers/specs/2026-05-23-demo-ui-polish-design.md`, `docs/superpowers/plans/2026-05-23-demo-ui-polish.md`, `frontend/src/App.tsx`, `frontend/src/styles.css`, `frontend/vite.config.ts` |
+| 2026-05-23 | Supabase schema readiness fallback | 로컬 `.env`에 Supabase key가 있어도 live schema가 미적용이면 `/api/chat` 등 API가 인메모리/local retriever로 fallback하도록 수정하고 브라우저 데모 smoke 통과 | `backend/app/api/dependencies.py`, `backend/tests/api/test_dependency_fallbacks.py` |
 
 ## 다음 작업 후보
 
-1. 실제 키/계정 입력 후 `pnpm live:smoke-plan -- --user-id <supabase-auth-user-uuid> --email <email> --password <password>`로 누락 항목 확인
+1. Supabase 프로젝트에 `supabase/schema.sql` 적용 후 `pnpm live:smoke-plan -- --user-id <supabase-auth-user-uuid> --email <email> --password <password>`로 누락 항목 확인
 2. Supabase live 검증: `pnpm env:check:strict`, `pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>`, `pnpm supabase:login-smoke -- --email <email> --password <password>`, `pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>`
 3. Gemini live 검증: `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`, `pnpm rag:ingest:embeddings`
 4. Google Calendar live 검증: OAuth 연결 후 `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`

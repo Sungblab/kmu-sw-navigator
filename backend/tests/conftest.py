@@ -2,6 +2,7 @@ from collections.abc import Iterator
 
 import pytest
 
+from app.api.dependencies import is_supabase_schema_ready
 from app.core.config import get_settings
 from app.db.supabase_client import get_supabase_client
 from app.main import app
@@ -21,7 +22,9 @@ def isolate_tests_from_local_live_env(monkeypatch: pytest.MonkeyPatch) -> Iterat
         monkeypatch.setenv(key, "")
     get_settings.cache_clear()
     get_supabase_client.cache_clear()
+    is_supabase_schema_ready.cache_clear()
     yield
     app.dependency_overrides.clear()
     get_settings.cache_clear()
     get_supabase_client.cache_clear()
+    is_supabase_schema_ready.cache_clear()

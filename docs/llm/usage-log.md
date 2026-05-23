@@ -76,6 +76,7 @@
 | 2026-05-16 | 김성빈 | Codex | 응답 종료 전 문서 갱신 판단 규칙 추가 | `AGENTS.md`에 답변을 끝내기 전 문서 갱신 필요 여부를 판단하고, 필요할 때만 관련 문서를 갱신하는 규칙 추가 | 매번 문서를 억지로 수정하지 않고 기능/API/검증/제출 설명 변화가 있을 때만 문서화하도록 운영 기준을 정리 |
 | 2026-05-22 | 김성빈 | Codex | 홈서버 데모/운영 전략 문서화 | 라즈베리파이 홈서버 운영은 Docker Compose 기반 후속 배포로 두고, 발표 데모는 노트북 로컬 실행을 1순위로 유지하도록 dev guide, demo scenario, 제출 체크리스트를 갱신 | 네트워크, DDNS, HTTPS, OAuth 변수 때문에 홈서버 URL을 주 데모 경로로 과장하지 않고, 보조 시연과 녹화 백업을 함께 준비하는 기준으로 정리 |
 | 2026-05-23 | 김성빈 | Codex | 데모 UI polish 구현 | live smoke가 외부 키 부족으로 막힌 상태를 확인한 뒤, 외부 API 계약을 바꾸지 않는 `streamdown`, `@streamdown/cjk`, `sonner` 기반 답변 렌더링/토스트 개선 spec과 plan을 작성하고 구현 | assistant 답변은 markdown으로 표시하고 주요 성공/실패 액션은 toast로 피드백하며, `pnpm build:frontend`로 TypeScript/Vite build를 검증 |
+| 2026-05-23 | 김성빈 | Codex | 로컬 데모 Supabase schema fallback 보강 | Supabase Direct key는 있으나 `google_oauth_tokens`, `user_memories` 등 live table이 schema cache에 없어 `/api/chat`이 500을 내는 문제를 확인하고 dependency schema probe와 in-memory/local fallback 테스트를 추가 | 실제 Supabase live smoke는 `supabase/schema.sql` 적용과 live key가 필요하다고 분리했고, API 직접 호출과 브라우저 smoke로 로컬 데모 채팅 응답을 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

@@ -65,6 +65,17 @@ supabase_llm_usage_log_store: SupabaseLLMUsageLogStore | None = None
 supabase_document_retriever: SupabaseTextRetriever | SupabaseVectorRetriever | None = None
 gemini_answer_generator: GeminiAnswerGenerator | None = None
 gemini_grounding_answer_generator: GeminiGroundingAnswerGenerator | None = None
+REQUIRED_SUPABASE_TABLES = (
+    "profiles",
+    "user_memories",
+    "memory_events",
+    "chat_sessions",
+    "chat_messages",
+    "assignments",
+    "google_oauth_tokens",
+    "llm_usage_logs",
+    "document_chunks",
+)
 
 
 def get_current_user_id(
@@ -85,10 +96,31 @@ def get_current_user_id(
     return x_user_id
 
 
+@lru_cache
+def is_supabase_schema_ready() -> bool:
+    settings = get_settings()
+    if not settings.has_supabase_backend:
+        return False
+
+    client = get_supabase_client()
+    try:
+        for table_name in REQUIRED_SUPABASE_TABLES:
+            # Supabase keys can exist before schema.sql has been applied. A tiny read probe keeps
+            # the local demo path on in-memory stores instead of surfacing PostgREST 500s.
+            client.table(table_name).select("*").limit(1).execute()
+    except Exception:
+        return False
+    return True
+
+
+def use_supabase_backend() -> bool:
+    return is_supabase_schema_ready()
+
+
 def get_profile_store() -> ProfileStore:
     global supabase_profile_store
     # Supabase 키가 없는 로컬/발표 환경에서도 API 테스트가 돌아가도록 in-memory fallback을 유지한다.
-    if get_settings().has_supabase_backend:
+    if use_supabase_backend():
         if supabase_profile_store is None:
             supabase_profile_store = SupabaseProfileStore(get_supabase_client())
         return supabase_profile_store
@@ -99,7 +131,7 @@ def get_memory_store() -> MemoryStore:
     global supabase_memory_store
     # 실제 배포에서는 Supabase adapter가 영속 저장을 맡는다.
     # 키가 없으면 deterministic 테스트용 저장소를 쓴다.
-    if get_settings().has_supabase_backend:
+    if use_supabase_backend():
         if supabase_memory_store is None:
             supabase_memory_store = SupabaseMemoryStore(get_supabase_client())
         return supabase_memory_store
@@ -108,7 +140,7 @@ def get_memory_store() -> MemoryStore:
 
 def get_chat_store() -> ChatStore:
     global supabase_chat_store
-    if get_settings().has_supabase_backend:
+    if use_supabase_backend():
         if supabase_chat_store is None:
             supabase_chat_store = SupabaseChatStore(get_supabase_client())
         return supabase_chat_store
@@ -117,7 +149,7 @@ def get_chat_store() -> ChatStore:
 
 def get_assignment_store() -> AssignmentStore:
     global supabase_assignment_store
-    if get_settings().has_supabase_backend:
+    if use_supabase_backend():
         if supabase_assignment_store is None:
             supabase_assignment_store = SupabaseAssignmentStore(get_supabase_client())
         return supabase_assignment_store
@@ -126,7 +158,7 @@ def get_assignment_store() -> AssignmentStore:
 
 def get_google_oauth_token_store() -> GoogleOAuthTokenStore:
     global supabase_google_oauth_token_store
-    if get_settings().has_supabase_backend:
+    if use_supabase_backend():
         if supabase_google_oauth_token_store is None:
             supabase_google_oauth_token_store = SupabaseGoogleOAuthTokenStore(
                 get_supabase_client()
@@ -137,7 +169,7 @@ def get_google_oauth_token_store() -> GoogleOAuthTokenStore:
 
 def get_llm_usage_log_store() -> LLMUsageLogStore:
     global supabase_llm_usage_log_store
-    if get_settings().has_supabase_backend:
+    if use_supabase_backend():
         if supabase_llm_usage_log_store is None:
             supabase_llm_usage_log_store = SupabaseLLMUsageLogStore(get_supabase_client())
         return supabase_llm_usage_log_store
@@ -164,7 +196,7 @@ def get_document_retriever() -> (
 ):
     global supabase_document_retriever
     settings = get_settings()
-    if settings.has_supabase_backend:
+    if use_supabase_backend():
         if supabase_document_retriever is None:
             if settings.gemini_api_key:
                 supabase_document_retriever = SupabaseVectorRetriever(

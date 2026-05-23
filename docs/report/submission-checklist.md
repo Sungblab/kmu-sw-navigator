@@ -56,17 +56,18 @@ pnpm build:frontend
 최근 확인 결과:
 
 - `pnpm verify:local`: docs/wiki/RAG dry-run/submission check/root test/backend test/backend lint/frontend build 전체 통과
-- `pnpm docs:check`: 필수 문서 19개 확인 완료
+- `pnpm docs:check`: 필수 문서 20개 확인 완료
 - `pnpm wiki:build`: raw_documents=4, wiki_pages=4 생성 완료
 - `pnpm rag:ingest:dry`: documents=8, chunks=36, wiki_chunks=24, raw_chunks=12 준비 완료
-- `pnpm test:backend`: 134 passed
+- `pnpm test:backend`: 136 passed
 - `python -m pytest tests`: 1 passed
 - `pnpm lint:backend`: All checks passed
 - `pnpm build:frontend`: Vite production build 통과
-- `pnpm submission:check`: 제출 조건 증거 8개 확인 완료
+- `pnpm submission:check`: 제출 조건 증거 9개 확인 완료
 - `pnpm submission:check`: 사용자 입력, 조건문, 반복문, 함수, 리스트/딕셔너리, 의미 있는 출력, 실행 가능한 Python, LLM 활용 기록, LLM 생성 코드 그대로 사용 금지 증거 확인
 - `git diff --check`: exit 0, 생성된 wiki와 기존 문서의 CRLF 경고만 있음
 - Playwright smoke: `http://127.0.0.1:5173` 렌더 확인, CORS/favicon console error 없음
+- 2026-05-23 local demo smoke: Supabase key는 있으나 live schema가 미적용된 상태에서 `/api/chat`이 in-memory/local fallback으로 응답하고 브라우저 채팅에서 실패 toast 없이 답변 렌더링 확인
 
 실제 Supabase/Gemini/Google 키가 있을 때 추가로 실행할 검증:
 
