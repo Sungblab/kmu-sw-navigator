@@ -42,13 +42,15 @@
 | 2026-05-23 | 데모 UI polish | assistant 답변 Streamdown markdown 렌더링, CJK plugin, Sonner toast, Streamdown vendor chunk 분리 구현/검증 완료 | `docs/superpowers/specs/2026-05-23-demo-ui-polish-design.md`, `docs/superpowers/plans/2026-05-23-demo-ui-polish.md`, `frontend/src/App.tsx`, `frontend/src/styles.css`, `frontend/vite.config.ts` |
 | 2026-05-23 | Supabase schema readiness fallback | 로컬 `.env`에 Supabase key가 있어도 live schema가 미적용이면 `/api/chat` 등 API가 인메모리/local retriever로 fallback하도록 수정하고 브라우저 데모 smoke 통과 | `backend/app/api/dependencies.py`, `backend/tests/api/test_dependency_fallbacks.py` |
 | 2026-05-23 | SaaS 제출 목표 재정렬 | 로컬 fallback을 보조 경로로 낮추고 Supabase live 연결, Python 핵심 로직 설명 가능성, LLM 활용 기록을 최종 제출 기준으로 문서화 | `docs/product/prd-dev-plan.md`, `docs/contributing/roadmap.md`, `docs/report/report-outline.md`, `docs/report/submission-checklist.md`, `docs/product/demo-scenario.md` |
+| 2026-05-23 | Supabase live readiness 점검 | backend Direct/frontend Framework env는 존재하나 `SUPABASE_JWT_SECRET`, smoke user id/email/password, Gemini key가 없어 live smoke는 입력/env blocker로 중단. schema probe는 `schema_ready=False`로 확인 | `pnpm env:check`, `pnpm env:check:strict`, `pnpm live:smoke-plan`, `pnpm supabase:smoke`, `pnpm supabase:login-smoke`, `pnpm supabase:llm-smoke`, `docs/architecture/python-core-logic.md`, `docs/report/submission-checklist.md` |
 
 ## 다음 작업 후보
 
-1. Supabase 프로젝트에 `supabase/schema.sql` 적용 후 `pnpm live:smoke-plan -- --user-id <supabase-auth-user-uuid> --email <email> --password <password>`로 누락 항목 확인
-2. Supabase live 검증: `pnpm env:check:strict`, `pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>`, `pnpm supabase:login-smoke -- --email <email> --password <password>`, `pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>`
-3. Gemini live 검증: `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`, `pnpm rag:ingest:embeddings`
-4. Google Calendar live 검증: OAuth 연결 후 `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`
+1. Supabase 프로젝트에 `supabase/schema.sql`을 적용하고 `profiles`, `user_memories`, `memory_events`, `chat_sessions`, `chat_messages`, `assignments`, `google_oauth_tokens`, `llm_usage_logs`, `document_chunks`, `search_document_chunks_text`, `match_document_chunks`가 생성됐는지 확인
+2. `backend/.env`에 `SUPABASE_JWT_SECRET`을 추가하고 `SUPABASE_SMOKE_USER_ID`, `SUPABASE_SMOKE_EMAIL`, `SUPABASE_SMOKE_PASSWORD` 또는 동등한 CLI 인자를 준비
+3. Supabase live 검증: `pnpm env:check:strict`, `pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>`, `pnpm supabase:login-smoke -- --email <email> --password <password>`, `pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>`
+4. Gemini live 검증: `GEMINI_API_KEY` 설정 후 `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`, `pnpm rag:ingest:embeddings`
+5. Google Calendar live 검증: OAuth 연결 후 `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`
 
 ## 상태 기록 규칙
 

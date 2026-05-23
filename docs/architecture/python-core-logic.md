@@ -345,6 +345,10 @@ Calendar OAuth는 앱 로그인과 분리한다. Supabase Auth는 앱 사용자 
 
 현재 구조에서는 Supabase Dashboard의 Direct/backend 값과 Framework/frontend 값을 분리해서 사용한다. `SUPABASE_SERVICE_ROLE_KEY`는 backend 전용이며 frontend env에 넣지 않는다.
 
+2026-05-23 live 점검에서는 backend Supabase Direct 값과 frontend Supabase Framework 값은 존재했지만, `SUPABASE_JWT_SECRET`이 없어 `pnpm env:check:strict`와 login/API smoke가 막혔다. 별도 schema readiness probe 결과 `schema_ready=False`였으므로, 현재 live 프로젝트에는 `supabase/schema.sql`의 필수 table/function 적용 여부를 먼저 확인해야 한다. 필요한 schema 구성은 `profiles`, `user_memories`, `memory_events`, `chat_sessions`, `chat_messages`, `assignments`, `google_oauth_tokens`, `llm_usage_logs`, `document_chunks`, `search_document_chunks_text`, `match_document_chunks`다.
+
+Python 핵심 로직 주석은 이번 점검에서 `recommendation_service.py`, `retrieval_service.py`, `assignment_service.py`, `memory_service.py`, `chat_contract_service.py`를 다시 확인했다. 추천 점수, Mini Wiki 우선 RAG 검색, Gemini 일정 parser fallback, 메모리 민감도 차단, 일정 intent 우선 분류처럼 발표에서 질문받을 판단 기준에는 이미 의도 주석이 있고, 단순 문법 설명 주석은 추가하지 않았다.
+
 ## 16. LLM usage log 저장
 
 구현 위치:
@@ -374,8 +378,8 @@ Calendar OAuth는 앱 로그인과 분리한다. Supabase Auth는 앱 사용자 
 아직 live 환경에서 검증해야 하는 부분:
 
 - 실제 Supabase 프로젝트에 `supabase/schema.sql` 적용, Auth user 생성 후 `pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>`
-- 로컬 FastAPI 서버 실행 후 실제 Supabase session token으로 `pnpm supabase:auth-smoke -- --access-token <supabase-access-token>`
-- 수동 token 복사 없이 확인하려면 실제 Supabase 계정으로 `pnpm supabase:login-smoke -- --email <email> --password <password>`
+- `backend/.env`에 `SUPABASE_JWT_SECRET`을 추가하고 로컬 FastAPI 서버 실행 후 실제 Supabase session token으로 `pnpm supabase:auth-smoke -- --access-token <supabase-access-token>`
+- 수동 token 복사 없이 확인하려면 `SUPABASE_SMOKE_EMAIL`, `SUPABASE_SMOKE_PASSWORD` 또는 CLI 인자로 실제 Supabase 계정을 제공한 뒤 `pnpm supabase:login-smoke -- --email <email> --password <password>`
 - 실제 Supabase DB에서 `llm_usage_logs` 기록을 확인하려면 `pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>`
 - 저장된 Google Calendar token으로 실제 event insert를 확인하려면 `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`
 - 실제 Gemini key를 넣은 `pnpm gemini:smoke`, embedding ingest
