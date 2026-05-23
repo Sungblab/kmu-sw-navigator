@@ -50,6 +50,7 @@
 | 2026-05-23 | Live smoke runner | schema 적용 직후 `pnpm live:smoke-run --api-base http://127.0.0.1:8001` 하나로 Supabase DB/LLM/login, Gemini, embedding ingest를 순차 검증하도록 runner 추가 | `backend/app/scripts/live_smoke_run.py`, `backend/tests/test_live_smoke_run_script.py`, `package.json` |
 | 2026-05-23 | RAG embedding ingest idempotency | live smoke runner와 자료 보강을 반복 실행해도 `document_chunks`가 중복되지 않도록 schema unique index와 upsert ingest로 변경 | `supabase/schema.sql`, `backend/app/scripts/ingest_documents.py`, `backend/tests/test_ingest_documents_script.py` |
 | 2026-05-23 | RAG source intake template | 사용자가 PDF/사진/캡처/텍스트로 주는 교과과정, 트랙, 동아리, 학사 자료를 출처/category/핵심 필드 기준으로 접수하는 템플릿 추가 | `data/inbox/source-intake-template.md`, `data/inbox/README.md`, `docs/architecture/rag-data-intake.md` |
+| 2026-05-23 | Runtime product mode gate | 프론트/백엔드 런타임에 `demo-user`, `X-User-Id`, mock/목업/데모 fallback 표현이 재도입되지 않도록 `pnpm product:check` 추가 | `scripts/check_runtime_product_mode.py`, `package.json`, `docs/report/submission-checklist.md` |
 
 ## 다음 작업 후보
 

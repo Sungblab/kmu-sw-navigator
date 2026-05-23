@@ -30,8 +30,9 @@
     "gemini:answer-smoke": "cd backend && uv run python -m app.scripts.gemini_answer_smoke",
     "gemini:grounding-smoke": "cd backend && uv run python -m app.scripts.gemini_grounding_smoke",
     "docs:check": "python scripts/check_docs.py",
+    "product:check": "python scripts/check_runtime_product_mode.py",
     "submission:check": "python scripts/check_submission_evidence.py",
-    "verify:local": "pnpm docs:check && pnpm wiki:build && pnpm rag:ingest:dry && pnpm submission:check && python -m pytest tests && pnpm test:backend && pnpm lint:backend && pnpm build:frontend"
+    "verify:local": "pnpm docs:check && pnpm product:check && pnpm wiki:build && pnpm rag:ingest:dry && pnpm submission:check && python -m pytest tests && pnpm test:backend && pnpm lint:backend && pnpm build:frontend"
   },
   "packageManager": "pnpm@10.0.0",
   "engines": {
