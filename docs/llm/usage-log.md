@@ -120,6 +120,7 @@
 | 2026-05-23 | 김성빈 | Codex | Login smoke stale backend 분류 추가 | `supabase:login-smoke`가 401로만 실패해 auth/schema/code 원인이 흐려지는 문제를 줄이기 위해 profile write 전에 `/api/runtime/public-status` contract preflight를 추가 | TDD로 contract success/stale 404 테스트를 먼저 실패시킨 뒤 구현했고, 실제 8000 stale backend에서 재시작 안내 메시지로 분류되는 것을 확인 |
 | 2026-05-23 | 김성빈 | Codex | 활성 문서 live language gate 추가 | 제출/제품/아키텍처/기여 문서가 실제 로그인, 온보딩, 채팅 live 흐름을 기준으로 설명되도록 `pnpm live-language:check`와 회귀 테스트를 추가 | TDD로 현재 활성 문서의 비-live 표현을 먼저 실패시킨 뒤 문서를 정리했고, historical LLM 기록과 archived 설계 문서는 보존 |
 | 2026-05-23 | 김성빈 | Codex | Live readiness stale backend 진단 추가 | schema 미적용 상태에서도 `live:readiness`가 현재 `--api-base`의 `/api/runtime/public-status`를 확인해 오래된 FastAPI 서버를 별도 blocker로 표시하도록 보강 | TDD로 readiness report와 contract checker 테스트를 먼저 실패시킨 뒤 구현했고, 실제 8000 포트에서 Supabase schema blocker와 stale backend blocker가 함께 표시됨을 확인 |
+| 2026-05-23 | 김성빈 | Codex | SQL copy smoke api-base 안내 보정 | 8000번 stale backend 때문에 SQL 적용 뒤 검증 명령이 잘못된 port를 안내하지 않도록 `supabase:sql-copy -- --api-base ...` 옵션을 추가 | TDD로 copy helper 출력이 8001 smoke 명령을 포함하는지 먼저 실패시킨 뒤 구현했고, 실제 클립보드 복사 명령을 8001 기준으로 재실행 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

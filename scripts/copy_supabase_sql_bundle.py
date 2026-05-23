@@ -71,6 +71,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--project-ref",
         help="Supabase project ref for the Dashboard SQL Editor URL.",
     )
+    parser.add_argument(
+        "--api-base",
+        default="http://127.0.0.1:8001",
+        help="FastAPI base URL to show in the follow-up live smoke command.",
+    )
     normalized_argv = sys.argv[1:] if argv is None else argv
     if normalized_argv[:1] == ["--"]:
         normalized_argv = normalized_argv[1:]
@@ -97,7 +102,7 @@ def main() -> int:
     print("")
     print("After running the SQL, verify with:")
     print("pnpm supabase:schema-check")
-    print("pnpm live:smoke-run --api-base http://127.0.0.1:8000")
+    print(f"pnpm live:smoke-run --api-base {args.api_base}")
     return 0
 
 

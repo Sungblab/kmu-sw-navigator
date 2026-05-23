@@ -28,6 +28,12 @@ pnpm supabase:sql-copy
 
 이 명령은 비밀값을 출력하지 않고 SQL Editor URL과 적용 뒤 검증 명령만 출력한다.
 
+현재 8000번에 오래된 서버가 남아 있거나 8001에서 현재 repo backend를 띄운 경우에는 검증 명령이 같은 port를 가리키도록 `--api-base`를 명시한다.
+
+```powershell
+pnpm supabase:sql-copy -- --api-base http://127.0.0.1:8001
+```
+
 적용 전 현재 env, SQL bundle, live schema blocker를 한 번에 보려면 아래 명령을 실행한다.
 
 ```powershell

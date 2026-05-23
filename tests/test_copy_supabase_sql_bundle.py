@@ -59,6 +59,8 @@ def test_cli_accepts_pnpm_separator_and_copies_bundle(monkeypatch, capsys) -> No
             "--",
             "--project-ref",
             "abbwnqwvvtxrizutswws",
+            "--api-base",
+            "http://127.0.0.1:8001",
         ],
     )
 
@@ -69,3 +71,4 @@ def test_cli_accepts_pnpm_separator_and_copies_bundle(monkeypatch, capsys) -> No
     assert "-- section: seed.sql" in copied["text"]
     assert "Copied Supabase SQL bundle to clipboard" in output
     assert "https://supabase.com/dashboard/project/abbwnqwvvtxrizutswws/sql/new" in output
+    assert "pnpm live:smoke-run --api-base http://127.0.0.1:8001" in output
