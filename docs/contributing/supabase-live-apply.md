@@ -6,9 +6,21 @@
 
 1. Supabase Dashboard에서 프로젝트 `abbwnqwvvtxrizutswws`를 연다.
 2. 좌측 SQL Editor로 이동한다.
-3. repo의 `supabase/schema.sql` 전체 내용을 새 query에 붙여넣는다.
-4. Run을 실행한다.
-5. 실행이 끝난 뒤 로컬에서 아래 명령을 순서대로 실행한다.
+3. 아래 명령으로 SQL Editor 적용용 bundle을 만든다.
+
+```powershell
+pnpm supabase:sql-bundle
+```
+
+초기 확인용 seed까지 함께 붙여넣고 싶으면 아래 명령을 사용한다.
+
+```powershell
+pnpm supabase:sql-bundle -- --include-seed
+```
+
+4. 생성된 `supabase/live-schema-bundle.sql` 전체 내용을 새 query에 붙여넣는다.
+5. Run을 실행한다.
+6. 실행이 끝난 뒤 로컬에서 아래 명령을 순서대로 실행한다.
 
 ```powershell
 pnpm supabase:schema-check
@@ -25,6 +37,8 @@ pnpm live:smoke-run --api-base http://127.0.0.1:8001
 ```
 
 `supabase:create-smoke-user --write-root-env`는 이미 실행되어 root `.env`에 smoke user UUID/email/password가 준비되어 있다. root `.env`는 gitignored 파일이므로 커밋하지 않는다.
+
+`supabase/live-schema-bundle.sql`은 적용 편의를 위한 생성 파일이므로 커밋하지 않는다. 원본은 `supabase/schema.sql`과 `supabase/seed.sql`이다.
 
 ## 성공 기준
 

@@ -32,6 +32,7 @@ logs/
 *.log
 test-results/
 playwright-report/
+supabase/live-schema-bundle.sql
 
 # 에디터/OS
 .vscode/
@@ -40,4 +41,3 @@ playwright-report/
 *.swo
 .DS_Store
 Thumbs.db
-
