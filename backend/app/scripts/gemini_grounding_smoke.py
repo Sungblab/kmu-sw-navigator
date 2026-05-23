@@ -4,6 +4,7 @@ import argparse
 from dataclasses import dataclass
 from os import environ
 
+from app.core.config import get_settings
 from app.schemas.chat import ChatRequest
 from app.services.answer_generation_service import (
     GeminiGroundingAnswerGenerator,
@@ -58,8 +59,12 @@ def main() -> int:
     parser.add_argument("--api-key", default=None)
     parser.add_argument("--model", default=None)
     args = parser.parse_args()
+    settings = get_settings()
 
-    config = resolve_grounding_smoke_config(api_key=args.api_key, model=args.model)
+    config = resolve_grounding_smoke_config(
+        api_key=args.api_key or settings.gemini_api_key,
+        model=args.model or settings.gemini_main_model,
+    )
     if config is None:
         print("Gemini grounding smoke skipped: GEMINI_API_KEY is required.")
         return 2

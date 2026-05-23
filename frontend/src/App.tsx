@@ -6,7 +6,7 @@ import {
   X,
 } from "lucide-react";
 import { cjk } from "@streamdown/cjk";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Toaster, toast } from "sonner";
 
@@ -58,6 +58,8 @@ import type {
   Memory,
   MissingProfile,
   Profile,
+  Department,
+  CurriculumYear,
   TrackRecommendResponse,
 } from "./types/api";
 import type {
@@ -71,27 +73,23 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
+interface ProfileInput {
+  department: Department;
+  grade: number;
+  curriculum_year: CurriculumYear;
+}
+
 export default function App() {
   const [activePage, setActivePage] = useState<WorkspacePage>("chat");
   const [profile, setProfile] = useState<Profile | MissingProfile | null>(null);
   const [memories, setMemories] = useState<Memory[]>([]);
   const [chatSessions, setChatSessions] = useState<ChatSessionSummary[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "seed-user",
-      role: "user",
-      text: "AI 쪽 관심 있는데 1학년 때 뭘 먼저 보면 좋아?",
-    },
-    {
-      id: "seed-assistant",
-      role: "assistant",
-      text: "지금 프로필 기준으로는 Python 기초, 자료구조, 수학/통계 기초를 먼저 잡고, 2학기부터 작은 AI 프로젝트를 하나 만드는 흐름이 좋습니다.",
-    },
-  ]);
-  const [draft, setDraft] = useState("수강신청 전에 AI 트랙 기준으로 어떤 과목을 볼까?");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [authSession, setAuthSession] = useState<AuthSessionSummary | null>(null);
   const [authEmail, setAuthEmail] = useState("");
@@ -108,6 +106,11 @@ export default function App() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isMobileContextOpen, setIsMobileContextOpen] = useState(false);
   const [isRecommendationEdited, setIsRecommendationEdited] = useState(false);
+  const [onboardingDraft, setOnboardingDraft] = useState<ProfileInput>({
+    department: "software",
+    grade: 1,
+    curriculum_year: "2025",
+  });
 
   const latestAssistantResponse = [...messages]
     .reverse()
@@ -140,6 +143,17 @@ export default function App() {
     setError(null);
     setIsLoading(true);
     try {
+      const session = await getAuthSession();
+      setAuthSession(session);
+      if (!session) {
+        setProfile(null);
+        setMemories([]);
+        setChatSessions([]);
+        setAssignments([]);
+        setLlmUsageLogs([]);
+        setGoogleCalendarStatus(null);
+        return;
+      }
       const [profileData, memoryData, sessionsData, calendarStatusData, llmLogData] = await Promise.all([
         getProfile(),
         getMemories(),
@@ -164,6 +178,7 @@ export default function App() {
 
   async function refreshAuthSession() {
     setAuthSession(await getAuthSession());
+    setIsAuthChecked(true);
   }
 
   async function handleAuthSubmit(mode: "signin" | "signup") {
@@ -198,9 +213,14 @@ export default function App() {
     try {
       await signOutSupabase();
       setAuthSession(null);
-      setAuthStatus("로그아웃되었습니다. demo fallback으로 전환됩니다.");
+      setProfile(null);
+      setMemories([]);
+      setChatSessions([]);
+      setAssignments([]);
+      setMessages([]);
+      setActiveSessionId(null);
+      setAuthStatus("로그아웃되었습니다.");
       toast.success("로그아웃되었습니다.");
-      await refresh();
     } catch (authError) {
       const message = getErrorMessage(authError, "로그아웃에 실패했습니다.");
       setAuthStatus(message);
@@ -348,17 +368,15 @@ export default function App() {
     setRecommendationDraft(recommendationContextToDraft(automaticRecommendationInput));
   }
 
-  async function seedProfile() {
+  async function saveOnboardingProfile() {
     setError(null);
     try {
       setProfile(
-        await upsertProfile({
-          department: "software",
-          grade: 1,
-          curriculum_year: "2025",
-        }),
+        await upsertProfile(onboardingDraft),
       );
+      setActivePage("chat");
       toast.success("프로필을 저장했습니다.");
+      await refresh();
     } catch (apiError) {
       const message = getErrorMessage(apiError, "프로필 저장에 실패했습니다.");
       setError(message);
@@ -447,11 +465,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    void refresh();
-  }, []);
-
-  useEffect(() => {
-    void refreshAuthSession();
+    void refreshAuthSession().then(() => void refresh());
     const supabase = getSupabaseClient();
     const subscription = supabase?.auth.onAuthStateChange((_event, session) => {
       setAuthSession(
@@ -462,12 +476,64 @@ export default function App() {
             }
           : null,
       );
-      void refresh();
+      if (session) {
+        void refresh();
+      } else {
+        setProfile(null);
+        setMemories([]);
+        setChatSessions([]);
+        setAssignments([]);
+        setMessages([]);
+        setLlmUsageLogs([]);
+        setIsLoading(false);
+      }
     });
     return () => {
       subscription?.data.subscription.unsubscribe();
     };
   }, []);
+
+  if (!isAuthChecked) {
+    return (
+      <FullPageShell>
+        <div className="text-sm font-semibold text-[#716c63]">세션을 확인하는 중입니다.</div>
+      </FullPageShell>
+    );
+  }
+
+  if (!authSession) {
+    return (
+      <LoginPage
+        authEmail={authEmail}
+        authPassword={authPassword}
+        authStatus={authStatus}
+        isAuthBusy={isAuthBusy}
+        setAuthEmail={setAuthEmail}
+        setAuthPassword={setAuthPassword}
+        onAuthSubmit={(mode) => void handleAuthSubmit(mode)}
+      />
+    );
+  }
+
+  if (isLoading || profile === null) {
+    return (
+      <FullPageShell>
+        <div className="text-sm font-semibold text-[#716c63]">사용자 데이터를 불러오는 중입니다.</div>
+      </FullPageShell>
+    );
+  }
+
+  if (!profile.exists) {
+    return (
+      <OnboardingPage
+        authSession={authSession}
+        draft={onboardingDraft}
+        setDraft={setOnboardingDraft}
+        onSave={() => void saveOnboardingProfile()}
+        onSignOut={() => void handleSignOut()}
+      />
+    );
+  }
 
   return (
     <main className="h-screen min-h-[720px] overflow-hidden bg-[#faf8f3] text-[#191817]">
@@ -537,7 +603,7 @@ export default function App() {
               onAuthSubmit={(mode) => void handleAuthSubmit(mode)}
               profile={profile}
               googleCalendarStatus={googleCalendarStatus}
-              onSeedProfile={() => void seedProfile()}
+              onSeedProfile={() => void saveOnboardingProfile()}
               onSignOut={() => void handleSignOut()}
               onRefresh={() => void refresh()}
               onConnectGoogleCalendar={() => void handleConnectGoogleCalendar()}
@@ -572,6 +638,181 @@ export default function App() {
         profile={profile}
       />
     </main>
+  );
+}
+
+function FullPageShell({ children }: { children: ReactNode }) {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#faf8f3] px-5 text-[#191817]">
+      <div className="w-full max-w-[520px] rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-6 shadow-sm">
+        {children}
+      </div>
+    </main>
+  );
+}
+
+function LoginPage({
+  authEmail,
+  authPassword,
+  authStatus,
+  isAuthBusy,
+  setAuthEmail,
+  setAuthPassword,
+  onAuthSubmit,
+}: {
+  authEmail: string;
+  authPassword: string;
+  authStatus: string | null;
+  isAuthBusy: boolean;
+  setAuthEmail: (value: string) => void;
+  setAuthPassword: (value: string) => void;
+  onAuthSubmit: (mode: "signin" | "signup") => void;
+}) {
+  return (
+    <FullPageShell>
+      <div className="space-y-5">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#938d83]">
+            KMU SW Navigator
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-normal">로그인</h1>
+          <p className="mt-2 text-sm leading-6 text-[#716c63]">
+            Supabase Auth 세션으로 로그인해야 학업 상담, 일정, 추천, LLM 기록을 사용할 수 있습니다.
+          </p>
+        </div>
+        <div className="grid gap-3">
+          <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+            이메일
+            <input
+              className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+              type="email"
+              value={authEmail}
+              onChange={(event) => setAuthEmail(event.target.value)}
+            />
+          </label>
+          <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+            비밀번호
+            <input
+              className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+              type="password"
+              value={authPassword}
+              onChange={(event) => setAuthPassword(event.target.value)}
+            />
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8] disabled:opacity-50"
+            type="button"
+            disabled={isAuthBusy}
+            onClick={() => onAuthSubmit("signin")}
+          >
+            <LogIn className="h-4 w-4" aria-hidden="true" />
+            로그인
+          </button>
+          <button
+            className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold disabled:opacity-50"
+            type="button"
+            disabled={isAuthBusy}
+            onClick={() => onAuthSubmit("signup")}
+          >
+            가입
+          </button>
+        </div>
+        {authStatus ? <p className="text-xs leading-5 text-[#716c63]">{authStatus}</p> : null}
+      </div>
+    </FullPageShell>
+  );
+}
+
+function OnboardingPage({
+  authSession,
+  draft,
+  setDraft,
+  onSave,
+  onSignOut,
+}: {
+  authSession: AuthSessionSummary;
+  draft: ProfileInput;
+  setDraft: (value: ProfileInput) => void;
+  onSave: () => void;
+  onSignOut: () => void;
+}) {
+  return (
+    <FullPageShell>
+      <div className="space-y-5">
+        <div>
+          <p className="text-xs font-semibold text-[#938d83]">
+            {authSession.email ?? authSession.userId}
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-normal">처음 설정</h1>
+          <p className="mt-2 text-sm leading-6 text-[#716c63]">
+            상담과 추천에 사용할 기본 학업 정보를 저장합니다. 이 값은 Supabase의 현재 로그인 사용자 프로필에 저장됩니다.
+          </p>
+        </div>
+        <div className="grid gap-3">
+          <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+            학부
+            <select
+              className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+              value={draft.department}
+              onChange={(event) =>
+                setDraft({ ...draft, department: event.target.value as Department })
+              }
+            >
+              <option value="software">소프트웨어학부</option>
+              <option value="ai">인공지능학부</option>
+              <option value="other">기타</option>
+              <option value="unknown">미정</option>
+            </select>
+          </label>
+          <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+            학년
+            <select
+              className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+              value={draft.grade}
+              onChange={(event) => setDraft({ ...draft, grade: Number(event.target.value) })}
+            >
+              <option value={1}>1학년</option>
+              <option value={2}>2학년</option>
+              <option value={3}>3학년</option>
+              <option value={4}>4학년</option>
+            </select>
+          </label>
+          <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+            적용 교과과정
+            <select
+              className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+              value={draft.curriculum_year}
+              onChange={(event) =>
+                setDraft({ ...draft, curriculum_year: event.target.value as CurriculumYear })
+              }
+            >
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="unknown">미정</option>
+            </select>
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8]"
+            type="button"
+            onClick={onSave}
+          >
+            시작하기
+          </button>
+          <button
+            className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold"
+            type="button"
+            onClick={onSignOut}
+          >
+            로그아웃
+          </button>
+        </div>
+      </div>
+    </FullPageShell>
   );
 }
 

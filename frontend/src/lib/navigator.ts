@@ -19,7 +19,7 @@ export function buildRecommendationInputContext(memories: Memory[]): Recommendat
     preference: deriveLearningPreference(memoryText),
     activityStyle: deriveActivityStyle(memoryText),
     weeklyHours: deriveWeeklyHours(memoryText),
-    sourceLabel: memories.length ? "프로필/메모리" : "데모 fallback",
+    sourceLabel: memories.length ? "프로필/메모리" : "온보딩 프로필",
   };
 }
 

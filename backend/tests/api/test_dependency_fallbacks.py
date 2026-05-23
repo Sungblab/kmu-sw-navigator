@@ -46,17 +46,19 @@ def _enable_supabase_env(monkeypatch) -> None:
     dependencies.is_supabase_schema_ready.cache_clear()
 
 
-def test_dependencies_use_in_memory_fallback_when_supabase_schema_is_missing(monkeypatch) -> None:
+def test_dependencies_use_supabase_adapters_when_supabase_env_exists(monkeypatch) -> None:
     _enable_supabase_env(monkeypatch)
     monkeypatch.setattr(dependencies, "get_supabase_client", lambda: MissingSchemaClient())
 
-    assert isinstance(dependencies.get_profile_store(), InMemoryProfileStore)
-    assert isinstance(dependencies.get_memory_store(), InMemoryMemoryStore)
-    assert isinstance(dependencies.get_chat_store(), InMemoryChatStore)
-    assert isinstance(dependencies.get_assignment_store(), InMemoryAssignmentStore)
-    assert isinstance(dependencies.get_google_oauth_token_store(), InMemoryGoogleOAuthTokenStore)
-    assert isinstance(dependencies.get_llm_usage_log_store(), InMemoryLLMUsageLogStore)
-    assert isinstance(dependencies.get_document_retriever(), LocalDocumentRetriever)
+    assert dependencies.get_profile_store().__class__.__name__ == "SupabaseProfileStore"
+    assert dependencies.get_memory_store().__class__.__name__ == "SupabaseMemoryStore"
+    assert dependencies.get_chat_store().__class__.__name__ == "SupabaseChatStore"
+    assert dependencies.get_assignment_store().__class__.__name__ == "SupabaseAssignmentStore"
+    assert (
+        dependencies.get_google_oauth_token_store().__class__.__name__
+        == "SupabaseGoogleOAuthTokenStore"
+    )
+    assert dependencies.get_llm_usage_log_store().__class__.__name__ == "SupabaseLLMUsageLogStore"
 
 
 def test_dependencies_use_supabase_adapters_when_schema_probe_succeeds(monkeypatch) -> None:
@@ -72,3 +74,18 @@ def test_dependencies_use_supabase_adapters_when_schema_probe_succeeds(monkeypat
         == "SupabaseGoogleOAuthTokenStore"
     )
     assert dependencies.get_llm_usage_log_store().__class__.__name__ == "SupabaseLLMUsageLogStore"
+
+
+def test_dependencies_keep_in_memory_adapters_without_supabase_env(monkeypatch) -> None:
+    monkeypatch.setenv("SUPABASE_URL", "")
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    get_settings.cache_clear()
+    dependencies.is_supabase_schema_ready.cache_clear()
+
+    assert isinstance(dependencies.get_profile_store(), InMemoryProfileStore)
+    assert isinstance(dependencies.get_memory_store(), InMemoryMemoryStore)
+    assert isinstance(dependencies.get_chat_store(), InMemoryChatStore)
+    assert isinstance(dependencies.get_assignment_store(), InMemoryAssignmentStore)
+    assert isinstance(dependencies.get_google_oauth_token_store(), InMemoryGoogleOAuthTokenStore)
+    assert isinstance(dependencies.get_llm_usage_log_store(), InMemoryLLMUsageLogStore)
+    assert isinstance(dependencies.get_document_retriever(), LocalDocumentRetriever)

@@ -5,7 +5,7 @@ from typing import Annotated
 import httpx
 from fastapi import Header, HTTPException, status
 
-from app.api.auth import user_id_from_supabase_token
+from app.api.auth import user_id_from_supabase_auth_api, user_id_from_supabase_token
 from app.core.config import get_settings
 from app.db.supabase_client import get_supabase_client
 from app.services.answer_generation_service import (
@@ -79,21 +79,22 @@ REQUIRED_SUPABASE_TABLES = (
 
 
 def get_current_user_id(
-    x_user_id: Annotated[str | None, Header(alias="X-User-Id")] = None,
     authorization: Annotated[str | None, Header(alias="Authorization")] = None,
 ) -> str:
     settings = get_settings()
     if settings.supabase_jwt_secret:
         return user_id_from_supabase_token(authorization, settings.supabase_jwt_secret)
-
-    # Supabase JWT secret이 없는 로컬 테스트에서는 명시적 dev header만 허용한다.
-    # 이 경로는 제출용 단위 테스트와 오프라인 발표 실행을 위한 fallback이다.
-    if not x_user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="인증된 사용자만 사용할 수 있습니다.",
+    if settings.has_supabase_backend:
+        return user_id_from_supabase_auth_api(
+            authorization,
+            supabase_url=settings.supabase_url,
+            service_role_key=settings.supabase_service_role_key,
         )
-    return x_user_id
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Supabase 로그인 세션이 필요합니다.",
+    )
 
 
 @lru_cache
@@ -105,8 +106,8 @@ def is_supabase_schema_ready() -> bool:
     client = get_supabase_client()
     try:
         for table_name in REQUIRED_SUPABASE_TABLES:
-            # Supabase keys can exist before schema.sql has been applied. A tiny read probe keeps
-            # the local demo path on in-memory stores instead of surfacing PostgREST 500s.
+            # Supabase keys can exist before schema.sql has been applied. This probe is kept as a
+            # live readiness signal so smoke output separates env/auth success from schema blockers.
             client.table(table_name).select("*").limit(1).execute()
     except Exception:
         return False
@@ -114,12 +115,12 @@ def is_supabase_schema_ready() -> bool:
 
 
 def use_supabase_backend() -> bool:
-    return is_supabase_schema_ready()
+    return get_settings().has_supabase_backend
 
 
 def get_profile_store() -> ProfileStore:
     global supabase_profile_store
-    # Supabase 키가 없는 로컬/발표 환경에서도 API 테스트가 돌아가도록 in-memory fallback을 유지한다.
+    # Supabase 키가 없는 단위 테스트에서는 in-memory store로 API 흐름을 검증한다.
     if use_supabase_backend():
         if supabase_profile_store is None:
             supabase_profile_store = SupabaseProfileStore(get_supabase_client())

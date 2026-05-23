@@ -22,10 +22,13 @@ ENV_CHECKS = (
         purpose="FastAPI persistence through the Supabase service-role client",
     ),
     EnvCheck(
-        label="Backend Supabase JWT",
+        label="Backend Supabase Auth Verification",
         file_path=Path("backend/.env"),
-        required_keys=("SUPABASE_JWT_SECRET",),
-        purpose="Verify Supabase Auth access tokens",
+        required_keys=(),
+        purpose=(
+            "Verify Supabase Auth access tokens with SUPABASE_JWT_SECRET when present, "
+            "or with the Supabase Auth API through backend Direct values"
+        ),
     ),
     EnvCheck(
         label="Frontend Supabase Framework",

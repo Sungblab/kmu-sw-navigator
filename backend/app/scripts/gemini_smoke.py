@@ -6,6 +6,7 @@ from datetime import date
 from os import environ
 from typing import Protocol
 
+from app.core.config import get_settings
 from app.services.assignment_service import AssignmentParser, GeminiAssignmentParser
 from app.services.embedding_service import EmbeddingService, GeminiEmbeddingService
 
@@ -95,12 +96,13 @@ def main() -> int:
     parser.add_argument("--schedule-model", default=None)
     parser.add_argument("--embedding-dim", type=int, default=None)
     args = parser.parse_args()
+    settings = get_settings()
 
     config = resolve_gemini_smoke_config(
-        api_key=args.api_key,
-        embedding_model=args.embedding_model,
-        schedule_model=args.schedule_model,
-        embedding_dim=args.embedding_dim,
+        api_key=args.api_key or settings.gemini_api_key,
+        embedding_model=args.embedding_model or settings.gemini_embedding_model,
+        schedule_model=args.schedule_model or settings.gemini_schedule_model,
+        embedding_dim=args.embedding_dim or settings.gemini_embedding_dim,
     )
     if config is None:
         print("Gemini smoke skipped: GEMINI_API_KEY is required.")

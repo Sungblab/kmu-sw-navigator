@@ -42,7 +42,7 @@ export function TopBar({
       </div>
       <div className="flex items-center gap-2">
         <span className="hidden rounded-full border border-[#ded7cb] bg-[#fffdf8] px-3 py-1 text-xs font-semibold text-[#716c63] md:inline-flex">
-          {authSession ? "Supabase session" : "demo user"}
+          {authSession ? "Supabase session" : "로그인 필요"}
         </span>
         <button
           className="hidden h-9 items-center gap-2 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-xs font-semibold text-[#3d3b37] sm:inline-flex"

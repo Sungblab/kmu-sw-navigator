@@ -74,16 +74,14 @@ def test_google_calendar_callback_exchanges_code_and_stores_token(monkeypatch) -
     app.dependency_overrides[get_google_oauth_http_client] = lambda: httpx.Client(
         transport=httpx.MockTransport(handler)
     )
+    app.dependency_overrides[get_current_user_id] = lambda: "user-1"
     client = TestClient(app)
 
     response = client.get(
         "/api/integrations/google-calendar/callback",
         params={"code": "auth-code", "state": state},
     )
-    status_response = client.get(
-        "/api/integrations/google-calendar/status",
-        headers={"X-User-Id": "user-1"},
-    )
+    status_response = client.get("/api/integrations/google-calendar/status")
 
     app.dependency_overrides.clear()
     get_settings.cache_clear()

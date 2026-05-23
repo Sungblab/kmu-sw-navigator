@@ -28,7 +28,7 @@ Copy-Item frontend\.env.example frontend\.env
 | --- | --- | --- |
 | `SUPABASE_URL` | backend | Supabase 프로젝트 URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | backend | 백엔드 전용 service role key |
-| `SUPABASE_JWT_SECRET` | backend | Supabase JWT 검증용 secret |
+| `SUPABASE_JWT_SECRET` | backend | 선택 값. 있으면 Supabase access token을 로컬 JWT 검증으로 확인 |
 | `VITE_SUPABASE_URL` | frontend | Supabase 프로젝트 URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | frontend | Supabase Framework 화면의 publishable client key |
 | `VITE_SUPABASE_ANON_KEY` | frontend | 프론트엔드 공개 anon key |
@@ -38,13 +38,13 @@ Copy-Item frontend\.env.example frontend\.env
 | `GOOGLE_OAUTH_REDIRECT_URI` | backend | Google OAuth callback URL |
 | `GOOGLE_CALENDAR_SCOPE` | backend | Calendar event 생성 권한 scope |
 
-`SUPABASE_JWT_SECRET`이 설정된 백엔드는 `Authorization: Bearer <Supabase access token>`만 신뢰합니다. 이 값이 없을 때만 로컬 테스트용 `X-User-Id` header fallback을 허용합니다.
+백엔드는 `Authorization: Bearer <Supabase access token>`만 신뢰합니다. `SUPABASE_JWT_SECRET`이 있으면 로컬에서 JWT를 검증하고, 없으면 `SUPABASE_URL`과 `SUPABASE_SERVICE_ROLE_KEY`로 Supabase Auth `/auth/v1/user` API를 호출해 token 소유자를 확인합니다. 런타임에서는 `X-User-Id` 개발 fallback을 사용하지 않습니다.
 
-프론트엔드는 `VITE_SUPABASE_URL`과 `VITE_SUPABASE_PUBLISHABLE_KEY` 또는 `VITE_SUPABASE_ANON_KEY`가 있으면 Supabase session access token을 API 요청에 자동으로 붙입니다. 값이 없거나 로그인 세션이 없으면 `demo-user` fallback으로 요청합니다.
+프론트엔드는 `VITE_SUPABASE_URL`과 `VITE_SUPABASE_PUBLISHABLE_KEY` 또는 `VITE_SUPABASE_ANON_KEY`가 있으면 Supabase session access token을 API 요청에 자동으로 붙입니다. 로그인 세션이 없으면 앱은 로그인 화면에서 멈추고 API 요청을 보내지 않습니다.
 
 백엔드 CORS는 `FRONTEND_ORIGIN` 기본값인 `http://localhost:5173`을 허용하고, 로컬 Vite가 포트 충돌로 `127.0.0.1:5174`처럼 `51xx` 포트로 올라가는 경우도 개발 편의를 위해 허용합니다.
 
-로그인 UI는 앱의 `설정` 화면에 있습니다. Supabase Auth에서 이메일/비밀번호 로그인을 켠 뒤 `frontend/.env`와 `backend/.env`를 채우면 같은 화면에서 가입, 로그인, 로그아웃을 확인할 수 있습니다.
+로그인 UI는 앱 첫 화면입니다. Supabase Auth에서 이메일/비밀번호 로그인을 켠 뒤 `frontend/.env`와 `backend/.env`를 채우면 가입, 로그인, 로그아웃, 온보딩, 채팅 흐름을 같은 live session으로 확인할 수 있습니다.
 
 Google Calendar 연결도 `설정` 화면에서 확인합니다. Google OAuth env가 없으면 연결 버튼은 비활성화되고, env가 있으면 백엔드가 consent URL을 만들어 프론트를 이동시킵니다. callback은 authorization code를 Google token endpoint로 교환하고 token을 server-only 저장소에 둡니다. token이 있으면 일정 내보내기 API가 Google `events.insert`를 호출하고, token이 없으면 로컬 데모용 synthetic event id로 앱 내부 export 상태를 저장합니다.
 
@@ -110,7 +110,7 @@ pnpm dev:frontend
 5. `SUPABASE_URL`과 `SUPABASE_SERVICE_ROLE_KEY`가 있으면 백엔드는 profile/memory를 Supabase에 저장합니다.
 6. live smoke에는 Supabase Auth에서 생성된 실제 사용자 UUID가 필요합니다.
 
-환경 변수가 없으면 백엔드는 in-memory fallback으로 실행됩니다. 이 경로는 로컬 테스트와 발표 데모용이며, 새로고침이나 서버 재시작 뒤 영속 저장을 보장하지 않습니다.
+환경 변수가 없으면 백엔드는 in-memory fallback으로 실행됩니다. 이 경로는 단위 테스트와 오프라인 검증용이며, 새로고침이나 서버 재시작 뒤 영속 저장을 보장하지 않습니다. Supabase env가 있으면 schema가 미적용된 상태도 live blocker로 드러나도록 Supabase adapter를 사용합니다.
 
 Supabase 연결 확인:
 
@@ -125,7 +125,7 @@ pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>
 ```
 
 성공하면 `profiles`, `user_memories`, `memory_events`에 smoke user 기준 row가 생성되고 `profile_exists=True`, `memory_status=active`가 출력됩니다.
-`auth-smoke`는 실제 로그인 session access token으로 `/api/profile`을 write/read해 JWT 인증 boundary와 API Bearer token 전달을 함께 확인합니다.
+`auth-smoke`는 실제 로그인 session access token으로 `/api/profile`을 write/read해 Supabase Auth boundary와 API Bearer token 전달을 함께 확인합니다.
 `login-smoke`는 Supabase password grant로 access token을 받은 뒤 같은 API smoke를 수행하므로 수동으로 token을 복사하지 않아도 됩니다.
 `llm-smoke`는 `llm_usage_logs`에 smoke row를 쓰고 같은 사용자 범위로 조회되는지 확인합니다.
 `google:calendar-smoke`는 Google OAuth token이 서버 저장소에 있는 사용자로 실제 `events.insert`를 호출합니다.
@@ -201,7 +201,7 @@ pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>
 pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>
 ```
 
-`pnpm supabase:smoke`와 `pnpm supabase:llm-smoke`는 Supabase 키와 실제 Auth user UUID가 있어야 성공합니다. `pnpm supabase:auth-smoke`는 로컬 FastAPI 서버, `SUPABASE_JWT_SECRET`, 실제 Supabase access token이 있어야 성공합니다. `pnpm supabase:login-smoke`는 추가로 Supabase URL, anon key, 이메일/비밀번호가 필요합니다. `pnpm google:calendar-smoke`는 같은 user에 저장된 Google OAuth token이 있어야 성공합니다. 외부 키가 필요한 검증을 실행하지 못하면 PR에 이유를 적습니다.
+`pnpm supabase:smoke`와 `pnpm supabase:llm-smoke`는 Supabase 키와 실제 Auth user UUID가 있어야 성공합니다. `pnpm supabase:auth-smoke`는 로컬 FastAPI 서버와 실제 Supabase access token이 있어야 성공합니다. `pnpm supabase:login-smoke`는 추가로 Supabase URL, anon/publishable key, 이메일/비밀번호가 필요합니다. `pnpm google:calendar-smoke`는 같은 user에 저장된 Google OAuth token이 있어야 성공합니다. 외부 키가 필요한 검증을 실행하지 못하면 PR에 이유를 적습니다.
 
 ## 일반 문제 해결
 

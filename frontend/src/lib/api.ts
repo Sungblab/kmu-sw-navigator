@@ -19,7 +19,6 @@ import type {
 import { getSupabaseAccessToken } from "./supabase";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
-const DEV_USER_ID = "demo-user";
 
 interface ProfileInput {
   department: Department;
@@ -29,15 +28,15 @@ interface ProfileInput {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const accessToken = await getSupabaseAccessToken();
-  const authHeaders: Record<string, string> = accessToken
-    ? { Authorization: `Bearer ${accessToken}` }
-    : { "X-User-Id": DEV_USER_ID };
+  if (!accessToken) {
+    throw new Error("Supabase 로그인 세션이 필요합니다.");
+  }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...authHeaders,
+      Authorization: `Bearer ${accessToken}`,
       ...init?.headers,
     },
   });

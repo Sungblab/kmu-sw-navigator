@@ -43,7 +43,6 @@ def build_live_smoke_steps(
                 backend_env,
                 "SUPABASE_URL",
                 "SUPABASE_SERVICE_ROLE_KEY",
-                "SUPABASE_JWT_SECRET",
             )
             + missing_env(frontend_env, "VITE_SUPABASE_URL")
             + missing_any_env(
@@ -64,7 +63,6 @@ def build_live_smoke_steps(
                 frontend_env,
                 ("VITE_SUPABASE_PUBLISHABLE_KEY", "VITE_SUPABASE_ANON_KEY"),
             )
-            + missing_env(backend_env, "SUPABASE_JWT_SECRET")
             + missing_value(smoke_email, "--email or SUPABASE_SMOKE_EMAIL")
             + missing_value(smoke_password, "--password or SUPABASE_SMOKE_PASSWORD"),
         ),
