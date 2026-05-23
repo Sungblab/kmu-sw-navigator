@@ -20,6 +20,14 @@ pnpm supabase:sql-bundle
 pnpm supabase:sql-bundle -- --include-seed
 ```
 
+SQL을 파일에서 직접 열어 복사하지 않고 바로 클립보드에 넣으려면 아래 명령을 사용한다. 기본값은 초기 확인용 seed까지 포함한 schema+seed bundle이다.
+
+```powershell
+pnpm supabase:sql-copy
+```
+
+이 명령은 비밀값을 출력하지 않고 SQL Editor URL과 적용 뒤 검증 명령만 출력한다.
+
 적용 전 현재 env, SQL bundle, live schema blocker를 한 번에 보려면 아래 명령을 실행한다.
 
 ```powershell

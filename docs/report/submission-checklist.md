@@ -81,6 +81,7 @@ pnpm build:frontend
 - `pnpm docs:check`: 필수 문서 20개 확인 완료
 - `pnpm product:check`: `frontend/src`, `backend/app` 런타임에 `demo-user`, `X-User-Id`, `mock`, `목업`, `데모` fallback 표현이 남아 있지 않음
 - `pnpm supabase:sql-bundle`: SQL Editor 적용용 `supabase/live-schema-bundle.sql` 생성 전 필수 schema marker와 비밀값 marker 검증 후 생성 완료. 생성 파일은 gitignored
+- `pnpm supabase:sql-copy`: 검증된 schema+seed SQL bundle을 클립보드에 복사하고 Supabase SQL Editor URL과 적용 뒤 smoke 명령을 출력
 - `pnpm rag:intake-check`: `data/inbox`의 사용자 제공 자료가 출처/category/placeholder/개인정보 위험 검사를 통과해야 raw/wiki 변환으로 진행
 - `pnpm rag:intake-stub`: PDF/사진/캡처/텍스트 원본을 받으면 `data/inbox/*-intake.md` 접수 stub을 생성해 출처/category/전사 상태를 먼저 기록
 - `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`: env, SQL bundle, Supabase schema 상태를 비밀값 없이 한 번에 요약. 현재 live blocker는 schema 미적용

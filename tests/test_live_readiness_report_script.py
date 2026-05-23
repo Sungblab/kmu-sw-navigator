@@ -19,7 +19,8 @@ def test_build_readiness_report_marks_schema_blocker() -> None:
     assert "Supabase schema: blocker" in report
     assert "table: profiles" in report
     assert "API health: skipped" in report
-    assert "pnpm supabase:sql-bundle -- --include-seed" in report
+    assert "pnpm supabase:sql-copy" in report
+    assert "schema+seed SQL" in report
     assert "pnpm live:smoke-run --api-base http://127.0.0.1:8001" in report
 
 

@@ -78,11 +78,14 @@ def build_readiness_report(
     if bundle_errors:
         lines.append("1. Fix supabase/schema.sql or supabase/seed.sql until bundle validation passes.")
     elif schema_ready is False:
-        bundle_command = "pnpm supabase:sql-bundle -- --include-seed" if include_seed else "pnpm supabase:sql-bundle"
-        lines.append(f"1. {bundle_command}")
-        lines.append("2. Open supabase/live-schema-bundle.sql and paste it into the Supabase SQL Editor.")
-        lines.append("3. Run the SQL in project abbwnqwvvtxrizutswws.")
-        lines.append(f"4. pnpm live:smoke-run --api-base {api_base}")
+        if include_seed:
+            lines.append("1. pnpm supabase:sql-copy")
+            lines.append("2. Paste the copied schema+seed SQL into the Supabase SQL Editor and run it.")
+            lines.append(f"3. pnpm live:smoke-run --api-base {api_base}")
+        else:
+            lines.append("1. pnpm supabase:sql-copy -- --schema-only")
+            lines.append("2. Paste the copied schema SQL into the Supabase SQL Editor and run it.")
+            lines.append(f"3. pnpm live:smoke-run --api-base {api_base}")
     elif api_ready is False:
         lines.append("1. cd backend")
         lines.append("2. uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8001")

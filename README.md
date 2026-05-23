@@ -156,6 +156,7 @@ uv run python -m app.scripts.ingest_documents --raw-dir ../data/raw --wiki-dir .
 Supabase 프로젝트에 `supabase/schema.sql`을 적용한 뒤 실행합니다.
 
 ```powershell
+pnpm supabase:sql-copy
 pnpm live:smoke-plan -- --user-id <supabase-auth-user-uuid> --email <email> --password <password>
 pnpm env:check:strict
 pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>

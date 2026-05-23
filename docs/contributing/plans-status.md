@@ -76,6 +76,7 @@
 | 2026-05-23 | Supabase schema cache reload marker | SQL Editor 적용 직후 PostgREST RPC/table schema cache 반영을 유도하도록 `notify pgrst, 'reload schema'`를 schema와 bundle validation gate에 추가 | `supabase/schema.sql`, `scripts/build_supabase_sql_bundle.py`, `backend/tests/test_supabase_schema_sql_contract.py`, `tests/test_build_supabase_sql_bundle.py` |
 | 2026-05-23 | Live smoke schema retry | SQL Editor 적용 직후 PostgREST schema cache 반영 지연으로 table/RPC가 잠깐 missing일 때 `live:smoke-run`이 schema check를 짧게 재시도 | `backend/app/scripts/live_smoke_run.py`, `backend/tests/test_live_smoke_run_script.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Supabase schema-check retry option | 적용 직후 `pnpm supabase:schema-check`도 기본 3회 retry를 수행하고 `--retries`, `--retry-delay`로 조정 가능하게 보강 | `backend/app/scripts/supabase_schema_check.py`, `backend/tests/test_supabase_schema_check_script.py`, `docs/contributing/supabase-live-apply.md` |
+| 2026-05-23 | Supabase SQL Editor copy helper | Supabase CLI/psql 없이 Dashboard SQL Editor에 붙여넣을 schema+seed bundle을 검증 후 클립보드로 복사하고 다음 smoke 명령을 출력 | `scripts/copy_supabase_sql_bundle.py`, `tests/test_copy_supabase_sql_bundle.py`, `docs/contributing/supabase-live-apply.md` |
 
 ## 다음 작업 후보
 
