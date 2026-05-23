@@ -17,6 +17,7 @@
 | 필요 | 문서 |
 | --- | --- |
 | 로컬 개발 환경 | `contributing/dev-guide.md` |
+| Supabase live schema 적용 | `contributing/supabase-live-apply.md` |
 | 팀 기여 방법 | `../CONTRIBUTING.md` |
 | 작업 상태 | `contributing/plans-status.md` |
 | GitHub 설정 | `github/repository-settings.md` |

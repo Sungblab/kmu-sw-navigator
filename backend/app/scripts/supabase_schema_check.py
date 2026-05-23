@@ -20,7 +20,7 @@ REQUIRED_TABLES = (
 )
 
 REQUIRED_FUNCTION_ARGS: dict[str, dict[str, Any]] = {
-    "search_document_chunks_text": {"query_text": "schema smoke", "match_count": 1},
+    "search_document_chunks_text": {"search_query": "schema smoke", "match_count": 1},
     "match_document_chunks": {
         "query_embedding": [0.0] * 768,
         "match_count": 1,
