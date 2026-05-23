@@ -89,6 +89,7 @@ pnpm build:frontend
 - 로그인 화면 live readiness: 로그인 전에도 비인증 runtime status로 Supabase backend/schema/Gemini readiness를 확인할 수 있어, Gemini key ready와 Supabase schema blocker를 같은 화면에서 구분 가능
 - Supabase schema blocker가 표시되면 앱 안에서도 `pnpm supabase:sql-bundle -- --include-seed`, SQL Editor 적용, `pnpm live:smoke-run --api-base http://127.0.0.1:8001` 순서를 확인 가능
 - 로그인 후 app data 로딩이 schema 503 등으로 실패하면 무한 로딩 대신 live 상태, schema 다음 액션, 새로고침/로그아웃을 표시
+- live status는 Supabase schema missing table/function 전체와 Google Calendar missing env 이름을 표시하되 비밀값은 출력하지 않음
 - `pnpm wiki:build`: raw_documents=12, wiki_pages=7 생성 완료
 - `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 demo/mock 출처 표현 없음
 - `pnpm rag:ingest:dry`: documents=19, chunks=118, wiki_chunks=72, raw_chunks=46 준비 완료

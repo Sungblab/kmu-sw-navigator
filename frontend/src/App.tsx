@@ -871,6 +871,16 @@ function LiveStatusPanel({
           </ol>
         </div>
       ) : null}
+      <RuntimeStatusDetails
+        title="Supabase schema missing 항목"
+        items={runtimeStatus?.supabase_schema.missing_schema}
+      />
+      {showGoogleCalendar ? (
+        <RuntimeStatusDetails
+          title="Google Calendar missing env"
+          items={runtimeStatus?.google_calendar.missing_env}
+        />
+      ) : null}
     </div>
   );
 }
@@ -1823,10 +1833,11 @@ function RuntimeStatusRow({
   readyText: string;
 }) {
   const problemItems = status ? [...status.missing_env, ...status.missing_schema] : [];
+  const hiddenCount = Math.max(problemItems.length - 3, 0);
   const detail = status?.ready
     ? readyText
     : problemItems.length
-      ? problemItems.slice(0, 3).join(", ")
+      ? `${problemItems.slice(0, 3).join(", ")}${hiddenCount ? ` 외 ${hiddenCount}개` : ""}`
       : status?.blocker ?? "확인 전";
 
   return (
@@ -1840,6 +1851,34 @@ function RuntimeStatusRow({
       >
         {status?.ready ? "live" : "blocked"}
       </span>
+    </div>
+  );
+}
+
+function RuntimeStatusDetails({
+  title,
+  items,
+}: {
+  title: string;
+  items?: string[] | null;
+}) {
+  if (!items?.length) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 rounded-lg border border-[#ded7cb] bg-[#fffdf8] p-3">
+      <p className="text-xs font-semibold text-[#716c63]">{title}</p>
+      <div className="mt-2 flex max-h-32 flex-wrap gap-1 overflow-y-auto">
+        {items.map((item) => (
+          <code
+            className="rounded border border-[#ded7cb] bg-[#faf8f3] px-2 py-1 text-[11px] text-[#191817]"
+            key={item}
+          >
+            {item}
+          </code>
+        ))}
+      </div>
     </div>
   );
 }

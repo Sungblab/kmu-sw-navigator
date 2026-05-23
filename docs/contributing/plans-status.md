@@ -70,6 +70,7 @@
 | 2026-05-23 | Runtime schema blocker next action | Supabase schema blocker가 있을 때 runtime status API와 로그인/설정 화면에 SQL bundle 생성, SQL Editor 적용, live smoke 재실행 순서를 표시 | `backend/app/services/runtime_status_service.py`, `backend/app/schemas/runtime_status.py`, `frontend/src/App.tsx` |
 | 2026-05-23 | Live app data failure recovery | Supabase Auth 로그인은 성공했지만 app data 로딩이 schema 503 등으로 실패할 때 무한 로딩 대신 live 상태, schema 다음 액션, 새로고침/로그아웃을 표시 | `frontend/src/App.tsx` |
 | 2026-05-23 | Official KMU RAG source expansion 2 | 공식 페이지 기반으로 인공지능학부 2025 교과과정, 소프트웨어학부 트랙 선택 구조, 졸업요건 상담 기준, K-StarTrack 현장실습 자료를 추가하고 초기 raw 자료의 출처도 공식 확인 경로로 정리 | `data/raw/`, `data/wiki/` |
+| 2026-05-23 | Runtime missing detail UI | 로그인/복구/설정 화면의 live status에서 Supabase schema missing table/function 전체와 Google Calendar missing env 이름을 비밀값 없이 펼쳐 표시 | `frontend/src/App.tsx` |
 
 ## 다음 작업 후보
 
