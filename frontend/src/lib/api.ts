@@ -65,6 +65,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function publicRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...init?.headers,
+    },
+  });
+
+  if (!response.ok) {
+    throw await buildApiError(response);
+  }
+
+  return response.json() as Promise<T>;
+}
+
 async function buildApiError(response: Response): Promise<ApiError> {
   const fallback = `API 요청 실패: ${response.status}`;
   try {
@@ -181,6 +197,10 @@ export function getGoogleCalendarConnectUrl(): Promise<GoogleCalendarConnectResp
 
 export function getRuntimeStatus(): Promise<RuntimeStatus> {
   return request<RuntimeStatus>("/api/runtime/status");
+}
+
+export function getPublicRuntimeStatus(): Promise<RuntimeStatus> {
+  return publicRequest<RuntimeStatus>("/api/runtime/public-status");
 }
 
 export function recommendTrack(input: {

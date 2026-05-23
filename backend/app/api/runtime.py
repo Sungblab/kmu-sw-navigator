@@ -39,3 +39,8 @@ def runtime_status(
     schema_items: RuntimeSchemaItems,
 ) -> RuntimeStatusResponse:
     return build_runtime_status(get_settings(), schema_items=schema_items)
+
+
+@router.get("/public-status")
+def public_runtime_status(schema_items: RuntimeSchemaItems) -> RuntimeStatusResponse:
+    return build_runtime_status(get_settings(), schema_items=schema_items)

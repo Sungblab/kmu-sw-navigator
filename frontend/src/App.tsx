@@ -25,6 +25,7 @@ import {
   getGoogleCalendarStatus,
   getLLMUsageLogs,
   getProfile,
+  getPublicRuntimeStatus,
   getRuntimeStatus,
   previewAssignment,
   recommendActivity,
@@ -489,6 +490,7 @@ export default function App() {
   }
 
   useEffect(() => {
+    void refreshPublicRuntimeStatus();
     void refreshAuthSession().then(() => void refresh());
     const supabase = getSupabaseClient();
     const subscription = supabase?.auth.onAuthStateChange((_event, session) => {
@@ -517,6 +519,14 @@ export default function App() {
     };
   }, []);
 
+  async function refreshPublicRuntimeStatus() {
+    try {
+      setRuntimeStatus(await getPublicRuntimeStatus());
+    } catch {
+      setRuntimeStatus(null);
+    }
+  }
+
   if (!isAuthChecked) {
     return (
       <FullPageShell>
@@ -535,6 +545,7 @@ export default function App() {
         setAuthEmail={setAuthEmail}
         setAuthPassword={setAuthPassword}
         onAuthSubmit={(mode) => void handleAuthSubmit(mode)}
+        runtimeStatus={runtimeStatus}
       />
     );
   }
@@ -684,6 +695,7 @@ function LoginPage({
   setAuthEmail,
   setAuthPassword,
   onAuthSubmit,
+  runtimeStatus,
 }: {
   authEmail: string;
   authPassword: string;
@@ -692,6 +704,7 @@ function LoginPage({
   setAuthEmail: (value: string) => void;
   setAuthPassword: (value: string) => void;
   onAuthSubmit: (mode: "signin" | "signup") => void;
+  runtimeStatus: RuntimeStatus | null;
 }) {
   return (
     <FullPageShell>
@@ -744,9 +757,44 @@ function LoginPage({
             가입
           </button>
         </div>
+        <LiveStatusPanel runtimeStatus={runtimeStatus} />
         {authStatus ? <p className="text-xs leading-5 text-[#716c63]">{authStatus}</p> : null}
       </div>
     </FullPageShell>
+  );
+}
+
+function LiveStatusPanel({
+  runtimeStatus,
+  showGoogleCalendar = false,
+}: {
+  runtimeStatus: RuntimeStatus | null;
+  showGoogleCalendar?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4">
+      <h2 className="text-sm font-semibold">Live API 상태</h2>
+      <div className="mt-3 grid gap-2">
+        <RuntimeStatusRow
+          label="Supabase backend"
+          status={runtimeStatus?.supabase_backend}
+          readyText="env 연결됨"
+        />
+        <RuntimeStatusRow
+          label="Supabase schema"
+          status={runtimeStatus?.supabase_schema}
+          readyText="schema.sql 적용됨"
+        />
+        <RuntimeStatusRow label="Gemini" status={runtimeStatus?.gemini} readyText="API 키 연결됨" />
+        {showGoogleCalendar ? (
+          <RuntimeStatusRow
+            label="Google Calendar"
+            status={runtimeStatus?.google_calendar}
+            readyText="OAuth env 연결됨"
+          />
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -1588,26 +1636,8 @@ function SettingsPage({
         <p className="mt-2 text-sm leading-6 text-[#716c63]">
           프로필, 메모리, API live 연결 상태를 관리하는 화면입니다.
         </p>
-        <div className="mt-5 rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4">
-          <h3 className="text-sm font-semibold">Live API 상태</h3>
-          <div className="mt-3 grid gap-2">
-            <RuntimeStatusRow
-              label="Supabase backend"
-              status={runtimeStatus?.supabase_backend}
-              readyText="env 연결됨"
-            />
-            <RuntimeStatusRow
-              label="Supabase schema"
-              status={runtimeStatus?.supabase_schema}
-              readyText="schema.sql 적용됨"
-            />
-            <RuntimeStatusRow label="Gemini" status={runtimeStatus?.gemini} readyText="API 키 연결됨" />
-            <RuntimeStatusRow
-              label="Google Calendar"
-              status={runtimeStatus?.google_calendar}
-              readyText="OAuth env 연결됨"
-            />
-          </div>
+        <div className="mt-5">
+          <LiveStatusPanel runtimeStatus={runtimeStatus} showGoogleCalendar />
         </div>
         <div className="mt-5 rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4">
           <h3 className="text-sm font-semibold">Supabase 로그인</h3>
