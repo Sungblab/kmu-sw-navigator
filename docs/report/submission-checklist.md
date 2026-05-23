@@ -80,6 +80,7 @@ pnpm build:frontend
 - `pnpm docs:check`: 필수 문서 20개 확인 완료
 - `pnpm product:check`: `frontend/src`, `backend/app` 런타임에 `demo-user`, `X-User-Id`, `mock`, `목업`, `데모` fallback 표현이 남아 있지 않음
 - `pnpm supabase:sql-bundle`: SQL Editor 적용용 `supabase/live-schema-bundle.sql` 생성 전 필수 schema marker와 비밀값 marker 검증 후 생성 완료. 생성 파일은 gitignored
+- `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`: env, SQL bundle, Supabase schema 상태를 비밀값 없이 한 번에 요약. 현재 live blocker는 schema 미적용
 - `pnpm wiki:build`: raw_documents=8, wiki_pages=6 생성 완료
 - `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 demo/mock 출처 표현 없음
 - `pnpm rag:ingest:dry`: documents=14, chunks=80, wiki_chunks=50, raw_chunks=30 준비 완료
@@ -98,6 +99,7 @@ pnpm build:frontend
 ```powershell
 pnpm live:smoke-plan -- --user-id <supabase-auth-user-uuid> --email <email> --password <password>
 pnpm env:check:strict
+pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001
 pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>
 pnpm supabase:auth-smoke -- --access-token <supabase-access-token>
 pnpm supabase:login-smoke -- --email <email> --password <password>

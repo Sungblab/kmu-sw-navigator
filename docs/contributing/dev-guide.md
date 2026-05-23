@@ -117,6 +117,7 @@ Supabase 연결 확인:
 ```powershell
 pnpm env:check
 pnpm live:smoke-plan -- --user-id <supabase-auth-user-uuid> --email <email> --password <password>
+pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001
 pnpm supabase:schema-check
 pnpm supabase:create-smoke-user --write-root-env
 pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>
@@ -135,6 +136,7 @@ pnpm live:smoke-run --api-base http://127.0.0.1:8001
 `llm-smoke`는 `llm_usage_logs`에 smoke row를 쓰고 같은 사용자 범위로 조회되는지 확인합니다.
 `google:calendar-smoke`는 Google OAuth token이 서버 저장소에 있는 사용자로 실제 `events.insert`를 호출합니다.
 `live:smoke-plan`은 비밀값을 출력하지 않고 live smoke 순서와 누락 입력을 보여줍니다.
+`live:readiness`는 env, SQL bundle validation, live Supabase schema 상태를 한 보고서로 묶어 현재 blocker와 다음 명령을 보여줍니다.
 
 ## RAG 문서 ingest
 

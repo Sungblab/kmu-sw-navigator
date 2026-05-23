@@ -59,6 +59,7 @@
 | 2026-05-23 | Supabase SQL Editor bundle | Dashboard SQL Editor에 붙여넣을 schema-only 또는 schema+seed bundle 생성 명령 추가 | `scripts/build_supabase_sql_bundle.py`, `tests/test_build_supabase_sql_bundle.py`, `package.json`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Live smoke schema blocker next actions | schema 미적용으로 live smoke가 멈출 때 SQL bundle 생성, SQL Editor 적용, 재실행 명령을 바로 출력 | `backend/app/scripts/live_smoke_run.py`, `backend/tests/test_live_smoke_run_script.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Supabase SQL bundle validation gate | SQL Editor 적용 bundle에 필수 schema/seed marker가 포함되고 비밀값 marker가 섞이지 않도록 검증을 추가하고 `verify:local`에 포함 | `scripts/build_supabase_sql_bundle.py`, `tests/test_build_supabase_sql_bundle.py`, `package.json` |
+| 2026-05-23 | Live readiness report | env, SQL bundle validation, live Supabase schema 상태와 next action을 비밀값 없이 한 번에 출력하는 `pnpm live:readiness` 추가 | `scripts/live_readiness_report.py`, `tests/test_live_readiness_report_script.py`, `package.json` |
 
 ## 다음 작업 후보
 

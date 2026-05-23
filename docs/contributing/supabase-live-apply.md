@@ -20,6 +20,14 @@ pnpm supabase:sql-bundle
 pnpm supabase:sql-bundle -- --include-seed
 ```
 
+적용 전 현재 env, SQL bundle, live schema blocker를 한 번에 보려면 아래 명령을 실행한다.
+
+```powershell
+pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001
+```
+
+이 명령은 비밀값을 출력하지 않고 missing 변수 이름, SQL bundle 검증 결과, Supabase schema missing 항목, 다음 실행 명령만 보여준다.
+
 4. 생성된 `supabase/live-schema-bundle.sql` 전체 내용을 새 query에 붙여넣는다.
 5. Run을 실행한다.
 6. 실행이 끝난 뒤 로컬에서 아래 명령을 순서대로 실행한다.
