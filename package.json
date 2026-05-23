@@ -33,6 +33,7 @@
     "gemini:grounding-smoke": "cd backend && uv run python -m app.scripts.gemini_grounding_smoke",
     "docs:check": "python scripts/check_docs.py",
     "product:check": "python scripts/check_runtime_product_mode.py",
+    "rag:intake-stub": "python scripts/create_rag_intake_stub.py",
     "rag:intake-check": "python scripts/check_rag_intake.py",
     "rag:source-check": "python scripts/check_rag_source_mode.py",
     "submission:check": "python scripts/check_submission_evidence.py",
