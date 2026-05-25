@@ -1,12 +1,20 @@
 import {
+  CalendarDays,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
+  Clock3,
+  GripVertical,
   Lightbulb,
   LogIn,
   LogOut,
   Paperclip,
+  PanelRightClose,
+  PanelRightOpen,
+  Plus,
   Send,
   SlidersHorizontal,
+  Sparkles,
   Square,
   UserRound,
   X,
@@ -14,7 +22,9 @@ import {
 import { cjk } from "@streamdown/cjk";
 import {
   FormEvent,
+  type CSSProperties,
   type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
   useEffect,
   useMemo,
@@ -200,6 +210,19 @@ interface ComposerAttachment extends ChatAttachmentInput {
   id: string;
 }
 
+const LEFT_SIDEBAR_COLLAPSED_WIDTH = 56;
+const LEFT_SIDEBAR_DEFAULT_WIDTH = 272;
+const LEFT_SIDEBAR_MIN_WIDTH = 220;
+const LEFT_SIDEBAR_MAX_WIDTH = 360;
+const RIGHT_PANEL_COLLAPSED_WIDTH = 52;
+const RIGHT_PANEL_DEFAULT_WIDTH = 336;
+const RIGHT_PANEL_MIN_WIDTH = 280;
+const RIGHT_PANEL_MAX_WIDTH = 460;
+
+function clampPanelWidth(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
 export default function App() {
   const [activePage, setActivePage] = useState<WorkspacePage>("chat");
   const [profile, setProfile] = useState<Profile | MissingProfile | null>(null);
@@ -228,6 +251,10 @@ export default function App() {
   const [activityResult, setActivityResult] = useState<ActivityRecommendResponse | null>(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isMobileContextOpen, setIsMobileContextOpen] = useState(false);
+  const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
+  const [leftSidebarWidth, setLeftSidebarWidth] = useState(LEFT_SIDEBAR_DEFAULT_WIDTH);
+  const [rightPanelWidth, setRightPanelWidth] = useState(RIGHT_PANEL_DEFAULT_WIDTH);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRecommendationEdited, setIsRecommendationEdited] = useState(false);
   const [onboardingDraft, setOnboardingDraft] = useState<ProfileInput>({
@@ -242,6 +269,14 @@ export default function App() {
     weekly_hours: 0,
   });
   const activeChatAbortRef = useRef<AbortController | null>(null);
+  const workspaceGridColumns = `${
+    isLeftSidebarCollapsed ? LEFT_SIDEBAR_COLLAPSED_WIDTH : leftSidebarWidth
+  }px minmax(0,1fr) ${
+    isRightPanelCollapsed ? RIGHT_PANEL_COLLAPSED_WIDTH : rightPanelWidth
+  }px`;
+  const workspaceShellStyle = {
+    "--workspace-grid-columns": workspaceGridColumns,
+  } as CSSProperties;
 
   const latestAssistantResponse = [...messages]
     .reverse()
@@ -269,6 +304,38 @@ export default function App() {
       setRecommendationDraft(recommendationContextToDraft(automaticRecommendationInput));
     }
   }, [automaticRecommendationInput, isRecommendationEdited]);
+
+  function startPanelResize(side: "left" | "right", event: ReactPointerEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = side === "left" ? leftSidebarWidth : rightPanelWidth;
+
+    function handlePointerMove(moveEvent: PointerEvent) {
+      const delta = moveEvent.clientX - startX;
+      if (side === "left") {
+        setLeftSidebarWidth(
+          clampPanelWidth(startWidth + delta, LEFT_SIDEBAR_MIN_WIDTH, LEFT_SIDEBAR_MAX_WIDTH),
+        );
+        return;
+      }
+
+      setRightPanelWidth(
+        clampPanelWidth(startWidth - delta, RIGHT_PANEL_MIN_WIDTH, RIGHT_PANEL_MAX_WIDTH),
+      );
+    }
+
+    function handlePointerUp() {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    }
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp, { once: true });
+  }
 
   async function loadChatSessionMessages(sessionId: string): Promise<ChatMessage[]> {
     const records = await getChatMessages(sessionId);
@@ -855,15 +922,21 @@ export default function App() {
   return (
     <main className="h-[100dvh] w-[100dvw] overflow-hidden bg-[#faf8f3] text-[#191817]">
       <Toaster richColors position="top-right" />
-      <div className="grid h-full min-h-0 w-full min-w-0 overflow-hidden grid-cols-1 lg:grid-cols-[272px_minmax(0,1fr)_336px]">
+      <div
+        className="grid h-full min-h-0 w-full min-w-0 grid-cols-1 overflow-hidden lg:[grid-template-columns:var(--workspace-grid-columns)]"
+        style={workspaceShellStyle}
+      >
         <Sidebar
           activePage={activePage}
           activeSessionId={activeSessionId}
+          isCollapsed={isLeftSidebarCollapsed}
           sessions={chatSessions}
           setActivePage={handleSelectPage}
           onNewChat={startNewChat}
           onOpenSession={(sessionId) => void openChatSession(sessionId)}
           onDeleteSession={(sessionId) => void handleDeleteChatSession(sessionId)}
+          onToggleCollapse={() => setIsLeftSidebarCollapsed((value) => !value)}
+          onResizeStart={(event) => startPanelResize("left", event)}
         />
 
         <section className="grid h-full min-h-0 min-w-0 overflow-hidden grid-rows-[64px_minmax(0,1fr)] bg-[#faf8f3]">
@@ -944,11 +1017,14 @@ export default function App() {
 
         <ContextPanel
           activePage={activePage}
+          isCollapsed={isRightPanelCollapsed}
           profile={profile}
           memories={memories}
           latestResponse={latestAssistantResponse}
           onAsk={startContextQuestion}
           onOpenSettings={openSettingsModal}
+          onResizeStart={(event) => startPanelResize("right", event)}
+          onToggleCollapse={() => setIsRightPanelCollapsed((value) => !value)}
         />
       </div>
       <MobileDrawer
@@ -1893,21 +1969,68 @@ function SourceReferenceStrip({ sources }: { sources: SourceSummary[] }) {
 
 function ContextPanel({
   activePage,
+  isCollapsed,
   profile,
   memories,
   latestResponse,
   onAsk,
   onOpenSettings,
+  onResizeStart,
+  onToggleCollapse,
 }: {
   activePage: WorkspacePage;
+  isCollapsed: boolean;
   profile: Profile | MissingProfile | null;
   memories: Memory[];
   latestResponse?: ChatResponse;
   onAsk: (question: string) => void;
   onOpenSettings: () => void;
+  onResizeStart: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  onToggleCollapse: () => void;
 }) {
+  if (isCollapsed) {
+    return (
+      <aside className="hidden min-w-0 border-l border-[#ded7cb] bg-[#f7f2ea] p-2 lg:flex lg:flex-col lg:items-center">
+        <button
+          className="grid h-9 w-9 place-items-center rounded-lg border border-[#c9c0b3] bg-[#fffdf8] text-[#3d3b37]"
+          type="button"
+          aria-label="오른쪽 참고 패널 펼치기"
+          title="참고 패널 펼치기"
+          onClick={onToggleCollapse}
+        >
+          <PanelRightOpen className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="hidden min-w-0 overflow-y-auto border-l border-[#ded7cb] bg-[#f7f2ea] p-3.5 lg:block">
+    <aside className="relative hidden min-w-0 overflow-y-auto border-l border-[#ded7cb] bg-[#f7f2ea] p-3.5 lg:block">
+      <div
+        className="absolute left-[-3px] top-0 z-10 hidden h-full w-2 cursor-col-resize lg:block"
+        role="separator"
+        aria-label="오른쪽 참고 패널 폭 조절"
+        aria-orientation="vertical"
+        onPointerDown={onResizeStart}
+      />
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <strong className="block text-sm font-semibold">참고 정보</strong>
+          <span className="block text-xs text-[#716c63]">내 정보와 답변 근거</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <GripVertical className="h-4 w-4 text-[#938d83]" aria-hidden="true" />
+          <button
+            className="grid h-8 w-8 place-items-center rounded-lg border border-[#c9c0b3] bg-[#fffdf8] text-[#3d3b37]"
+            type="button"
+            aria-label="오른쪽 참고 패널 접기"
+            title="참고 패널 접기"
+            onClick={onToggleCollapse}
+          >
+            <PanelRightClose className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
       <ContextPanelContent
         activePage={activePage}
         latestResponse={latestResponse}
@@ -2176,38 +2299,131 @@ function SchedulePage({
   onComplete: (assignmentId: string) => void;
   onDelete: (assignmentId: string) => void;
 }) {
+  const calendarDays = buildCalendarDays(assignments);
+  const upcomingAssignments = [...assignments]
+    .sort((left, right) => new Date(left.due_at).getTime() - new Date(right.due_at).getTime())
+    .slice(0, 5);
+  const urgentCount = assignments.filter((assignment) => assignment.d_day <= 3).length;
+
   return (
     <section className="min-h-0 overflow-y-auto px-6 py-7">
-      <div className="mx-auto max-w-[900px] space-y-4">
+      <div className="mx-auto max-w-[1040px] space-y-4">
         <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-5">
-          <h2 className="text-xl font-semibold tracking-normal">일정</h2>
-          <div className="mt-4 rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-3">
-            <textarea
-              className="block min-h-[72px] w-full resize-none bg-transparent text-sm leading-6 outline-none"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              aria-label="일정 자연어 입력"
-            />
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                className="h-9 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8]"
-                type="button"
-                onClick={onPreview}
-              >
-                미리보기
-              </button>
-              <button
-                className="h-9 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold disabled:opacity-50"
-                type="button"
-                disabled={!preview}
-                onClick={onSave}
-              >
-                저장
-              </button>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="inline-flex h-8 items-center gap-2 rounded-full border border-[#ded7cb] bg-[#faf8f3] px-3 text-xs font-semibold text-[#716c63]">
+                <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+                과제 · 시험 · D-day
+              </div>
+              <h2 className="mt-3 text-xl font-semibold tracking-normal">일정 보드</h2>
+              <p className="mt-2 text-sm leading-6 text-[#716c63]">
+                상담에서 나온 마감 문장이나 과제 공지를 붙여 넣으면 날짜를 추출해 캘린더에 올립니다.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-3">
+              <ScheduleMetric label="전체" value={`${assignments.length}개`} />
+              <ScheduleMetric label="임박" value={`${urgentCount}개`} />
+              <ScheduleMetric label="다음" value={upcomingAssignments[0]?.d_day_label ?? "없음"} />
             </div>
           </div>
-          {preview ? (
-            <div className="mt-4 rounded-xl border border-[#ded7cb] bg-[#f1ede5] p-4">
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">이번 달 캘린더</h3>
+                <p className="mt-1 text-xs text-[#716c63]">
+                  {new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long" })}
+                </p>
+              </div>
+              <span className="rounded-full border border-[#ded7cb] bg-[#faf8f3] px-3 py-1 text-xs font-semibold text-[#716c63]">
+                {assignments.length ? "저장된 일정 반영" : "일정 없음"}
+              </span>
+            </div>
+            <div className="grid grid-cols-7 border-l border-t border-[#ded7cb] text-center text-[11px] font-semibold text-[#938d83]">
+              {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+                <div className="border-b border-r border-[#ded7cb] bg-[#faf8f3] py-2" key={day}>
+                  {day}
+                </div>
+              ))}
+              {calendarDays.map((day) => (
+                <div
+                  className={`min-h-[92px] border-b border-r border-[#ded7cb] p-2 text-left ${
+                    day.inCurrentMonth ? "bg-[#fffdf8]" : "bg-[#f7f2ea] text-[#b0a89a]"
+                  }`}
+                  key={day.key}
+                >
+                  <span
+                    className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs font-semibold ${
+                      day.isToday ? "bg-[#191817] text-[#fffdf8]" : ""
+                    }`}
+                  >
+                    {day.date.getDate()}
+                  </span>
+                  <div className="mt-2 space-y-1">
+                    {day.assignments.slice(0, 2).map((assignment) => (
+                      <button
+                        className="block w-full truncate rounded-md bg-[#f1ede5] px-2 py-1 text-left text-[11px] font-semibold text-[#3d3b37]"
+                        key={assignment.id}
+                        type="button"
+                        title={assignment.title}
+                      >
+                        {assignment.title}
+                      </button>
+                    ))}
+                    {day.assignments.length > 2 ? (
+                      <span className="block text-[11px] text-[#716c63]">
+                        +{day.assignments.length - 2}개
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-[#716c63]" aria-hidden="true" />
+                <h3 className="text-sm font-semibold">AI 일정 추출</h3>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-[#716c63]">
+                예: “자료구조 과제 다음주 금요일까지”처럼 자연어로 입력합니다.
+              </p>
+              <div className="mt-3 rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-3">
+                <textarea
+                  className="block min-h-[88px] w-full resize-none bg-transparent text-sm leading-6 outline-none"
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  aria-label="일정 자연어 입력"
+                />
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#191817] px-3 text-sm font-semibold text-[#fffdf8] hover:bg-[#2b2926]"
+                    type="button"
+                    onClick={onPreview}
+                  >
+                    <Clock3 className="h-4 w-4" aria-hidden="true" />
+                    추출
+                  </button>
+                  <button
+                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-semibold hover:bg-[#f1ede5] disabled:opacity-50"
+                    type="button"
+                    disabled={!preview}
+                    onClick={onSave}
+                  >
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    캘린더에 추가
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {preview ? (
+              <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4">
+                <p className="mb-3 text-xs font-semibold text-[#716c63]">추출 결과</p>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-sm font-semibold">{preview.title}</h3>
@@ -2222,45 +2438,92 @@ function SchedulePage({
                   {preview.d_day_label}
                 </strong>
               </div>
-            </div>
-          ) : null}
-        </div>
+              </div>
+            ) : null}
 
-        <div className="grid gap-2">
-          {assignments.map((assignment) => (
-            <article
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4"
-              key={assignment.id}
-            >
-              <div>
-                <h3 className="text-sm font-semibold">{assignment.title}</h3>
-                <p className="mt-1 text-xs text-[#716c63]">
-                  {assignment.course ?? "과목 미지정"} · {new Date(assignment.due_at).toLocaleDateString()}
-                </p>
+            <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4">
+              <h3 className="text-sm font-semibold">다가오는 일정</h3>
+              <div className="mt-3 space-y-2">
+                {upcomingAssignments.length ? (
+                  upcomingAssignments.map((assignment) => (
+                    <article
+                      className="rounded-lg border border-[#ded7cb] bg-[#faf8f3] p-3"
+                      key={assignment.id}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h4 className="truncate text-sm font-semibold">{assignment.title}</h4>
+                          <p className="mt-1 text-xs text-[#716c63]">
+                            {assignment.course ?? "과목 미지정"} · {new Date(assignment.due_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <strong className="shrink-0 rounded-full bg-[#f1ede5] px-2 py-1 text-xs">
+                          {assignment.d_day_label}
+                        </strong>
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-xs font-semibold hover:bg-[#f1ede5]"
+                          type="button"
+                          onClick={() => onComplete(assignment.id)}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          완료
+                        </button>
+                        <button
+                          className="h-8 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-xs font-semibold text-[#716c63] hover:bg-[#f1ede5]"
+                          type="button"
+                          onClick={() => onDelete(assignment.id)}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <div className="rounded-lg border border-dashed border-[#c9c0b3] bg-[#faf8f3] p-4 text-sm leading-6 text-[#716c63]">
+                    아직 일정이 없습니다. 상담에서 나온 과제 문장이나 공지 문장을 붙여 넣어 캘린더에 추가하세요.
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <strong className="text-sm">{assignment.d_day_label}</strong>
-                <button
-                  className="h-8 rounded-lg border border-[#c9c0b3] px-3 text-xs font-semibold"
-                  type="button"
-                  onClick={() => onComplete(assignment.id)}
-                >
-                  완료
-                </button>
-                <button
-                  className="h-8 rounded-lg border border-[#c9c0b3] px-3 text-xs font-semibold text-[#716c63]"
-                  type="button"
-                  onClick={() => onDelete(assignment.id)}
-                >
-                  삭제
-                </button>
-              </div>
-            </article>
-          ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
+}
+
+function ScheduleMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg bg-[#f1ede5] px-3 py-2">
+      <span className="block text-[11px] font-semibold text-[#716c63]">{label}</span>
+      <strong className="mt-1 block text-sm font-semibold">{value}</strong>
+    </div>
+  );
+}
+
+function buildCalendarDays(assignments: Assignment[]) {
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const gridStart = new Date(monthStart);
+  gridStart.setDate(monthStart.getDate() - monthStart.getDay());
+
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(gridStart);
+    date.setDate(gridStart.getDate() + index);
+    const key = date.toISOString().slice(0, 10);
+    return {
+      key,
+      date,
+      inCurrentMonth: date.getMonth() === today.getMonth(),
+      isToday: date.toDateString() === today.toDateString(),
+      assignments: assignments.filter((assignment) => {
+        const dueDate = new Date(assignment.due_at);
+        return dueDate.toDateString() === date.toDateString();
+      }),
+    };
+  });
 }
 
 function RecommendationPage({
@@ -2290,17 +2553,58 @@ function RecommendationPage({
     .slice(0, 5);
   const missingItems = recommendationMissingItems(inputContext);
   const hasEnoughContext = missingItems.length === 0;
+  const hasRecommendations = Boolean(trackResult || activityResult);
 
   return (
     <section className="min-h-0 overflow-y-auto px-6 py-7">
-      <div className="mx-auto max-w-[920px] space-y-4">
+      <div className="mx-auto max-w-[1040px] space-y-4">
         <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold tracking-normal">내 추천</h2>
+              <div className="inline-flex h-8 items-center gap-2 rounded-full border border-[#ded7cb] bg-[#faf8f3] px-3 text-xs font-semibold text-[#716c63]">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                상담 기반 개인 보드
+              </div>
+              <h2 className="mt-3 text-xl font-semibold tracking-normal">추천 보드</h2>
               <p className="mt-2 text-sm leading-6 text-[#716c63]">
-                AI 상담에서 파악한 정보를 바탕으로 트랙과 활동 준비를 정리합니다.
+                AI 상담에서 파악한 목표와 관심사를 트랙, 과목, 활동 준비로 정리합니다.
               </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold text-[#3d3b37] hover:bg-[#f1ede5]"
+                type="button"
+                onClick={onStartAdvisor}
+              >
+                상담으로 정보 보강
+              </button>
+              <button
+                className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8] hover:bg-[#2b2926]"
+                type="button"
+                onClick={onRecommend}
+              >
+                추천 새로고침
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <div className="rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold">AI가 파악한 내 상태</h3>
+                  <p className="mt-1 text-xs leading-5 text-[#716c63]">
+                    이 값은 상담과 설정에서 갱신되고 추천 계산에 사용됩니다.
+                  </p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  hasEnoughContext
+                    ? "bg-[#e9f6e7] text-[#2f6c36]"
+                    : "bg-[#fff4df] text-[#8a5a12]"
+                }`}>
+                  {hasEnoughContext ? "추천 준비 완료" : "정보 보강 필요"}
+                </span>
+              </div>
               {contextTags.length ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {contextTags.map((item, index) => (
@@ -2309,38 +2613,26 @@ function RecommendationPage({
                 </div>
               ) : (
                 <p className="mt-3 text-xs leading-5 text-[#716c63]">
-                  아직 파악한 관심 분야가 없습니다. 먼저 AI 상담에서 진로 페르소나와 대화해 주세요.
+                  아직 파악한 관심 분야가 없습니다. 상담으로 관심사와 목표를 먼저 정리하세요.
                 </p>
               )}
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <RecommendationFact label="관심 트랙" value={inputContext.trackInterests.join(", ")} />
+                <RecommendationFact label="목표" value={inputContext.goal} />
+                <RecommendationFact label="코딩 경험" value={codingLevelLabel(inputContext.codingLevel)} />
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold text-[#3d3b37]"
-                type="button"
-                onClick={onStartAdvisor}
-              >
-                AI 상담에서 정리
-              </button>
-              <button
-                className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8]"
-                type="button"
-                onClick={onRecommend}
-              >
-                추천 실행
-              </button>
+            <div className="rounded-xl border border-[#ded7cb] bg-[#191817] p-4 text-[#fffdf8]">
+              <span className="text-xs font-semibold text-[#cfc8bb]">다음 추천 액션</span>
+              <strong className="mt-2 block text-lg font-semibold leading-7">
+                {hasEnoughContext ? "추천을 새로고침해 현재 계획을 확인하세요." : "상담에서 부족한 정보를 먼저 채우세요."}
+              </strong>
+              <p className="mt-3 text-xs leading-5 text-[#cfc8bb]">
+                {hasRecommendations
+                  ? "아래 추천 결과는 현재 저장된 정보와 학교 자료를 기준으로 정리됩니다."
+                  : "아직 추천 결과가 없으면 상담 정보 정리 후 추천 새로고침을 누르세요."}
+              </p>
             </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 lg:grid-cols-3">
-            <RecommendationFact label="트랙 관심사" value={inputContext.trackInterests.join(", ")} />
-            <RecommendationFact label="활동 관심사" value={inputContext.activityInterests.join(", ")} />
-            <RecommendationFact label="목표" value={inputContext.goal} />
-            <RecommendationFact label="코딩 경험" value={codingLevelLabel(inputContext.codingLevel)} />
-            <RecommendationFact label="학습 선호" value={learningPreferenceLabel(inputContext.preference)} />
-            <RecommendationFact
-              label="활동 방식/시간"
-              value={`${activityStyleLabel(inputContext.activityStyle)} · ${inputContext.weeklyHours ? `주 ${inputContext.weeklyHours}시간` : "시간 미정"}`}
-            />
           </div>
 
           <div className="mt-4 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-3 py-2 text-xs leading-5 text-[#716c63]">
@@ -2463,19 +2755,43 @@ function RecommendationPage({
           ) : null}
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-2">
-          <RecommendationPanel
-            title="트랙 추천"
-            items={trackResult?.recommendations ?? []}
-            actions={trackResult?.recommended_actions ?? []}
-            sources={trackResult?.evidence.internal_sources ?? []}
-          />
-          <RecommendationPanel
-            title={activityResult?.activity_style ?? "활동 추천"}
-            items={activityResult?.recommendations ?? []}
-            actions={activityResult?.recommended_actions ?? []}
-            sources={activityResult?.evidence.internal_sources ?? []}
-          />
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+          <div className="space-y-4">
+            <RecommendationPanel
+              title="트랙·과목 추천"
+              emptyText="추천 새로고침을 누르면 관심사에 맞는 트랙과 수강 방향이 표시됩니다."
+              items={trackResult?.recommendations ?? []}
+              actions={trackResult?.recommended_actions ?? []}
+              sources={trackResult?.evidence.internal_sources ?? []}
+            />
+            <RecommendationPanel
+              title="활동·포트폴리오 추천"
+              emptyText="동아리, 프로젝트, 스터디 같은 활동 추천이 여기에 표시됩니다."
+              items={activityResult?.recommendations ?? []}
+              actions={activityResult?.recommended_actions ?? []}
+              sources={activityResult?.evidence.internal_sources ?? []}
+            />
+          </div>
+          <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4">
+            <h3 className="text-sm font-semibold">추천 로드맵</h3>
+            <div className="mt-4 space-y-3">
+              {[
+                ["1", "상담에서 관심사 정리", inputContext.trackInterests.length ? "완료" : "필요"],
+                ["2", "트랙·과목 추천 확인", trackResult ? "완료" : "대기"],
+                ["3", "활동·포트폴리오 계획", activityResult ? "완료" : "대기"],
+              ].map(([step, title, status]) => (
+                <div className="flex gap-3 rounded-lg bg-[#faf8f3] p-3" key={step}>
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#191817] text-xs font-semibold text-[#fffdf8]">
+                    {step}
+                  </span>
+                  <div>
+                    <strong className="block text-sm">{title}</strong>
+                    <span className="mt-1 block text-xs text-[#716c63]">{status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -2539,31 +2855,42 @@ function activityStyleLabel(value: RecommendationInputContext["activityStyle"]):
 
 function RecommendationPanel({
   title,
+  emptyText,
   items,
   actions,
   sources,
 }: {
   title: string;
+  emptyText: string;
   items: Array<{ id: string; title: string; score: number; reasons: string[] }>;
   actions: string[];
   sources: Array<Record<string, unknown>>;
 }) {
   return (
     <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4">
-      <h3 className="text-sm font-semibold">{title}</h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <span className="text-xs font-semibold text-[#716c63]">
+          {items.length ? `${items.length}개 추천` : "대기"}
+        </span>
+      </div>
       <div className="mt-3 space-y-2">
         {items.length ? (
           items.slice(0, 3).map((item) => (
-            <article className="rounded-lg bg-[#f1ede5] p-3" key={item.id}>
+            <article className="rounded-lg border border-[#ded7cb] bg-[#faf8f3] p-3" key={item.id}>
               <div className="flex items-center justify-between gap-3">
                 <strong className="text-sm">{item.title}</strong>
-                <span className="text-xs font-semibold text-[#716c63]">{item.score}점</span>
+                <span className="rounded-full bg-[#f1ede5] px-2 py-1 text-xs font-semibold text-[#716c63]">
+                  {item.score}점
+                </span>
               </div>
               <p className="mt-2 text-xs leading-5 text-[#716c63]">{item.reasons[0]}</p>
             </article>
           ))
         ) : (
-          <p className="text-xs leading-5 text-[#716c63]">추천 실행 후 결과가 표시됩니다.</p>
+          <div className="rounded-lg border border-dashed border-[#c9c0b3] bg-[#faf8f3] p-4 text-xs leading-5 text-[#716c63]">
+            {emptyText}
+          </div>
         )}
       </div>
       {actions.length ? (

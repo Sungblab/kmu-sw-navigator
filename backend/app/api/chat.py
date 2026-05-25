@@ -178,7 +178,8 @@ def _build_and_store_streaming_chat_response(
         if isinstance(chunk, StreamedAnswerChunk):
             terminal_response = chunk.response
         chunks.append(chunk_text)
-        yield _sse("text", {"delta": chunk_text})
+        if chunk_text:
+            yield _sse("text", {"delta": chunk_text})
     answer = "".join(chunks).strip()
     if not answer:
         raise RuntimeError("Gemini returned an empty answer")

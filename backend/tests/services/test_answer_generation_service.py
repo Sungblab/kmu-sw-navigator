@@ -1,6 +1,7 @@
 from app.schemas.chat import ChatRequest
 from app.schemas.memory import MemoryResponse
 from app.services.answer_generation_service import (
+    CHAT_MAX_OUTPUT_TOKENS,
     GroundedAnswer,
     _looks_incomplete_answer,
     build_answer_prompt,
@@ -47,6 +48,10 @@ class FakeGroundingAnswerGenerator:
                 }
             ],
         )
+
+
+def test_chat_answer_output_budget_is_not_tiny() -> None:
+    assert CHAT_MAX_OUTPUT_TOKENS == 4096
 
 
 def test_build_answer_prompt_includes_question_memories_and_evidence() -> None:
@@ -164,3 +169,10 @@ def test_build_chat_response_does_not_ground_academic_questions() -> None:
 def test_incomplete_answer_detection_checks_markdown_not_length() -> None:
     assert not _looks_incomplete_answer("네, 먼저 Python을 보세요.")
     assert _looks_incomplete_answer("**인공지능학부 2025 교과과정 Basic")
+
+
+def test_incomplete_answer_detection_accepts_camel_case_finish_reason() -> None:
+    candidate = type("Candidate", (), {"finishReason": "MAX_TOKENS"})()
+    response = type("Response", (), {"candidates": [candidate]})()
+
+    assert _looks_incomplete_answer("AI 관련 주요 과", response)

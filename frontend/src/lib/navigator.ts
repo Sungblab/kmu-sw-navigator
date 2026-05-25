@@ -57,7 +57,7 @@ export function pageTitle(page: WorkspacePage): string {
   return {
     chat: "AI 트랙을 어떻게 준비할까?",
     roadmap: "학업 로드맵",
-    career: "내 추천",
+    career: "추천 보드",
     project: "프로젝트",
     schedule: "일정",
     settings: "설정",

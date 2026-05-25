@@ -11,6 +11,8 @@ from app.schemas.chat import ChatRequest
 from app.schemas.memory import MemoryResponse
 from app.services.retrieval_service import RetrievalResult
 
+CHAT_MAX_OUTPUT_TOKENS = 4096
+
 
 class AnswerGenerator(Protocol):
     def generate_answer(
@@ -83,7 +85,7 @@ class GeminiAnswerGenerator:
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_INSTRUCTION,
                 temperature=0.3,
-                max_output_tokens=768,
+                max_output_tokens=CHAT_MAX_OUTPUT_TOKENS,
             ),
         )
         answer = (response.text or "").strip()
@@ -96,7 +98,7 @@ class GeminiAnswerGenerator:
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_INSTRUCTION,
                     temperature=0.2,
-                    max_output_tokens=768,
+                    max_output_tokens=CHAT_MAX_OUTPUT_TOKENS,
                 ),
             )
             retry_answer = (retry_response.text or "").strip()
@@ -124,13 +126,15 @@ class GeminiAnswerGenerator:
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_INSTRUCTION,
                 temperature=0.3,
-                max_output_tokens=768,
+                max_output_tokens=CHAT_MAX_OUTPUT_TOKENS,
             ),
         )
         for chunk in stream:
             text = getattr(chunk, "text", None)
             if text:
                 yield StreamedAnswerChunk(text=text, response=chunk)
+            elif _finish_reason(chunk):
+                yield StreamedAnswerChunk(text="", response=chunk)
 
 
 class GeminiGroundingAnswerGenerator:
@@ -158,7 +162,7 @@ class GeminiGroundingAnswerGenerator:
             config=types.GenerateContentConfig(
                 system_instruction=GROUNDING_SYSTEM_INSTRUCTION,
                 temperature=0.2,
-                max_output_tokens=768,
+                max_output_tokens=CHAT_MAX_OUTPUT_TOKENS,
                 tools=[types.Tool(google_search=types.GoogleSearch())],
             ),
         )
@@ -303,11 +307,18 @@ def _has_unbalanced_markdown_strong(answer: str) -> bool:
 
 
 def _was_cut_off(response: object | None) -> bool:
+    finish_reason = _finish_reason(response).casefold()
+    return "max" in finish_reason or "length" in finish_reason
+
+
+def _finish_reason(response: object | None) -> str:
     candidates = getattr(response, "candidates", None) or []
     if not candidates:
-        return False
-    finish_reason = str(getattr(candidates[0], "finish_reason", "") or "").casefold()
-    return "max" in finish_reason or "length" in finish_reason
+        return ""
+    finish_reason = getattr(candidates[0], "finish_reason", "")
+    if not finish_reason:
+        finish_reason = getattr(candidates[0], "finishReason", "")
+    return str(finish_reason or "")
 
 
 def _repair_markdown(answer: str) -> str:

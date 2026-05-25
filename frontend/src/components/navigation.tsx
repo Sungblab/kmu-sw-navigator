@@ -2,10 +2,14 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   MessageSquareText,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
   Settings,
   Trash2,
   X,
 } from "lucide-react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 
 import type { ChatSessionSummary } from "../types/api";
 import type { WorkspacePage } from "../types/navigator";
@@ -16,18 +20,21 @@ const workspaceItems: Array<{
   icon: typeof MessageSquareText;
 }> = [
   { id: "chat", label: "AI 상담", icon: MessageSquareText },
-  { id: "career", label: "내 추천", icon: BriefcaseBusiness },
+  { id: "career", label: "추천 보드", icon: BriefcaseBusiness },
   { id: "schedule", label: "일정", icon: CalendarDays },
 ];
 
 interface NavigationProps {
   activePage: WorkspacePage;
   activeSessionId: string | null;
+  isCollapsed?: boolean;
   sessions: ChatSessionSummary[];
   setActivePage: (page: WorkspacePage) => void;
   onNewChat: () => void;
   onOpenSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => void;
+  onToggleCollapse?: () => void;
+  onResizeStart?: (event: ReactPointerEvent<HTMLDivElement>) => void;
 }
 
 interface MobileDrawerProps extends NavigationProps {
@@ -39,15 +46,95 @@ export function Sidebar(props: NavigationProps) {
   const {
     activePage,
     activeSessionId,
+    isCollapsed = false,
     sessions,
     setActivePage,
     onNewChat,
     onOpenSession,
     onDeleteSession,
+    onToggleCollapse,
+    onResizeStart,
   } = props;
+
+  if (isCollapsed) {
+    return (
+      <aside className="relative hidden h-full min-h-0 min-w-0 overflow-hidden border-r border-[#ded7cb] bg-[#f1ede5] p-2 lg:flex lg:flex-col lg:items-center">
+        <button
+          className="grid h-9 w-9 place-items-center rounded-lg border border-[#c9c0b3] bg-[#fffdf8] text-sm font-bold"
+          type="button"
+          aria-label="왼쪽 사이드바 펼치기"
+          title="사이드바 펼치기"
+          onClick={onToggleCollapse}
+        >
+          <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <button
+          className="mt-3 grid h-9 w-9 place-items-center rounded-lg bg-[#191817] text-[#fffdf8]"
+          type="button"
+          aria-label="새 상담"
+          title="새 상담"
+          onClick={onNewChat}
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <div className="mt-4 flex w-full flex-col items-center gap-1">
+          {workspaceItems.map((item) => {
+            const Icon = item.icon;
+            const selected = activePage === item.id;
+            return (
+              <button
+                className={`grid h-9 w-9 place-items-center rounded-lg ${
+                  selected
+                    ? "border border-[#ded7cb] bg-[#fffdf8] text-[#191817]"
+                    : "text-[#3d3b37] hover:bg-[#f7f2ea]"
+                }`}
+                key={item.id}
+                type="button"
+                aria-label={item.label}
+                title={item.label}
+                onClick={() => setActivePage(item.id)}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+              </button>
+            );
+          })}
+        </div>
+        <button
+          className="mt-auto grid h-9 w-9 place-items-center rounded-lg text-[#3d3b37] hover:bg-[#f7f2ea]"
+          type="button"
+          aria-label="설정"
+          title="설정"
+          onClick={() => setActivePage("settings")}
+        >
+          <Settings className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </aside>
+    );
+  }
+
   return (
     <aside className="relative hidden h-full min-h-0 min-w-0 overflow-hidden border-r border-[#ded7cb] bg-[#f1ede5] p-3 lg:block">
-      <BrandHeader />
+      {onResizeStart ? (
+        <div
+          className="absolute right-[-3px] top-0 z-10 hidden h-full w-2 cursor-col-resize lg:block"
+          role="separator"
+          aria-label="왼쪽 사이드바 폭 조절"
+          aria-orientation="vertical"
+          onPointerDown={onResizeStart}
+        />
+      ) : null}
+      <div className="flex items-start justify-between gap-2">
+        <BrandHeader />
+        <button
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#c9c0b3] bg-[#fffdf8] text-[#3d3b37]"
+          type="button"
+          aria-label="왼쪽 사이드바 접기"
+          title="사이드바 접기"
+          onClick={onToggleCollapse}
+        >
+          <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
 
       <button
         className="h-10 w-full rounded-lg bg-[#191817] text-sm font-semibold text-[#fffdf8]"
