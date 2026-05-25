@@ -6,7 +6,6 @@ export type WorkspacePage =
   | "career"
   | "project"
   | "schedule"
-  | "logs"
   | "settings";
 
 export interface ChatMessage {
@@ -21,7 +20,7 @@ export interface RecommendationInputContext {
   trackInterests: string[];
   activityInterests: string[];
   goal: string;
-  codingLevel: "beginner" | "intermediate" | "advanced";
+  codingLevel: "beginner" | "intermediate" | "advanced" | "unknown";
   preference: "lecture" | "project" | "study" | "unknown";
   activityStyle: "solo" | "team" | "mixed" | "unknown";
   weeklyHours: number;

@@ -22,6 +22,8 @@ from app.services.answer_generation_service import (
     AnswerGenerator,
     GeminiAnswerGenerator,
     GroundingAnswerGenerator,
+    StreamedAnswerChunk,
+    _looks_incomplete_answer,
 )
 from app.services.chat_contract_service import build_chat_response, detect_intent
 from app.services.retrieval_service import (
@@ -164,17 +166,30 @@ def _build_and_store_streaming_chat_response(
 
     model = getattr(streaming_generator, "model", None)
     chunks: list[str] = []
+    terminal_response: object | None = None
     for chunk in streaming_generator.stream_answer(
         request,
         intent=intent,
         memories=memories,
         retrieval_results=retrieval_results,
     ):
-        chunks.append(chunk)
-        yield _sse("text", {"delta": chunk})
+        chunk_text = chunk.text if isinstance(chunk, StreamedAnswerChunk) else chunk
+        if isinstance(chunk, StreamedAnswerChunk):
+            terminal_response = chunk.response
+        chunks.append(chunk_text)
+        yield _sse("text", {"delta": chunk_text})
     answer = "".join(chunks).strip()
     if not answer:
         raise RuntimeError("Gemini returned an empty answer")
+    if _looks_incomplete_answer(answer, terminal_response):
+        retry_answer = streaming_generator.generate_answer(
+            request,
+            intent=intent,
+            memories=memories,
+            retrieval_results=retrieval_results,
+        ).strip()
+        if retry_answer and not _looks_incomplete_answer(retry_answer):
+            answer = retry_answer
     response = build_chat_response(
         request,
         memories,

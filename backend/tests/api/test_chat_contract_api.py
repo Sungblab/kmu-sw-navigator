@@ -9,7 +9,7 @@ from app.api.dependencies import (
     get_memory_store,
 )
 from app.main import app
-from app.services.answer_generation_service import GroundedAnswer
+from app.services.answer_generation_service import GroundedAnswer, StreamedAnswerChunk
 from app.services.chat_store import InMemoryChatStore
 from app.services.memory_service import InMemoryMemoryStore, create_memory_candidate
 from app.services.retrieval_service import LocalDocumentRetriever
@@ -33,6 +33,27 @@ class FakeStreamingAnswerGenerator:
         yield f"{request.mode}/"
         yield f"{request.model_tier}/"
         yield request.attachments[0].name if request.attachments else "no-file"
+
+
+class FakeCutoffCandidate:
+    finish_reason = "MAX_TOKENS"
+
+
+class FakeCutoffResponse:
+    candidates = [FakeCutoffCandidate()]
+
+
+class FakeCutoffStreamingAnswerGenerator:
+    model = "gemini-test-stream"
+
+    def generate_answer(self, request, *, intent, memories, retrieval_results):
+        return "Python 문법 다음에는 선형대수 기초와 자료구조를 함께 확인하세요."
+
+    def stream_answer(self, request, *, intent, memories, retrieval_results):
+        yield StreamedAnswerChunk(
+            text="Python 문법과 선형",
+            response=FakeCutoffResponse(),
+        )
 
 
 def test_chat_returns_answer_actions_evidence_and_choices() -> None:
@@ -225,3 +246,27 @@ def test_chat_stream_uses_request_options_and_streaming_generator() -> None:
     assert "fast/" in body
     assert "courses.md" in body
     assert "gemini-test-stream" in body
+
+
+def test_chat_stream_retries_cutoff_answer_before_done_and_save() -> None:
+    store = InMemoryMemoryStore()
+    chat_store = InMemoryChatStore()
+    app.dependency_overrides[get_current_user_id] = lambda: "user-1"
+    app.dependency_overrides[get_memory_store] = lambda: store
+    app.dependency_overrides[get_chat_store] = lambda: chat_store
+    app.dependency_overrides[get_document_retriever] = lambda: LocalDocumentRetriever([])
+    app.dependency_overrides[get_answer_generator] = lambda: FakeCutoffStreamingAnswerGenerator()
+    app.dependency_overrides[get_grounding_answer_generator] = lambda: None
+    client = TestClient(app)
+
+    with client.stream("POST", "/api/chat/stream", json={"message": "AI 트랙 알려줘"}) as response:
+        body = response.read().decode("utf-8")
+
+    saved_messages = chat_store.list_messages("user-1", chat_store.list_sessions("user-1")[0].id)
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert "Python 문법 다음에는 선형대수 기초와 자료구조를 함께 확인하세요." in body
+    assert (
+        saved_messages[1].content
+        == "Python 문법 다음에는 선형대수 기초와 자료구조를 함께 확인하세요."
+    )

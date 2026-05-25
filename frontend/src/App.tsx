@@ -1,7 +1,6 @@
 import {
   ChevronDown,
   ChevronRight,
-  CheckCircle2,
   Lightbulb,
   LogIn,
   LogOut,
@@ -12,7 +11,15 @@ import {
   X,
 } from "lucide-react";
 import { cjk } from "@streamdown/cjk";
-import { FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Streamdown } from "streamdown";
 import { Toaster, toast } from "sonner";
 
@@ -28,7 +35,6 @@ import {
   deleteAssignment,
   getAssignments,
   getMemories,
-  getLLMUsageLogs,
   getProfile,
   previewAssignment,
   recommendActivity,
@@ -60,7 +66,6 @@ import type {
   ChatModelTier,
   ChatMessageRecord,
   ChatSessionSummary,
-  LLMUsageLog,
   Memory,
   MissingProfile,
   Profile,
@@ -217,7 +222,6 @@ export default function App() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [assignmentDraft, setAssignmentDraft] = useState("자료구조 과제 다음주 금요일까지");
   const [assignmentPreview, setAssignmentPreview] = useState<AssignmentPreview | null>(null);
-  const [llmUsageLogs, setLlmUsageLogs] = useState<LLMUsageLog[]>([]);
   const [trackResult, setTrackResult] = useState<TrackRecommendResponse | null>(null);
   const [activityResult, setActivityResult] = useState<ActivityRecommendResponse | null>(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -227,12 +231,12 @@ export default function App() {
     department: "software",
     grade: 1,
     curriculum_year: "2025",
-    interests_text: "AI, 백엔드",
-    goal: "AI 서비스 개발",
-    coding_level: "beginner",
-    preference: "project",
-    activity_style: "team",
-    weekly_hours: 4,
+    interests_text: "",
+    goal: "",
+    coding_level: "unknown",
+    preference: "unknown",
+    activity_style: "unknown",
+    weekly_hours: 0,
   });
   const activeChatAbortRef = useRef<AbortController | null>(null);
 
@@ -286,19 +290,16 @@ export default function App() {
         setMemories([]);
         setChatSessions([]);
         setAssignments([]);
-        setLlmUsageLogs([]);
         return;
       }
-      const [profileData, memoryData, sessionsData, llmLogData] = await Promise.all([
+      const [profileData, memoryData, sessionsData] = await Promise.all([
         getProfile(),
         getMemories(),
         getChatSessions(),
-        getLLMUsageLogs(),
       ]);
       setProfile(profileData);
       setMemories(memoryData);
       setChatSessions(sessionsData);
-      setLlmUsageLogs(llmLogData);
       const savedSessionId = window.localStorage.getItem(ACTIVE_CHAT_SESSION_KEY);
       const sessionToRestore =
         sessionsData.find((session) => session.id === savedSessionId)?.id ?? sessionsData[0]?.id;
@@ -437,6 +438,19 @@ export default function App() {
 
   async function handleRecommend() {
     setError(null);
+    if (
+      !recommendationInput.trackInterests.length ||
+      !recommendationInput.activityInterests.length ||
+      !recommendationInput.goal ||
+      recommendationInput.codingLevel === "unknown"
+    ) {
+      setActivePage("chat");
+      setDraft(
+        "내 관심 분야, 목표, 코딩 경험을 먼저 물어보고 추천에 필요한 정보로 정리해줘.",
+      );
+      toast.message("추천에 필요한 정보가 부족해요. 먼저 AI 상담에서 관심사와 목표를 정리해 주세요.");
+      return;
+    }
     try {
       const [track, activity] = await Promise.all([
         recommendTrack({
@@ -528,9 +542,9 @@ export default function App() {
       setDraft(buildFirstQuestion(onboardingDraft, interests));
       setRecommendationDraft(
         recommendationContextToDraft({
-          trackInterests: interests.length ? interests : ["AI", "백엔드"],
-          activityInterests: interests.length ? interests : ["개발"],
-          goal: onboardingDraft.goal.trim() || "AI 서비스 개발",
+          trackInterests: interests,
+          activityInterests: [],
+          goal: onboardingDraft.goal.trim(),
           codingLevel: onboardingDraft.coding_level,
           preference: onboardingDraft.preference,
           activityStyle: onboardingDraft.activity_style,
@@ -743,7 +757,6 @@ export default function App() {
         setAssignments([]);
         setMessages([]);
         setActiveSessionId(null);
-        setLlmUsageLogs([]);
         window.localStorage.removeItem(ACTIVE_CHAT_SESSION_KEY);
         setIsLoading(false);
       }
@@ -791,9 +804,9 @@ export default function App() {
   }
 
   return (
-    <main className="h-screen overflow-hidden bg-[#faf8f3] text-[#191817]">
+    <main className="h-[100dvh] w-[100dvw] overflow-hidden bg-[#faf8f3] text-[#191817]">
       <Toaster richColors position="top-right" />
-      <div className="grid h-full grid-cols-1 lg:grid-cols-[272px_minmax(0,1fr)_336px]">
+      <div className="grid h-full min-h-0 w-full min-w-0 overflow-hidden grid-cols-1 lg:grid-cols-[272px_minmax(0,1fr)_336px]">
         <Sidebar
           activePage={activePage}
           activeSessionId={activeSessionId}
@@ -804,7 +817,7 @@ export default function App() {
           onDeleteSession={(sessionId) => void handleDeleteChatSession(sessionId)}
         />
 
-        <section className="grid min-w-0 grid-rows-[64px_minmax(0,1fr)] bg-[#faf8f3]">
+        <section className="grid h-full min-h-0 min-w-0 overflow-hidden grid-rows-[64px_minmax(0,1fr)] bg-[#faf8f3]">
           <TopBar
             activePage={activePage}
             error={error}
@@ -850,8 +863,6 @@ export default function App() {
               onComplete={(assignmentId) => void handleCompleteAssignment(assignmentId)}
               onDelete={(assignmentId) => void handleDeleteAssignment(assignmentId)}
             />
-          ) : activePage === "logs" ? (
-            <LogsPage logs={llmUsageLogs} />
           ) : activePage === "career" ? (
             <RecommendationPage
               trackResult={trackResult}
@@ -952,14 +963,16 @@ function buildOnboardingMemoryText(draft: ProfileInput, interests: string[]): st
 }
 
 function buildFirstQuestion(draft: ProfileInput, interests: string[]): string {
-  const interestText = interests.length ? interests.join(", ") : "AI";
+  const interestText = interests.length
+    ? `${interests.join(", ")}에 관심 있어`
+    : "아직 관심 분야를 정하는 중이야";
   const departmentText =
     draft.department === "ai"
       ? "인공지능학부"
       : draft.department === "software"
         ? "소프트웨어학부"
         : "소프트웨어융합대학";
-  return `${departmentText} ${draft.grade}학년이고 ${interestText}에 관심 있어. ${draft.goal.trim() || "진로 준비"} 기준으로 이번 학기에 뭘 먼저 하면 좋을까?`;
+  return `${departmentText} ${draft.grade}학년이고 ${interestText}. ${draft.goal.trim() || "진로와 학습 목표를 같이 정하는 것"} 기준으로 이번 학기에 뭘 먼저 하면 좋을까?`;
 }
 
 function FullPageShell({ children }: { children: ReactNode }) {
@@ -1252,6 +1265,7 @@ function OnboardingPage({
                   })
                 }
               >
+                <option value="unknown">미정</option>
                 <option value="beginner">초급</option>
                 <option value="intermediate">중급</option>
                 <option value="advanced">고급</option>
@@ -1365,6 +1379,7 @@ function ChatWorkspace({
 }) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [openMenu, setOpenMenu] = useState<"mode" | "model" | null>(null);
   const modeOptions: Array<{ value: ChatMode; label: string }> = [
     { value: "auto", label: "자동" },
@@ -1385,8 +1400,22 @@ function ChatWorkspace({
     target.scrollTo({ top: target.scrollHeight, behavior: "smooth" });
   }, [messages, isSending]);
 
+  function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (
+      event.key !== "Enter" ||
+      event.shiftKey ||
+      event.nativeEvent.isComposing ||
+      isSending ||
+      !draft.trim()
+    ) {
+      return;
+    }
+    event.preventDefault();
+    formRef.current?.requestSubmit();
+  }
+
   return (
-    <div className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto]">
+    <div className="grid h-full min-h-0 overflow-hidden grid-rows-[minmax(0,1fr)_auto]">
       <section ref={scrollRef} className="min-h-0 overflow-y-auto px-5 py-7">
         <div className="mx-auto max-w-[820px] space-y-6">
           {isBootstrapping ? <ChatHistorySkeleton /> : null}
@@ -1399,7 +1428,7 @@ function ChatWorkspace({
         </div>
       </section>
 
-      <form className="border-t border-[#ded7cb] px-5 py-4" onSubmit={onSend}>
+      <form ref={formRef} className="border-t border-[#ded7cb] px-5 py-4" onSubmit={onSend}>
         <div className="mx-auto max-w-[820px] rounded-xl border border-[#c9c0b3] bg-[#fffdf8] p-2">
           {attachments.length ? (
             <div className="mb-2 flex flex-wrap gap-2 px-1">
@@ -1427,6 +1456,7 @@ function ChatWorkspace({
             className="block min-h-[76px] w-full resize-none bg-transparent px-2 py-2 text-[15px] leading-6 text-[#191817] outline-none"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={handleComposerKeyDown}
             placeholder="예: AI 트랙을 준비하려면 이번 학기에 어떤 과목과 활동을 먼저 하면 좋을까?"
             aria-label="AI 상담 입력"
           />
@@ -1636,7 +1666,6 @@ function MessageBubble({
 }) {
   const isUser = message.role === "user";
   const sources = message.response ? buildSourceSummaries(message.response) : [];
-  const isAssistantDone = !isUser && Boolean(message.response);
   const isAssistantWriting = !isUser && !message.isPending && message.text && !message.response;
   return (
     <article className={isUser ? "flex justify-end" : "flex justify-start"}>
@@ -1663,22 +1692,12 @@ function MessageBubble({
             {normalizeAssistantMarkdown(message.text)}
           </Streamdown>
         )}
-        {isAssistantDone || isAssistantWriting ? (
+        {isAssistantWriting ? (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[#716c63]">
-            {isAssistantDone ? (
-              <span
-                className="inline-flex min-h-7 items-center gap-1.5 rounded-full border border-[#c7d8c4] bg-[#f3f8f0] px-3 text-[#3c6b35]"
-                title={message.response?.model ?? "기본 응답"}
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                {message.response?.model ? "Gemini 답변" : "답변 완료"}
-              </span>
-            ) : (
-              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-full border border-[#ded7cb] bg-[#fffdf8] px-3">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[#938d83]" />
-                답변 작성 중
-              </span>
-            )}
+            <span className="inline-flex min-h-7 items-center gap-1.5 rounded-full border border-[#ded7cb] bg-[#fffdf8] px-3">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-[#938d83]" />
+              답변 작성 중
+            </span>
           </div>
         ) : null}
         {sources.length ? <SourceReferenceStrip sources={sources} /> : null}
@@ -1762,27 +1781,17 @@ function sourceDetail(source: Record<string, unknown>): string | null {
 
 function SourceReferenceStrip({ sources }: { sources: SourceSummary[] }) {
   return (
-    <div className="mt-4 rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-3">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold text-[#716c63]">답변 근거</span>
-        <span className="text-[11px] text-[#938d83]">{sources.length}개 자료</span>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {sources.map((source) => (
-          <span
-            className="inline-flex min-h-8 max-w-full items-center gap-2 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs text-[#3d3b37]"
-            key={`${source.label}-${source.title}-${source.index}`}
-            title={source.detail ?? source.title}
-          >
-            <span className="grid h-5 min-w-5 place-items-center rounded bg-[#191817] px-1 text-[11px] font-semibold text-[#fffdf8]">
-              {source.index}
-            </span>
-            <span className="truncate">
-              {source.label} · {source.title}
-            </span>
-          </span>
-        ))}
-      </div>
+    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-[#938d83]">
+      <span className="mr-0.5">근거</span>
+      {sources.map((source) => (
+        <span
+          className="inline-grid h-5 min-w-5 place-items-center rounded-md border border-[#d9d0c3] bg-[#fffdf8] px-1.5 font-semibold text-[#3d3b37]"
+          key={`${source.label}-${source.title}-${source.index}`}
+          title={`${source.label} · ${source.title}${source.detail ? ` / ${source.detail}` : ""}`}
+        >
+          {source.index}
+        </span>
+      ))}
     </div>
   );
 }
@@ -1926,14 +1935,14 @@ function ContextPanelContent({
                 key={`panel-source-${source.index}-${source.label}-${source.title}`}
                 label={`[${source.index}] ${source.label}`}
                 title={source.title}
+                detail={source.detail}
               />
             ))}
           </div>
         ) : (
-          <>
-            <SourceCard label="학교 자료" title="소프트웨어학부 트랙 안내" />
-            <SourceCard label="학교 자료" title="신입생 수강신청 안내" />
-          </>
+          <p className="text-xs leading-5 text-[#716c63]">
+            AI 상담 답변이 생성되면 사용된 학교 자료와 웹 근거가 여기에 표시됩니다.
+          </p>
         )}
       </Panel>
 
@@ -1955,63 +1964,32 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function SourceCard({ label, title }: { label: string; title: string }) {
+function SourceCard({
+  label,
+  title,
+  detail,
+}: {
+  label: string;
+  title: string;
+  detail?: string | null;
+}) {
   return (
-    <div className="rounded-lg bg-[#f1ede5] p-2.5">
-      <span className="block text-[11px] text-[#716c63]">{label}</span>
-      <strong className="mt-1 block text-xs font-semibold">{title}</strong>
+    <div className="rounded-lg border border-[#ded7cb] bg-[#f8f3eb] p-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="rounded bg-[#191817] px-1.5 py-0.5 text-[10px] font-semibold text-[#fffdf8]">
+          {label}
+        </span>
+      </div>
+      <strong className="mt-2 block text-xs font-semibold leading-5 text-[#191817]">
+        {title}
+      </strong>
+      {detail ? (
+        <p className="mt-1 line-clamp-2 break-words text-[11px] leading-4 text-[#716c63]">
+          {detail}
+        </p>
+      ) : null}
     </div>
   );
-}
-
-function LogsPage({ logs }: { logs: LLMUsageLog[] }) {
-  return (
-    <section className="min-h-0 overflow-y-auto px-6 py-7">
-      <div className="mx-auto max-w-[900px] rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-5">
-        <h2 className="text-xl font-semibold tracking-normal">상담 기록</h2>
-        <p className="mt-2 text-sm leading-6 text-[#716c63]">
-          AI 상담에서 어떤 도움을 받았는지 간단히 확인합니다.
-        </p>
-        <div className="mt-5 space-y-3">
-          {logs.length ? (
-            logs.slice(0, 10).map((log) => (
-              <article className="rounded-lg bg-[#f1ede5] p-3" key={log.id}>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <strong className="text-sm">{usageLogFeatureLabel(log.feature)}</strong>
-                  <span className="text-xs text-[#716c63]">
-                    {new Date(log.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs leading-5 text-[#3d3b37]">{log.purpose}</p>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#716c63]">
-                  입력: {log.input_text}
-                </p>
-                {log.output_text ? (
-                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#716c63]">
-                    출력: {log.output_text}
-                  </p>
-                ) : null}
-              </article>
-            ))
-          ) : (
-            <div className="rounded-lg bg-[#f1ede5] p-3 text-sm leading-6 text-[#716c63]">
-              아직 상담 기록이 없습니다. AI 상담을 사용하면 이 화면에 기록됩니다.
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function usageLogFeatureLabel(feature: string): string {
-  const labels: Record<string, string> = {
-    rag_chat: "AI 상담",
-    google_grounding: "진로 정보 보강",
-    schedule_parser: "일정 정리",
-    embedding_ingest: "자료 정리",
-  };
-  return labels[feature] ?? "상담 활동";
 }
 
 function SchedulePage({
@@ -2139,6 +2117,10 @@ function RecommendationPage({
   onResetInput: () => void;
   onUpdateInput: (patch: Partial<RecommendationInputDraft>) => void;
 }) {
+  const contextTags = [...inputContext.trackInterests, inputContext.goal]
+    .filter(Boolean)
+    .slice(0, 5);
+
   return (
     <section className="min-h-0 overflow-y-auto px-6 py-7">
       <div className="mx-auto max-w-[920px] space-y-4">
@@ -2149,11 +2131,17 @@ function RecommendationPage({
               <p className="mt-2 text-sm leading-6 text-[#716c63]">
                 {inputContext.sourceLabel}를 바탕으로 지금 필요한 준비를 추천합니다.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {[...inputContext.trackInterests, inputContext.goal].slice(0, 5).map((item, index) => (
-                  <EvidenceChip key={`input-context-${index}-${item}`} label={item} />
-                ))}
-              </div>
+              {contextTags.length ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {contextTags.map((item, index) => (
+                    <EvidenceChip key={`input-context-${index}-${item}`} label={item} />
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-xs leading-5 text-[#716c63]">
+                  AI 상담에서 관심 분야와 목표를 말하면 이 입력값이 자동으로 채워집니다.
+                </p>
+              )}
             </div>
             <button
               className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8]"
@@ -2170,7 +2158,7 @@ function RecommendationPage({
                 className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
                 value={inputDraft.trackInterestsText}
                 onChange={(event) => onUpdateInput({ trackInterestsText: event.target.value })}
-                placeholder="AI, 백엔드"
+                placeholder="예: AI, 백엔드"
               />
             </label>
             <label className="space-y-1 text-xs font-semibold text-[#716c63]">
@@ -2179,7 +2167,7 @@ function RecommendationPage({
                 className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
                 value={inputDraft.activityInterestsText}
                 onChange={(event) => onUpdateInput({ activityInterestsText: event.target.value })}
-                placeholder="개발, 알고리즘"
+                placeholder="예: 개발, 알고리즘"
               />
             </label>
             <label className="space-y-1 text-xs font-semibold text-[#716c63] lg:col-span-2">
@@ -2188,7 +2176,7 @@ function RecommendationPage({
                 className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
                 value={inputDraft.goal}
                 onChange={(event) => onUpdateInput({ goal: event.target.value })}
-                placeholder="AI 서비스 개발"
+                placeholder="예: 포트폴리오 준비"
               />
             </label>
             <label className="space-y-1 text-xs font-semibold text-[#716c63]">
@@ -2202,6 +2190,7 @@ function RecommendationPage({
                   })
                 }
               >
+                <option value="unknown">미정</option>
                 <option value="beginner">초급</option>
                 <option value="intermediate">중급</option>
                 <option value="advanced">고급</option>

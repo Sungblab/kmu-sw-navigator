@@ -30,7 +30,7 @@ class AnswerGenerator(Protocol):
         intent: str,
         memories: list[MemoryResponse],
         retrieval_results: list[RetrievalResult],
-    ) -> Iterator[str]:
+    ) -> Iterator[str | StreamedAnswerChunk]:
         ...
 
 
@@ -38,6 +38,12 @@ class AnswerGenerator(Protocol):
 class GroundedAnswer:
     text: str
     web_sources: list[dict[str, str]]
+
+
+@dataclass(frozen=True)
+class StreamedAnswerChunk:
+    text: str
+    response: object | None = None
 
 
 class GroundingAnswerGenerator(Protocol):
@@ -124,7 +130,7 @@ class GeminiAnswerGenerator:
         for chunk in stream:
             text = getattr(chunk, "text", None)
             if text:
-                yield text
+                yield StreamedAnswerChunk(text=text, response=chunk)
 
 
 class GeminiGroundingAnswerGenerator:

@@ -1,7 +1,6 @@
 import {
   BriefcaseBusiness,
   CalendarDays,
-  ClipboardList,
   MessageSquareText,
   Settings,
   Trash2,
@@ -47,7 +46,7 @@ export function Sidebar(props: NavigationProps) {
     onDeleteSession,
   } = props;
   return (
-    <aside className="hidden min-w-0 border-r border-[#ded7cb] bg-[#f1ede5] p-3 lg:block">
+    <aside className="relative hidden h-full min-h-0 min-w-0 overflow-hidden border-r border-[#ded7cb] bg-[#f1ede5] p-3 lg:block">
       <BrandHeader />
 
       <button
@@ -70,7 +69,7 @@ export function Sidebar(props: NavigationProps) {
         onDeleteSession={onDeleteSession}
       />
 
-      <div className="absolute bottom-3 left-3 right-auto hidden w-[248px] space-y-1 lg:block">
+      <div className="absolute bottom-3 left-3 right-3 hidden space-y-1 lg:block">
         <UtilityNav setActivePage={setActivePage} itemHeight="h-9" />
       </div>
     </aside>
@@ -292,24 +291,14 @@ function UtilityNav({
   itemHeight: "h-9" | "h-10";
 }) {
   return (
-    <>
-      <button
-        className={`flex ${itemHeight} w-full items-center gap-2 rounded-lg px-2.5 text-sm text-[#3d3b37] hover:bg-[#f7f2ea]`}
-        type="button"
-        onClick={() => setActivePage("logs")}
-      >
-        <ClipboardList className="h-4 w-4" aria-hidden="true" />
-        상담 기록
-      </button>
-      <button
-        className={`flex ${itemHeight} w-full items-center gap-2 rounded-lg px-2.5 text-sm text-[#3d3b37] hover:bg-[#f7f2ea]`}
-        type="button"
-        onClick={() => setActivePage("settings")}
-      >
-        <Settings className="h-4 w-4" aria-hidden="true" />
-        설정
-      </button>
-    </>
+    <button
+      className={`flex ${itemHeight} w-full items-center gap-2 rounded-lg px-2.5 text-sm text-[#3d3b37] hover:bg-[#f7f2ea]`}
+      type="button"
+      onClick={() => setActivePage("settings")}
+    >
+      <Settings className="h-4 w-4" aria-hidden="true" />
+      설정
+    </button>
   );
 }
 

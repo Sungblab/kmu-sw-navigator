@@ -12,14 +12,14 @@ export function buildRecommendationInputContext(memories: Memory[]): Recommendat
   const interests = deriveInterestKeywords(memoryText);
 
   return {
-    trackInterests: interests.track.length ? interests.track : ["AI", "백엔드"],
-    activityInterests: interests.activity.length ? interests.activity : ["개발", "운동"],
+    trackInterests: interests.track,
+    activityInterests: interests.activity,
     goal: deriveGoal(memoryText),
     codingLevel: deriveCodingLevel(memoryText),
     preference: deriveLearningPreference(memoryText),
     activityStyle: deriveActivityStyle(memoryText),
     weeklyHours: deriveWeeklyHours(memoryText),
-    sourceLabel: memories.length ? "내 관심 정보" : "처음 설정한 정보",
+    sourceLabel: memories.length ? "내 관심 정보" : "대화에서 파악한 정보 없음",
   };
 }
 
@@ -42,9 +42,9 @@ export function recommendationDraftToContext(
   sourceLabel: string,
 ): RecommendationInputContext {
   return {
-    trackInterests: splitRecommendationTerms(draft.trackInterestsText, ["AI", "백엔드"]),
-    activityInterests: splitRecommendationTerms(draft.activityInterestsText, ["개발", "운동"]),
-    goal: draft.goal.trim() || "AI 서비스 개발",
+    trackInterests: splitRecommendationTerms(draft.trackInterestsText),
+    activityInterests: splitRecommendationTerms(draft.activityInterestsText),
+    goal: draft.goal.trim(),
     codingLevel: draft.codingLevel,
     preference: draft.preference,
     activityStyle: draft.activityStyle,
@@ -60,7 +60,6 @@ export function pageTitle(page: WorkspacePage): string {
     career: "진로/취업",
     project: "프로젝트",
     schedule: "일정",
-    logs: "상담 기록",
     settings: "설정",
   }[page];
 }
@@ -72,7 +71,6 @@ export function pageDescription(page: WorkspacePage): string {
     career: "진로 고민과 최신 취업 정보를 분리해서 확인합니다.",
     project: "프로젝트와 창업 아이디어를 작은 실행 단위로 정리합니다.",
     schedule: "과제, 시험, 마감일과 D-day를 관리합니다.",
-    logs: "AI 상담으로 받은 도움을 다시 확인합니다.",
     settings: "계정과 기본 학업 정보를 관리합니다.",
   }[page];
 }
@@ -107,13 +105,13 @@ export function placeholderCards(page: WorkspacePage) {
   }));
 }
 
-function splitRecommendationTerms(value: string, fallback: string[]): string[] {
+function splitRecommendationTerms(value: string): string[] {
   const terms = value
     .split(/[,\n]/)
     .map((term) => term.trim())
     .filter(Boolean);
 
-  return terms.length ? Array.from(new Set(terms)).slice(0, 8) : fallback;
+  return Array.from(new Set(terms)).slice(0, 8);
 }
 
 function deriveInterestKeywords(text: string): { track: string[]; activity: string[] } {
@@ -158,10 +156,10 @@ function deriveGoal(text: string): string {
   if (normalized.includes("ai") || normalized.includes("인공지능")) {
     return "AI 서비스 개발";
   }
-  return "AI 서비스 개발";
+  return "";
 }
 
-function deriveCodingLevel(text: string): "beginner" | "intermediate" | "advanced" {
+function deriveCodingLevel(text: string): "beginner" | "intermediate" | "advanced" | "unknown" {
   const normalized = text.toLowerCase();
   if (normalized.includes("초급") || normalized.includes("처음") || normalized.includes("기초")) {
     return "beginner";
@@ -169,7 +167,7 @@ function deriveCodingLevel(text: string): "beginner" | "intermediate" | "advance
   if (normalized.includes("고급") || normalized.includes("상급") || normalized.includes("실무")) {
     return "advanced";
   }
-  return "intermediate";
+  return "unknown";
 }
 
 function deriveLearningPreference(text: string): "lecture" | "project" | "study" | "unknown" {
@@ -182,7 +180,7 @@ function deriveLearningPreference(text: string): "lecture" | "project" | "study"
   if (text.includes("프로젝트") || text.includes("개발")) {
     return "project";
   }
-  return "project";
+  return "unknown";
 }
 
 function deriveActivityStyle(text: string): "solo" | "team" | "mixed" | "unknown" {
@@ -195,13 +193,13 @@ function deriveActivityStyle(text: string): "solo" | "team" | "mixed" | "unknown
   if (text.includes("둘 다") || text.includes("혼합")) {
     return "mixed";
   }
-  return "team";
+  return "unknown";
 }
 
 function deriveWeeklyHours(text: string): number {
   const match = text.match(/주\s*(\d{1,2})\s*시간/);
   if (!match) {
-    return 4;
+    return 0;
   }
   return Math.min(Math.max(Number(match[1]), 0), 40);
 }

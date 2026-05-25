@@ -130,6 +130,9 @@
 | 2026-05-25 | 김성빈 | Codex | 채팅 UX와 기록 관리 보강 | OpenCairn의 인용/근거 분리 패턴을 축소 적용해 raw 근거 chip을 중복 제거된 번호형 근거로 바꾸고, 상담 삭제, 자동 제목, 마크다운 강조 정규화, SSE 종료 버퍼 처리를 추가 | `pnpm build:frontend`, `uv run python -m pytest tests/services/test_chat_store.py tests/services/test_supabase_stores.py tests/api/test_chat_contract_api.py`, `pnpm lint:backend`로 검증 |
 | 2026-05-25 | 김성빈 | Codex | 채팅 hardcoded 후속 질문 제거 | 상담 답변에 LLM이 생성하지 않은 `학업 상담`/`진로 상담`/`일정 관리` 고정 칩과 입력창 하단 고정 칩이 붙어 실제 상담 경험을 해치는 문제를 제거 | backend contract test를 고정 choices 없음 기준으로 바꾸고 frontend build/backend focused test/Gemini answer smoke로 검증 |
 | 2026-05-25 | 김성빈 | Codex | 채팅 composer와 실제 streaming 보강 | 모드 선택, 빠름/균형 모델 선택, 텍스트 파일 첨부, 답변 중지, Gemini `generate_content_stream` SSE 흐름을 구현 | focused backend tests 14개, `pnpm build:frontend`, `pnpm lint:backend`, 실제 Gemini streaming TestClient smoke로 `gemini-3.1-flash-lite` fast 응답과 첨부 반영을 검증 |
+| 2026-05-26 | 김성빈 | Codex | Gemini 스트리밍 답변 끊김 복구 | 스트리밍 chunk의 종료 메타데이터를 보존하고 `MAX_TOKENS`처럼 중간 종료된 답변은 기존 비스트리밍 재시도 경로로 완성 답변을 만들어 최종 `done` 응답과 저장본에 반영 | cutoff regression test를 먼저 실패시킨 뒤 구현했고 `uv run python -m pytest tests/api/test_chat_contract_api.py tests/services/test_answer_generation_service.py`, `uv run ruff check app tests/api/test_chat_contract_api.py tests/services/test_answer_generation_service.py`로 검증 |
+| 2026-05-26 | 김성빈 | Codex | 추천 화면 기본값 제거 | 진로/활동 추천 화면이 사용자 정보를 이미 아는 것처럼 보이지 않도록 기본 관심사/목표/활동값을 비우고, 정보가 부족하면 AI 상담으로 이동해 관심사와 목표를 먼저 정리하게 변경 | `pnpm build:frontend`, `git diff --check`로 검증 |
+| 2026-05-26 | 김성빈 | Codex | 중복 상담 기록 메뉴와 문서 스크롤 제거 | 사이드바 최근 상담이 실제 기록 탐색 역할을 하므로 별도 `상담 기록` 페이지 진입점을 제거하고 앱 레이아웃을 viewport 안에 고정 | `pnpm build:frontend`, `pnpm docs:check`, `git diff --check`로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
