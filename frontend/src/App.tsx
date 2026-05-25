@@ -764,11 +764,21 @@ export default function App() {
     setDraft("수강신청 전에 AI 트랙 기준으로 어떤 과목을 볼까?");
   }
 
+  function openSettingsModal() {
+    setOnboardingDraft((current) => buildSettingsDraft(current, profile, memories));
+    setIsSettingsOpen(true);
+    setIsMobileNavOpen(false);
+  }
+
+  function startContextQuestion(question: string) {
+    setActivePage("chat");
+    setDraft(question);
+    setIsMobileContextOpen(false);
+  }
+
   function handleSelectPage(page: WorkspacePage) {
     if (page === "settings") {
-      setOnboardingDraft((current) => buildSettingsDraft(current, profile, memories));
-      setIsSettingsOpen(true);
-      setIsMobileNavOpen(false);
+      openSettingsModal();
       return;
     }
     setActivePage(page);
@@ -937,6 +947,8 @@ export default function App() {
           profile={profile}
           memories={memories}
           latestResponse={latestAssistantResponse}
+          onAsk={startContextQuestion}
+          onOpenSettings={openSettingsModal}
         />
       </div>
       <MobileDrawer
@@ -956,6 +968,8 @@ export default function App() {
         latestResponse={latestAssistantResponse}
         memories={memories}
         onClose={() => setIsMobileContextOpen(false)}
+        onAsk={startContextQuestion}
+        onOpenSettings={openSettingsModal}
         profile={profile}
       />
       <SettingsModal
@@ -1882,11 +1896,15 @@ function ContextPanel({
   profile,
   memories,
   latestResponse,
+  onAsk,
+  onOpenSettings,
 }: {
   activePage: WorkspacePage;
   profile: Profile | MissingProfile | null;
   memories: Memory[];
   latestResponse?: ChatResponse;
+  onAsk: (question: string) => void;
+  onOpenSettings: () => void;
 }) {
   return (
     <aside className="hidden min-w-0 overflow-y-auto border-l border-[#ded7cb] bg-[#f7f2ea] p-3.5 lg:block">
@@ -1894,6 +1912,8 @@ function ContextPanel({
         activePage={activePage}
         latestResponse={latestResponse}
         memories={memories}
+        onAsk={onAsk}
+        onOpenSettings={onOpenSettings}
         profile={profile}
       />
     </aside>
@@ -1906,6 +1926,8 @@ function MobileContextDrawer({
   latestResponse,
   memories,
   onClose,
+  onAsk,
+  onOpenSettings,
   profile,
 }: {
   activePage: WorkspacePage;
@@ -1913,6 +1935,8 @@ function MobileContextDrawer({
   latestResponse?: ChatResponse;
   memories: Memory[];
   onClose: () => void;
+  onAsk: (question: string) => void;
+  onOpenSettings: () => void;
   profile: Profile | MissingProfile | null;
 }) {
   if (!isOpen) {
@@ -1946,6 +1970,8 @@ function MobileContextDrawer({
           activePage={activePage}
           latestResponse={latestResponse}
           memories={memories}
+          onAsk={onAsk}
+          onOpenSettings={onOpenSettings}
           profile={profile}
         />
       </aside>
@@ -1958,11 +1984,15 @@ function ContextPanelContent({
   profile,
   memories,
   latestResponse,
+  onAsk,
+  onOpenSettings,
 }: {
   activePage: WorkspacePage;
   profile: Profile | MissingProfile | null;
   memories: Memory[];
   latestResponse?: ChatResponse;
+  onAsk: (question: string) => void;
+  onOpenSettings: () => void;
 }) {
   const profileSummary = useMemo(() => {
     if (!profile?.exists) {
@@ -1975,23 +2005,42 @@ function ContextPanelContent({
     ];
   }, [profile]);
   const panelSources = latestResponse ? buildSourceSummaries(latestResponse) : [];
+  const nextQuestions = latestResponse ? buildNextQuestions(latestResponse, panelSources) : [];
 
   return (
     <>
       <Panel title="내 정보">
         {profileSummary ? (
-          <div className="grid grid-cols-2 gap-2">
-            {profileSummary.map(([label, value]) => (
-              <div className="rounded-lg bg-[#f1ede5] p-2.5" key={label}>
-                <span className="block text-[11px] text-[#716c63]">{label}</span>
-                <strong className="mt-1 block truncate text-xs font-semibold">{value}</strong>
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              {profileSummary.map(([label, value]) => (
+                <div className="rounded-lg bg-[#f1ede5] p-2.5" key={label}>
+                  <span className="block text-[11px] text-[#716c63]">{label}</span>
+                  <strong className="mt-1 block truncate text-xs font-semibold">{value}</strong>
+                </div>
+              ))}
+            </div>
+            <button
+              className="mt-3 h-9 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] text-xs font-semibold text-[#3d3b37] hover:bg-[#f1ede5]"
+              type="button"
+              onClick={onOpenSettings}
+            >
+              내 정보와 AI 설정 수정
+            </button>
+          </>
         ) : (
-          <p className="text-xs leading-5 text-[#716c63]">
-            설정에서 기본 정보를 저장하면 상담에 반영됩니다.
-          </p>
+          <div className="space-y-3">
+            <p className="text-xs leading-5 text-[#716c63]">
+              설정에서 기본 정보를 저장하면 상담에 반영됩니다.
+            </p>
+            <button
+              className="h-9 w-full rounded-lg bg-[#191817] text-xs font-semibold text-[#fffdf8] hover:bg-[#2b2926]"
+              type="button"
+              onClick={onOpenSettings}
+            >
+              기본 정보 설정
+            </button>
+          </div>
         )}
       </Panel>
 
@@ -2004,6 +2053,7 @@ function ContextPanelContent({
                 label={`[${source.index}] ${source.label}`}
                 title={source.title}
                 detail={source.detail}
+                onAsk={() => onAsk(`${source.title} 자료를 기준으로 지금 내가 할 일을 더 구체적으로 정리해줘.`)}
               />
             ))}
           </div>
@@ -2015,12 +2065,51 @@ function ContextPanelContent({
       </Panel>
 
       <Panel title="다음 행동">
-        <p className="text-xs leading-5 text-[#716c63]">
-          상담을 진행하면 답변에서 이어서 할 수 있는 질문과 일정 후보가 표시됩니다.
-        </p>
+        {nextQuestions.length ? (
+          <div className="space-y-2">
+            {nextQuestions.map((question, index) => (
+              <button
+                className="flex min-h-9 w-full items-center justify-between gap-2 rounded-lg border border-[#ded7cb] bg-[#fffdf8] px-3 py-2 text-left text-xs font-semibold leading-5 text-[#3d3b37] hover:bg-[#f1ede5]"
+                key={`${question}-${index}`}
+                type="button"
+                onClick={() => onAsk(question)}
+              >
+                <span>{question}</span>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {[
+              "내 관심사 기준으로 이번 주에 할 일을 정리해줘.",
+              "이 답변을 바탕으로 일정 후보를 뽑아줘.",
+            ].map((question) => (
+              <button
+                className="flex min-h-9 w-full items-center justify-between gap-2 rounded-lg border border-[#ded7cb] bg-[#fffdf8] px-3 py-2 text-left text-xs font-semibold leading-5 text-[#3d3b37] hover:bg-[#f1ede5]"
+                key={question}
+                type="button"
+                onClick={() => onAsk(question)}
+              >
+                <span>{question}</span>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        )}
       </Panel>
     </>
   );
+}
+
+function buildNextQuestions(response: ChatResponse, sources: SourceSummary[]): string[] {
+  const fromChoices = response.choices.map((choice) => choice.message).filter(Boolean);
+  const fromActions = response.actions
+    .map((action) => action.label)
+    .filter(Boolean)
+    .map((label) => `${label}을 이어서 도와줘.`);
+  const fromSources = sources.slice(0, 2).map((source) => `${source.title} 근거로 다음 행동을 추천해줘.`);
+  return Array.from(new Set([...fromChoices, ...fromActions, ...fromSources])).slice(0, 4);
 }
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -2036,17 +2125,25 @@ function SourceCard({
   label,
   title,
   detail,
+  onAsk,
 }: {
   label: string;
   title: string;
   detail?: string | null;
+  onAsk: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-[#ded7cb] bg-[#f8f3eb] p-2.5">
+    <button
+      className="block w-full rounded-lg border border-[#ded7cb] bg-[#f8f3eb] p-2.5 text-left hover:bg-[#f1ede5]"
+      type="button"
+      onClick={onAsk}
+      title="이 근거로 이어서 질문하기"
+    >
       <div className="flex items-center justify-between gap-2">
         <span className="rounded bg-[#191817] px-1.5 py-0.5 text-[10px] font-semibold text-[#fffdf8]">
           {label}
         </span>
+        <ChevronRight className="h-3.5 w-3.5 text-[#716c63]" aria-hidden="true" />
       </div>
       <strong className="mt-2 block text-xs font-semibold leading-5 text-[#191817]">
         {title}
@@ -2056,7 +2153,7 @@ function SourceCard({
           {detail}
         </p>
       ) : null}
-    </div>
+    </button>
   );
 }
 

@@ -93,7 +93,9 @@
 | 2026-05-26 | Recommendation input default removal | 진로/활동 추천 화면에서 `AI/백엔드/AI 서비스 개발` 같은 기본값을 제거하고, 정보가 부족하면 AI 상담에서 관심사와 목표를 먼저 정리하도록 유도 | `frontend/src/lib/navigator.ts`, `frontend/src/App.tsx`, `frontend/src/types/navigator.ts` |
 | 2026-05-26 | Chat navigation cleanup | 사이드바 최근 상담과 중복되는 `상담 기록` 페이지 진입점을 제거하고 앱 root/grid overflow를 고정해 브라우저 문서 스크롤이 생기지 않도록 정리 | `frontend/src/App.tsx`, `frontend/src/components/navigation.tsx`, `frontend/src/styles.css`, `frontend/src/types/navigator.ts` |
 | 2026-05-26 | Advisor-first recommendation UX | `진로/취업` 탭을 `내 추천`으로 낮추고, 사용자가 폼을 먼저 채우는 대신 AI 상담의 진로 페르소나가 부족한 정보를 물어본 뒤 추천 현황을 보여주도록 전환 | `frontend/src/App.tsx`, `frontend/src/components/navigation.tsx`, `frontend/src/components/TopBar.tsx`, `frontend/src/lib/navigator.ts` |
+| 2026-05-26 | Conversation learning memory extraction | AI 상담 문장에서 관심 트랙, 목표, 코딩 경험, 학습 선호, 주간 가능 시간을 Python 규칙으로 추출해 `conversation / learning_context` 메모리로 자동 저장 | `backend/app/services/memory_service.py`, `backend/app/api/chat.py`, `backend/tests/api/test_chat_contract_api.py`, `frontend/src/App.tsx`, `docs/architecture/python-core-logic.md` |
 | 2026-05-26 | Settings modal management | 설정을 별도 페이지에서 모달로 전환하고 계정, 내 정보, 메모리 보관, AI 상담 모드/모델 설정을 한곳에서 관리하도록 정리 | `frontend/src/App.tsx` |
+| 2026-05-26 | Interactive context panel | 우측 참고 패널의 내 정보, 답변 근거, 다음 행동을 클릭 가능한 상담 진입점으로 바꿔 설정 수정과 후속 질문 입력을 바로 이어갈 수 있게 정리 | `frontend/src/App.tsx` |
 | 2026-05-25 | RAG 과목/수강신청 데이터 수집 기준 | 공식 과목/제도 데이터와 비공식 수강신청 팁/과목 후기를 분리해 수집하는 템플릿과 팀원 요청 항목을 문서화 | `docs/architecture/rag-course-data-collection.md`, `docs/product/team-data-request.md` |
 
 ## 팀원 공유용 개발 현황
