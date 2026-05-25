@@ -1364,6 +1364,16 @@ function ChatWorkspace({
 }) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const modeOptions: Array<{ value: ChatMode; label: string }> = [
+    { value: "auto", label: "자동" },
+    { value: "academic", label: "학업" },
+    { value: "career", label: "진로" },
+    { value: "schedule", label: "일정" },
+  ];
+  const modelTierOptions: Array<{ value: ChatModelTier; label: string }> = [
+    { value: "balanced", label: "균형" },
+    { value: "fast", label: "빠름" },
+  ];
 
   useEffect(() => {
     const target = scrollRef.current;
@@ -1389,54 +1399,6 @@ function ChatWorkspace({
 
       <form className="border-t border-[#ded7cb] px-5 py-4" onSubmit={onSend}>
         <div className="mx-auto max-w-[820px] rounded-xl border border-[#c9c0b3] bg-[#fffdf8] p-2">
-          <div className="mb-2 flex flex-wrap items-center gap-2 px-1">
-            <label className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs font-semibold text-[#3d3b37]">
-              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-              <select
-                className="bg-transparent outline-none"
-                value={mode}
-                onChange={(event) => setMode(event.target.value as ChatMode)}
-                title="상담 모드"
-              >
-                <option value="auto">자동</option>
-                <option value="academic">학업</option>
-                <option value="career">진로</option>
-                <option value="schedule">일정</option>
-              </select>
-            </label>
-            <label className="inline-flex min-h-8 items-center rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs font-semibold text-[#3d3b37]">
-              <select
-                className="bg-transparent outline-none"
-                value={modelTier}
-                onChange={(event) => setModelTier(event.target.value as ChatModelTier)}
-                title="응답 품질"
-              >
-                <option value="balanced">균형 · Gemini 3 Flash</option>
-                <option value="fast">빠름 · Flash-Lite</option>
-              </select>
-            </label>
-            <input
-              ref={fileInputRef}
-              className="hidden"
-              type="file"
-              multiple
-              accept=".txt,.md,.csv,.json,.py,.ts,.tsx,.js,.jsx,.html,.css,text/*,application/json"
-              onChange={(event) => {
-                onAttachFiles(event.target.files);
-                event.target.value = "";
-              }}
-            />
-            <button
-              className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs font-semibold text-[#3d3b37] disabled:opacity-50"
-              type="button"
-              disabled={attachments.length >= 3 || isSending}
-              onClick={() => fileInputRef.current?.click()}
-              title="파일 첨부"
-            >
-              <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
-              파일
-            </button>
-          </div>
           {attachments.length ? (
             <div className="mb-2 flex flex-wrap gap-2 px-1">
               {attachments.map((attachment) => (
@@ -1466,7 +1428,79 @@ function ChatWorkspace({
             placeholder="예: AI 트랙을 준비하려면 이번 학기에 어떤 과목과 활동을 먼저 하면 좋을까?"
             aria-label="AI 상담 입력"
           />
-          <div className="flex items-center justify-end gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <div
+                className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-[#ded7cb] bg-[#faf8f3] p-0.5"
+                aria-label="상담 모드"
+                role="radiogroup"
+              >
+                <SlidersHorizontal
+                  className="ml-1.5 h-3.5 w-3.5 text-[#716c63]"
+                  aria-hidden="true"
+                />
+                {modeOptions.map((item) => (
+                  <button
+                    className={`min-h-7 rounded-md px-2 text-xs font-semibold ${
+                      mode === item.value
+                        ? "bg-[#191817] text-[#fffdf8]"
+                        : "text-[#716c63] hover:bg-[#ebe4d8]"
+                    }`}
+                    key={item.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={mode === item.value}
+                    onClick={() => setMode(item.value)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+              <div
+                className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-[#ded7cb] bg-[#faf8f3] p-0.5"
+                aria-label="응답 품질"
+                role="radiogroup"
+              >
+                {modelTierOptions.map((item) => (
+                  <button
+                    className={`min-h-7 rounded-md px-2 text-xs font-semibold ${
+                      modelTier === item.value
+                        ? "bg-[#191817] text-[#fffdf8]"
+                        : "text-[#716c63] hover:bg-[#ebe4d8]"
+                    }`}
+                    key={item.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={modelTier === item.value}
+                    onClick={() => setModelTier(item.value)}
+                    title={item.value === "balanced" ? "Gemini 3 Flash" : "Flash-Lite"}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+              <input
+                ref={fileInputRef}
+                className="hidden"
+                type="file"
+                multiple
+                accept=".txt,.md,.csv,.json,.py,.ts,.tsx,.js,.jsx,.html,.css,text/*,application/json"
+                onChange={(event) => {
+                  onAttachFiles(event.target.files);
+                  event.target.value = "";
+                }}
+              />
+              <button
+                className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs font-semibold text-[#3d3b37] disabled:opacity-50"
+                type="button"
+                disabled={attachments.length >= 3 || isSending}
+                onClick={() => fileInputRef.current?.click()}
+                title="파일 첨부"
+              >
+                <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
+                파일
+              </button>
+            </div>
             <button
               className="grid h-9 w-9 place-items-center rounded-lg bg-[#191817] text-[#fffdf8] disabled:opacity-50"
               type={isSending ? "button" : "submit"}
