@@ -1380,6 +1380,7 @@ function ChatWorkspace({
   const scrollRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [openMenu, setOpenMenu] = useState<"mode" | "model" | null>(null);
   const modeOptions: Array<{ value: ChatMode; label: string }> = [
     { value: "auto", label: "자동" },
@@ -1399,6 +1400,15 @@ function ChatWorkspace({
     }
     target.scrollTo({ top: target.scrollHeight, behavior: "smooth" });
   }, [messages, isSending]);
+
+  useEffect(() => {
+    const target = textareaRef.current;
+    if (!target) {
+      return;
+    }
+    target.style.height = "auto";
+    target.style.height = `${Math.min(target.scrollHeight, 144)}px`;
+  }, [draft]);
 
   function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (
@@ -1453,7 +1463,9 @@ function ChatWorkspace({
             </div>
           ) : null}
           <textarea
-            className="block min-h-[76px] w-full resize-none bg-transparent px-2 py-2 text-[15px] leading-6 text-[#191817] outline-none"
+            className="block min-h-10 max-h-36 w-full resize-none overflow-y-auto bg-transparent px-2 py-2 text-[15px] leading-6 text-[#191817] outline-none"
+            ref={textareaRef}
+            rows={1}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleComposerKeyDown}
@@ -1781,11 +1793,11 @@ function sourceDetail(source: Record<string, unknown>): string | null {
 
 function SourceReferenceStrip({ sources }: { sources: SourceSummary[] }) {
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-[#938d83]">
-      <span className="mr-0.5">근거</span>
+    <div className="mt-2 flex flex-wrap items-center gap-1 text-[11px] leading-5 text-[#938d83]">
+      <span className="mr-0.5 leading-5">근거</span>
       {sources.map((source) => (
         <span
-          className="inline-grid h-5 min-w-5 place-items-center rounded-md border border-[#d9d0c3] bg-[#fffdf8] px-1.5 font-semibold text-[#3d3b37]"
+          className="inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full border border-[#d9d0c3] bg-[#fffdf8] px-1 text-[10px] font-semibold leading-none tabular-nums text-[#3d3b37]"
           key={`${source.label}-${source.title}-${source.index}`}
           title={`${source.label} · ${source.title}${source.detail ? ` / ${source.detail}` : ""}`}
         >
@@ -1891,9 +1903,8 @@ function ContextPanelContent({
       ["소속", profile.department],
       ["학년", `${profile.grade}학년`],
       ["교과과정", profile.curriculum_year],
-      ["관심", memories[0]?.natural_text ?? "미설정"],
     ];
-  }, [profile, memories]);
+  }, [profile]);
   const panelSources = latestResponse ? buildSourceSummaries(latestResponse) : [];
 
   return (
@@ -1912,18 +1923,6 @@ function ContextPanelContent({
           <p className="text-xs leading-5 text-[#716c63]">
             설정에서 기본 정보를 저장하면 상담에 반영됩니다.
           </p>
-        )}
-      </Panel>
-
-      <Panel title="관심 정보">
-        {memories.length ? (
-          <ul className="list-disc space-y-1 pl-4 text-xs leading-5 text-[#3d3b37]">
-            {memories.map((memory) => (
-              <li key={memory.id}>{memory.natural_text}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs leading-5 text-[#716c63]">아직 저장된 관심 정보가 없습니다.</p>
         )}
       </Panel>
 
