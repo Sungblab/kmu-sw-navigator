@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -20,6 +21,16 @@ class AnswerGenerator(Protocol):
         memories: list[MemoryResponse],
         retrieval_results: list[RetrievalResult],
     ) -> str:
+        ...
+
+    def stream_answer(
+        self,
+        request: ChatRequest,
+        *,
+        intent: str,
+        memories: list[MemoryResponse],
+        retrieval_results: list[RetrievalResult],
+    ) -> Iterator[str]:
         ...
 
 
@@ -64,15 +75,56 @@ class GeminiAnswerGenerator:
             model=self.model,
             contents=prompt,
             config=types.GenerateContentConfig(
-                systemInstruction=SYSTEM_INSTRUCTION,
+                system_instruction=SYSTEM_INSTRUCTION,
                 temperature=0.3,
-                maxOutputTokens=512,
+                max_output_tokens=768,
             ),
         )
         answer = (response.text or "").strip()
         if not answer:
             raise RuntimeError("Gemini returned an empty answer")
-        return answer
+        if _looks_incomplete_answer(answer, response):
+            retry_response = self.client.models.generate_content(
+                model=self.model,
+                contents=_build_retry_prompt(prompt, answer),
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_INSTRUCTION,
+                    temperature=0.2,
+                    max_output_tokens=768,
+                ),
+            )
+            retry_answer = (retry_response.text or "").strip()
+            if retry_answer and not _looks_incomplete_answer(retry_answer, retry_response):
+                return retry_answer
+        return _repair_markdown(answer)
+
+    def stream_answer(
+        self,
+        request: ChatRequest,
+        *,
+        intent: str,
+        memories: list[MemoryResponse],
+        retrieval_results: list[RetrievalResult],
+    ) -> Iterator[str]:
+        prompt = build_answer_prompt(
+            request,
+            intent=intent,
+            memories=memories,
+            retrieval_results=retrieval_results,
+        )
+        stream = self.client.models.generate_content_stream(
+            model=self.model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_INSTRUCTION,
+                temperature=0.3,
+                max_output_tokens=768,
+            ),
+        )
+        for chunk in stream:
+            text = getattr(chunk, "text", None)
+            if text:
+                yield text
 
 
 class GeminiGroundingAnswerGenerator:
@@ -143,6 +195,12 @@ def build_answer_prompt(
     ]
     if not evidence_lines:
         evidence_lines = ["- 내부 자료 근거 없음"]
+    attachment_lines = [
+        _format_attachment(index, attachment)
+        for index, attachment in enumerate(request.attachments, 1)
+    ]
+    if not attachment_lines:
+        attachment_lines = ["- 첨부 파일 없음"]
 
     # prompt는 사용자 입력, 분류된 intent, 개인화 메모리, 검색 근거를 분리해
     # LLM이 출처 없는 추측보다 제공된 근거를 우선하도록 만든다.
@@ -158,12 +216,28 @@ def build_answer_prompt(
 내부 검색 근거:
 {chr(10).join(evidence_lines)}
 
+사용자 첨부:
+{chr(10).join(attachment_lines)}
+
 작성 규칙:
 - 내부 근거가 있으면 근거 제목을 자연스럽게 언급한다.
 - 내부 근거가 없으면 확인이 필요하다고 말한다.
 - 최신 취업/공모전 정보는 아직 웹 grounding 전이므로 확정적으로 말하지 않는다.
-- 4문장 이내로 답한다.
+- 제목 한 줄만 쓰지 말고, 학생이 바로 실행할 수 있는 3-4개 항목을 포함한다.
+- 각 항목은 완성된 문장으로 쓰고, 마크다운 굵게 표시는 반드시 닫는다.
+- 전체 답변은 4문장 또는 4개 bullet 이내로 답한다.
 """
+
+
+def _format_attachment(index: int, attachment: object) -> str:
+    name = getattr(attachment, "name", "첨부 파일")
+    mime_type = getattr(attachment, "mime_type", "application/octet-stream")
+    text_content = (getattr(attachment, "text_content", None) or "").replace("\n", " ").strip()
+    if len(text_content) > 1500:
+        text_content = f"{text_content[:1500]}..."
+    if text_content:
+        return f"{index}. {name} ({mime_type}): {text_content}"
+    return f"{index}. {name} ({mime_type}): 텍스트 추출 없음"
 
 
 def build_grounding_prompt(
@@ -196,6 +270,44 @@ def _format_evidence(index: int, result: RetrievalResult) -> str:
         f"{index}. [{result.source_type}] {result.title}"
         f" / {result.heading_path or 'root'} / score={result.score}: {content}"
     )
+
+
+def _build_retry_prompt(original_prompt: str, incomplete_answer: str) -> str:
+    return f"""{original_prompt}
+
+이전 응답이 중간에 끊겼거나 마크다운이 닫히지 않아 사용자 화면에서 깨졌다.
+
+이전 응답:
+{incomplete_answer}
+
+다시 작성:
+- 제목만 쓰지 말고 구체적인 다음 행동 3개를 포함한다.
+- 한국어 완성 문장으로 작성한다.
+- 마크다운 강조 표시는 열었으면 반드시 닫는다.
+- 답변만 출력한다.
+"""
+
+
+def _looks_incomplete_answer(answer: str, response: object | None = None) -> bool:
+    return _has_unbalanced_markdown_strong(answer.strip()) or _was_cut_off(response)
+
+
+def _has_unbalanced_markdown_strong(answer: str) -> bool:
+    return answer.count("**") % 2 == 1
+
+
+def _was_cut_off(response: object | None) -> bool:
+    candidates = getattr(response, "candidates", None) or []
+    if not candidates:
+        return False
+    finish_reason = str(getattr(candidates[0], "finish_reason", "") or "").casefold()
+    return "max" in finish_reason or "length" in finish_reason
+
+
+def _repair_markdown(answer: str) -> str:
+    if _has_unbalanced_markdown_strong(answer):
+        return answer.replace("**", "")
+    return answer
 
 
 def _web_sources_from_response(response: object) -> list[dict[str, str]]:

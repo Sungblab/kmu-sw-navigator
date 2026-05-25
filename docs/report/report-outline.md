@@ -15,7 +15,7 @@
    - 도메인 특화 RAG 챗봇 구현
    - 개인화 메모리 기반 학업/진로/프로젝트 상담
    - Supabase Auth/Postgres 기반 사용자별 데이터 저장
-   - 추천과 일정/Calendar 관리 제공
+   - 추천과 앱 내부 일정 관리 제공
 
 3. 기술 스택
    - React + Vite + TypeScript
@@ -23,14 +23,14 @@
    - Supabase Auth/Postgres/pgvector
    - Gemini API
    - Google Search grounding
-   - Google Calendar API
+   - Google Calendar API는 선택 확장 기능
 
 4. 주요 기능
    - 개인화 AI 상담
    - 학교/학과 자료 기반 RAG
    - 진로/취업/창업 grounding
    - 트랙/활동/프로젝트 추천
-   - 자연어 일정 관리와 Google Calendar 내보내기
+   - 자연어 일정 관리, D-day, 완료/삭제
    - LLM 활용 기록
 
 5. 시스템 구조
@@ -49,7 +49,7 @@
    - 문서 검색 함수
    - Gemini 호출 함수
    - D-day 계산 함수
-   - Calendar 내보내기 중복 방지
+   - Calendar 내보내기를 선택 확장 기능으로 분리한 이유
    - 환경 점검과 live smoke 분리
    - 로그 저장 함수
 
@@ -59,7 +59,7 @@
    - 개인화 챗봇 답변
    - 근거 보기: 개인화 근거, 내부 자료, 최신 웹 근거
    - 추천 결과
-   - 일정 등록과 Google Calendar 내보내기
+   - 일정 등록, D-day, 완료/삭제
    - LLM 활용 기록 화면
 
 8. LLM 활용 방식
@@ -77,7 +77,7 @@
    - 자료 범위 한계
    - 전체 학과 확장
    - Supabase/Gemini/Google live smoke 결과와 남은 외부 설정
-   - Calendar 양방향 동기화
+   - Google Calendar OAuth 연동은 후속 선택 확장
    - RAG 품질 개선
 
 ## 보고서에 넣을 실행 근거
@@ -93,7 +93,7 @@
 | 환경 변수 점검 | `pnpm env:check` |
 | Live smoke 준비 점검 | `pnpm live:smoke-plan -- --user-id <supabase-auth-user-uuid> --email <email> --password <password>` |
 | Supabase live 검증 | 키와 Auth user 준비 후 `pnpm env:check:strict`, `pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>`, `pnpm supabase:login-smoke -- --email <email> --password <password>`, `pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>` |
-| Google Calendar live 검증 | 저장된 Google OAuth token 준비 후 `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>` |
+| Google Calendar live 검증 | 선택 확장 기능. 이번 제출 필수 검증에서는 제외 |
 | Gemini live 검증 | 키 설정 후 `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`, `pnpm rag:ingest:embeddings` |
 
 ## 보고서 문장 초안

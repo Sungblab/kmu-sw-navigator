@@ -23,6 +23,18 @@ class FakeGroundingAnswerGenerator:
         )
 
 
+class FakeStreamingAnswerGenerator:
+    model = "gemini-test-stream"
+
+    def generate_answer(self, request, *, intent, memories, retrieval_results):
+        return f"{intent}: fallback"
+
+    def stream_answer(self, request, *, intent, memories, retrieval_results):
+        yield f"{request.mode}/"
+        yield f"{request.model_tier}/"
+        yield request.attachments[0].name if request.attachments else "no-file"
+
+
 def test_chat_returns_answer_actions_evidence_and_choices() -> None:
     store = InMemoryMemoryStore()
     chat_store = InMemoryChatStore()
@@ -109,7 +121,7 @@ def test_career_question_includes_personalization_evidence_key() -> None:
     assert response.json()["needs_verification"] == []
 
 
-def test_assignment_sentence_returns_schedule_choice() -> None:
+def test_assignment_sentence_returns_schedule_intent_without_hardcoded_choices() -> None:
     store = InMemoryMemoryStore()
     chat_store = InMemoryChatStore()
     app.dependency_overrides[get_current_user_id] = lambda: "user-1"
@@ -125,7 +137,7 @@ def test_assignment_sentence_returns_schedule_choice() -> None:
     app.dependency_overrides.clear()
     assert response.status_code == 200
     assert response.json()["intent"] == "schedule_assistant"
-    assert any(choice["id"] == "create_schedule" for choice in response.json()["choices"])
+    assert response.json()["choices"] == []
 
 
 def test_chat_sessions_and_messages_endpoints_return_saved_exchange() -> None:
@@ -147,8 +159,69 @@ def test_chat_sessions_and_messages_endpoints_return_saved_exchange() -> None:
     app.dependency_overrides.clear()
     assert sessions_response.status_code == 200
     assert sessions_response.json()["sessions"][0]["id"] == session_id
+    assert sessions_response.json()["sessions"][0]["last_message_preview"]
     assert messages_response.status_code == 200
     assert [message["role"] for message in messages_response.json()["messages"]] == [
         "user",
         "assistant",
     ]
+
+
+def test_chat_stream_returns_sse_text_and_done_events() -> None:
+    store = InMemoryMemoryStore()
+    chat_store = InMemoryChatStore()
+    app.dependency_overrides[get_current_user_id] = lambda: "user-1"
+    app.dependency_overrides[get_memory_store] = lambda: store
+    app.dependency_overrides[get_chat_store] = lambda: chat_store
+    app.dependency_overrides[get_document_retriever] = lambda: LocalDocumentRetriever([])
+    app.dependency_overrides[get_answer_generator] = lambda: None
+    app.dependency_overrides[get_grounding_answer_generator] = lambda: None
+    client = TestClient(app)
+
+    with client.stream("POST", "/api/chat/stream", json={"message": "AI 트랙 알려줘"}) as response:
+        body = response.read().decode("utf-8")
+
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert "event: status" in body
+    assert "event: text" in body
+    assert "event: done" in body
+    assert chat_store.list_sessions("user-1")[0].id
+
+
+def test_chat_stream_uses_request_options_and_streaming_generator() -> None:
+    store = InMemoryMemoryStore()
+    chat_store = InMemoryChatStore()
+    app.dependency_overrides[get_current_user_id] = lambda: "user-1"
+    app.dependency_overrides[get_memory_store] = lambda: store
+    app.dependency_overrides[get_chat_store] = lambda: chat_store
+    app.dependency_overrides[get_document_retriever] = lambda: LocalDocumentRetriever([])
+    app.dependency_overrides[get_answer_generator] = lambda: FakeStreamingAnswerGenerator()
+    app.dependency_overrides[get_grounding_answer_generator] = lambda: None
+    client = TestClient(app)
+
+    with client.stream(
+        "POST",
+        "/api/chat/stream",
+        json={
+            "message": "수강 전략 알려줘",
+            "mode": "academic",
+            "model_tier": "fast",
+            "attachments": [
+                {
+                    "name": "courses.md",
+                    "mime_type": "text/markdown",
+                    "size": 12,
+                    "text_content": "Python 이후 AI",
+                }
+            ],
+        },
+    ) as response:
+        body = response.read().decode("utf-8")
+
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert "academic/" in body
+    assert "fast/" in body
+    assert "courses.md" in body
+    assert "gemini-test-stream" in body

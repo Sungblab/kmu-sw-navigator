@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from app.schemas.assignment import (
@@ -12,6 +12,7 @@ from app.schemas.llm_usage import LLMUsageLogCreateRequest, LLMUsageLogResponse
 from app.schemas.memory import MemoryEventResponse, MemoryResponse
 from app.schemas.profile import ProfileResponse, ProfileUpsertRequest
 from app.services.assignment_service import build_assignment_response
+from app.services.chat_store import _chat_message_evidence, _chat_session_title
 
 
 class SupabaseProfileStore:
@@ -26,7 +27,7 @@ class SupabaseProfileStore:
             .maybe_single()
             .execute()
         )
-        if not result.data:
+        if result is None or not result.data:
             return None
         return _profile_from_row(result.data)
 
@@ -109,6 +110,8 @@ class SupabaseChatStore:
             self._touch_session(user_id, session_id, response)
 
         response_with_session = response.model_copy(update={"session_id": session_id})
+        user_message_created_at = datetime.now(UTC).isoformat()
+        assistant_message_created_at = datetime.now(UTC).isoformat()
         # user/assistant 메시지를 연속 insert해 대화 재구성 순서를 유지한다.
         self.client.table("chat_messages").insert(
             [
@@ -119,16 +122,18 @@ class SupabaseChatStore:
                     "content": request.message,
                     "evidence": {},
                     "memory_updates": [],
+                    "created_at": user_message_created_at,
                 },
                 {
                     "session_id": session_id,
                     "user_id": user_id,
                     "role": "assistant",
                     "content": response.answer,
-                    "evidence": response.evidence.model_dump(),
+                    "evidence": _chat_message_evidence(response),
                     "memory_updates": [
                         memory.model_dump() for memory in response.memory_updates
                     ],
+                    "created_at": assistant_message_created_at,
                 },
             ]
         ).execute()
@@ -140,13 +145,15 @@ class SupabaseChatStore:
         request: ChatRequest,
         response: ChatResponse,
     ) -> str:
+        now = datetime.now(UTC).isoformat()
         result = (
             self.client.table("chat_sessions")
             .insert(
                 {
                     "user_id": user_id,
-                    "title": request.message[:80],
+                    "title": _chat_session_title(request.message, response.intent),
                     "intent": response.intent,
+                    "updated_at": now,
                 }
             )
             .execute()
@@ -154,20 +161,29 @@ class SupabaseChatStore:
         return str(_single_row(result.data)["id"])
 
     def _touch_session(self, user_id: str, session_id: str, response: ChatResponse) -> None:
-        self.client.table("chat_sessions").update({"intent": response.intent}).eq(
-            "user_id", user_id
-        ).eq("id", session_id).execute()
+        self.client.table("chat_sessions").update(
+            {
+                "intent": response.intent,
+                "updated_at": datetime.now(UTC).isoformat(),
+            }
+        ).eq("user_id", user_id).eq("id", session_id).execute()
 
     def list_sessions(self, user_id: str, *, limit: int = 20) -> list[ChatSessionSummary]:
         result = (
             self.client.table("chat_sessions")
             .select("*")
             .eq("user_id", user_id)
-            .order("created_at", desc=True)
+            .order("updated_at", desc=True)
             .limit(limit)
             .execute()
         )
-        return [_chat_session_from_row(row) for row in result.data or []]
+        return [
+            _chat_session_from_row(
+                row,
+                last_message_preview=self._get_last_message_preview(user_id, str(row["id"])),
+            )
+            for row in result.data or []
+        ]
 
     def list_messages(self, user_id: str, session_id: str) -> list[ChatMessageRecord]:
         result = (
@@ -179,6 +195,29 @@ class SupabaseChatStore:
             .execute()
         )
         return [_chat_message_from_row(row) for row in result.data or []]
+
+    def delete_session(self, user_id: str, session_id: str) -> None:
+        self.client.table("chat_messages").delete().eq("user_id", user_id).eq(
+            "session_id", session_id
+        ).execute()
+        self.client.table("chat_sessions").delete().eq("user_id", user_id).eq(
+            "id", session_id
+        ).execute()
+
+    def _get_last_message_preview(self, user_id: str, session_id: str) -> str | None:
+        result = (
+            self.client.table("chat_messages")
+            .select("content")
+            .eq("user_id", user_id)
+            .eq("session_id", session_id)
+            .eq("role", "assistant")
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        if not result.data:
+            return None
+        return _message_preview(str(result.data[0].get("content") or ""))
 
 
 class SupabaseAssignmentStore:
@@ -376,11 +415,18 @@ def _memory_event_from_row(row: dict[str, Any]) -> MemoryEventResponse:
     )
 
 
-def _chat_session_from_row(row: dict[str, Any]) -> ChatSessionSummary:
+def _chat_session_from_row(
+    row: dict[str, Any],
+    *,
+    last_message_preview: str | None = None,
+) -> ChatSessionSummary:
     return ChatSessionSummary(
         id=str(row["id"]),
         title=row.get("title"),
         intent=row.get("intent"),
+        last_message_preview=last_message_preview,
+        updated_at=_datetime_to_string(row.get("updated_at")),
+        created_at=_datetime_to_string(row.get("created_at")),
     )
 
 
@@ -441,3 +487,13 @@ def _parse_datetime(value: Any) -> datetime | None:
     if isinstance(value, str):
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
     raise TypeError(f"Unsupported datetime value: {value!r}")
+
+
+def _datetime_to_string(value: Any) -> str | None:
+    parsed = _parse_datetime(value)
+    return parsed.isoformat() if parsed is not None else None
+
+
+def _message_preview(content: str, *, limit: int = 120) -> str:
+    normalized = " ".join(content.split())
+    return normalized[:limit]

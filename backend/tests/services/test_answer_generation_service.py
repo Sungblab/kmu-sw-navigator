@@ -1,11 +1,17 @@
 from app.schemas.chat import ChatRequest
 from app.schemas.memory import MemoryResponse
-from app.services.answer_generation_service import GroundedAnswer, build_answer_prompt
+from app.services.answer_generation_service import (
+    GroundedAnswer,
+    _looks_incomplete_answer,
+    build_answer_prompt,
+)
 from app.services.chat_contract_service import build_chat_response
 from app.services.retrieval_service import RetrievalResult
 
 
 class FakeAnswerGenerator:
+    model = "gemini-test"
+
     def __init__(self) -> None:
         self.calls = []
 
@@ -19,6 +25,10 @@ class FakeAnswerGenerator:
             }
         )
         return "Gemini 스타일 답변입니다."
+
+    def stream_answer(self, request, *, intent, memories, retrieval_results):
+        yield "Gemini "
+        yield "stream"
 
 
 class FakeGroundingAnswerGenerator:
@@ -71,6 +81,28 @@ def test_build_answer_prompt_includes_question_memories_and_evidence() -> None:
     assert "AI 트랙은 Python과 자료구조" in prompt
 
 
+def test_build_answer_prompt_includes_text_attachments() -> None:
+    prompt = build_answer_prompt(
+        ChatRequest(
+            message="이 파일 보고 수강 전략 알려줘",
+            attachments=[
+                {
+                    "name": "courses.md",
+                    "mime_type": "text/markdown",
+                    "size": 31,
+                    "text_content": "AI 과목은 Python 이후 듣는 것이 좋다.",
+                }
+            ],
+        ),
+        intent="academic_advisor",
+        memories=[],
+        retrieval_results=[],
+    )
+
+    assert "courses.md" in prompt
+    assert "AI 과목은 Python 이후" in prompt
+
+
 def test_build_chat_response_uses_answer_generator_when_present() -> None:
     generator = FakeAnswerGenerator()
 
@@ -82,7 +114,19 @@ def test_build_chat_response_uses_answer_generator_when_present() -> None:
     )
 
     assert response.answer == "Gemini 스타일 답변입니다."
+    assert response.model == "gemini-test"
     assert generator.calls[0]["intent"] == "academic_advisor"
+
+
+def test_manual_chat_mode_overrides_detected_intent() -> None:
+    response = build_chat_response(
+        ChatRequest(message="취업 준비 알려줘", mode="academic"),
+        memories=[],
+        retrieval_results=[],
+        answer_generator=FakeAnswerGenerator(),
+    )
+
+    assert response.intent == "academic_advisor"
 
 
 def test_build_chat_response_uses_grounding_for_career_questions() -> None:
@@ -115,3 +159,8 @@ def test_build_chat_response_does_not_ground_academic_questions() -> None:
     assert response.intent == "academic_advisor"
     assert response.evidence.web_sources == []
     assert grounding.calls == []
+
+
+def test_incomplete_answer_detection_checks_markdown_not_length() -> None:
+    assert not _looks_incomplete_answer("네, 먼저 Python을 보세요.")
+    assert _looks_incomplete_answer("**인공지능학부 2025 교과과정 Basic")

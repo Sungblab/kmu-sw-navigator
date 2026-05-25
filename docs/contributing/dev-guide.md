@@ -124,7 +124,6 @@ pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>
 pnpm supabase:auth-smoke -- --access-token <supabase-access-token>
 pnpm supabase:login-smoke -- --email <email> --password <password>
 pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>
-pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>
 pnpm live:smoke-run --api-base http://127.0.0.1:8001
 ```
 
@@ -134,7 +133,7 @@ pnpm live:smoke-run --api-base http://127.0.0.1:8001
 `auth-smoke`는 실제 로그인 session access token으로 `/api/profile`을 write/read해 Supabase Auth boundary와 API Bearer token 전달을 함께 확인합니다.
 `login-smoke`는 Supabase password grant로 access token을 받은 뒤 같은 API smoke를 수행하므로 수동으로 token을 복사하지 않아도 됩니다.
 `llm-smoke`는 `llm_usage_logs`에 smoke row를 쓰고 같은 사용자 범위로 조회되는지 확인합니다.
-`google:calendar-smoke`는 Google OAuth token이 서버 저장소에 있는 사용자로 실제 `events.insert`를 호출합니다.
+`google:calendar-smoke`는 선택 확장 검증입니다. Google OAuth token이 서버 저장소에 있는 사용자로 실제 `events.insert`를 호출하지만, 이번 제출의 필수 일정 시연은 앱 내부 일정 저장, D-day, 완료/삭제입니다.
 `live:smoke-plan`은 비밀값을 출력하지 않고 live smoke 순서와 누락 입력을 보여줍니다.
 `live:readiness`는 env, SQL bundle validation, live Supabase schema 상태를 한 보고서로 묶어 현재 blocker와 다음 명령을 보여줍니다.
 
@@ -216,11 +215,10 @@ pnpm supabase:smoke -- --user-id <supabase-auth-user-uuid>
 pnpm supabase:auth-smoke -- --access-token <supabase-access-token>
 pnpm supabase:login-smoke -- --email <email> --password <password>
 pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>
-pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>
 pnpm live:smoke-run --api-base http://127.0.0.1:8001
 ```
 
-`pnpm supabase:smoke`와 `pnpm supabase:llm-smoke`는 Supabase 키와 실제 Auth user UUID가 있어야 성공합니다. `pnpm supabase:auth-smoke`는 로컬 FastAPI 서버와 실제 Supabase access token이 있어야 성공합니다. `pnpm supabase:login-smoke`는 추가로 Supabase URL, anon/publishable key, 이메일/비밀번호가 필요합니다. `pnpm google:calendar-smoke`는 같은 user에 저장된 Google OAuth token이 있어야 성공합니다. 외부 키가 필요한 검증을 실행하지 못하면 PR에 이유를 적습니다.
+`pnpm supabase:smoke`와 `pnpm supabase:llm-smoke`는 Supabase 키와 실제 Auth user UUID가 있어야 성공합니다. `pnpm supabase:auth-smoke`는 로컬 FastAPI 서버와 실제 Supabase access token이 있어야 성공합니다. `pnpm supabase:login-smoke`는 추가로 Supabase URL, anon/publishable key, 이메일/비밀번호가 필요합니다. Google Calendar smoke는 OAuth token이 있어야 하는 선택 확장 검증이므로 제출 필수 gate에서 제외합니다. 외부 키가 필요한 필수 검증을 실행하지 못하면 PR에 이유를 적습니다.
 
 ## 일반 문제 해결
 

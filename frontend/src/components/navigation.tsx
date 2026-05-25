@@ -1,11 +1,10 @@
 import {
-  BookOpen,
   BriefcaseBusiness,
   CalendarDays,
   ClipboardList,
-  FolderKanban,
   MessageSquareText,
   Settings,
+  Trash2,
   X,
 } from "lucide-react";
 
@@ -15,22 +14,21 @@ import type { WorkspacePage } from "../types/navigator";
 const workspaceItems: Array<{
   id: WorkspacePage;
   label: string;
-  count: number;
   icon: typeof MessageSquareText;
 }> = [
-  { id: "chat", label: "AI 상담", count: 12, icon: MessageSquareText },
-  { id: "roadmap", label: "학업 로드맵", count: 4, icon: BookOpen },
-  { id: "career", label: "진로/취업", count: 3, icon: BriefcaseBusiness },
-  { id: "project", label: "프로젝트", count: 2, icon: FolderKanban },
-  { id: "schedule", label: "일정", count: 6, icon: CalendarDays },
+  { id: "chat", label: "AI 상담", icon: MessageSquareText },
+  { id: "career", label: "진로/취업", icon: BriefcaseBusiness },
+  { id: "schedule", label: "일정", icon: CalendarDays },
 ];
 
 interface NavigationProps {
   activePage: WorkspacePage;
+  activeSessionId: string | null;
   sessions: ChatSessionSummary[];
   setActivePage: (page: WorkspacePage) => void;
   onNewChat: () => void;
   onOpenSession: (sessionId: string) => void;
+  onDeleteSession: (sessionId: string) => void;
 }
 
 interface MobileDrawerProps extends NavigationProps {
@@ -39,7 +37,15 @@ interface MobileDrawerProps extends NavigationProps {
 }
 
 export function Sidebar(props: NavigationProps) {
-  const { activePage, sessions, setActivePage, onNewChat, onOpenSession } = props;
+  const {
+    activePage,
+    activeSessionId,
+    sessions,
+    setActivePage,
+    onNewChat,
+    onOpenSession,
+    onDeleteSession,
+  } = props;
   return (
     <aside className="hidden min-w-0 border-r border-[#ded7cb] bg-[#f1ede5] p-3 lg:block">
       <BrandHeader />
@@ -52,14 +58,16 @@ export function Sidebar(props: NavigationProps) {
         새 상담
       </button>
 
-      <SidebarLabel>Workspace</SidebarLabel>
+      <SidebarLabel>메뉴</SidebarLabel>
       <WorkspaceNav activePage={activePage} setActivePage={setActivePage} />
 
-      <SidebarLabel>Recent chats</SidebarLabel>
+      <SidebarLabel>최근 상담</SidebarLabel>
       <RecentChats
+        activeSessionId={activeSessionId}
         sessions={sessions}
         setActivePage={setActivePage}
         onOpenSession={onOpenSession}
+        onDeleteSession={onDeleteSession}
       />
 
       <div className="absolute bottom-3 left-3 right-auto hidden w-[248px] space-y-1 lg:block">
@@ -71,12 +79,14 @@ export function Sidebar(props: NavigationProps) {
 
 export function MobileDrawer({
   activePage,
+  activeSessionId,
   isOpen,
   sessions,
   setActivePage,
   onClose,
   onNewChat,
   onOpenSession,
+  onDeleteSession,
 }: MobileDrawerProps) {
   if (!isOpen) {
     return null;
@@ -112,14 +122,16 @@ export function MobileDrawer({
         </button>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <SidebarLabel>Workspace</SidebarLabel>
+          <SidebarLabel>메뉴</SidebarLabel>
           <WorkspaceNav activePage={activePage} setActivePage={setActivePage} mobile />
 
-          <SidebarLabel>Recent chats</SidebarLabel>
+          <SidebarLabel>최근 상담</SidebarLabel>
           <RecentChats
+            activeSessionId={activeSessionId}
             sessions={sessions}
             setActivePage={setActivePage}
             onOpenSession={onOpenSession}
+            onDeleteSession={onDeleteSession}
           />
         </div>
 
@@ -141,7 +153,7 @@ function BrandHeader({ compact = false }: { compact?: boolean }) {
         <strong className="block truncate text-sm font-semibold tracking-normal">
           SW Navigator
         </strong>
-        <span className="block truncate text-xs text-[#716c63]">personal campus AI</span>
+        <span className="block truncate text-xs text-[#716c63]">내 학업 내비게이터</span>
       </div>
     </div>
   );
@@ -176,7 +188,6 @@ function WorkspaceNav({
               <Icon className="h-4 w-4" aria-hidden="true" />
               {item.label}
             </span>
-            <span className="text-xs text-[#938d83]">{item.count}</span>
           </button>
         );
       })}
@@ -185,48 +196,92 @@ function WorkspaceNav({
 }
 
 function RecentChats({
+  activeSessionId,
   sessions,
   setActivePage,
   onOpenSession,
+  onDeleteSession,
 }: {
+  activeSessionId: string | null;
   sessions: ChatSessionSummary[];
   setActivePage: (page: WorkspacePage) => void;
   onOpenSession: (sessionId: string) => void;
+  onDeleteSession: (sessionId: string) => void;
 }) {
-  const chats = sessions.length
-    ? sessions
-    : [
-        {
-          id: "sample-1",
-          title: "AI 트랙을 어떻게 준비할까?",
-          intent: "학업/진로",
-        },
-        {
-          id: "sample-2",
-          title: "자료구조 과제 마감 정리",
-          intent: "일정",
-        },
-      ];
+  if (!sessions.length) {
+    return (
+      <div className="rounded-lg border border-[#ded7cb] bg-[#fffdf8] px-2.5 py-2 text-xs leading-5 text-[#716c63]">
+        새 상담을 시작하면 최근 기록이 여기에 표시됩니다.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-1">
-      {chats.map((chat, index) => (
-        <button
-          className={`w-full rounded-lg px-2.5 py-2 text-left ${
-            index === 0 ? "border border-[#ded7cb] bg-[#fffdf8]" : "hover:bg-[#f7f2ea]"
-          }`}
-          key={chat.id}
-          type="button"
-          onClick={() => (sessions.length ? onOpenSession(chat.id) : setActivePage("chat"))}
-        >
-          <strong className="block truncate text-sm font-semibold">{chat.title ?? "새 상담"}</strong>
-          <span className="mt-1 block text-xs text-[#716c63]">
-            {chat.intent ?? "general"}
-          </span>
-        </button>
-      ))}
+      {sessions.map((chat) => {
+        const selected = chat.id === activeSessionId;
+        return (
+          <div
+            className={`group flex items-start gap-1 rounded-lg px-2 py-2 ${
+              selected
+                ? "border border-[#ded7cb] bg-[#fffdf8]"
+                : "text-[#3d3b37] hover:bg-[#f7f2ea]"
+            }`}
+            key={chat.id}
+          >
+            <button
+              className="min-w-0 flex-1 text-left"
+              type="button"
+              onClick={() => (sessions.length ? onOpenSession(chat.id) : setActivePage("chat"))}
+            >
+              <span className="flex items-center justify-between gap-2">
+                <strong className="min-w-0 truncate text-sm font-semibold">{chat.title ?? "새 상담"}</strong>
+                {chat.updated_at ? (
+                  <span className="shrink-0 text-[11px] text-[#938d83]">
+                    {formatSessionDate(chat.updated_at)}
+                  </span>
+                ) : null}
+              </span>
+              <span className="mt-1 line-clamp-2 text-xs leading-5 text-[#716c63]">
+                {chat.last_message_preview ?? chatIntentLabel(chat.intent)}
+              </span>
+            </button>
+            <button
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#938d83] opacity-70 hover:bg-[#eadfd1] hover:text-[#9b3f24] group-hover:opacity-100"
+              type="button"
+              aria-label={`${chat.title ?? "상담"} 삭제`}
+              title="상담 기록 삭제"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDeleteSession(chat.id);
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
+}
+
+function formatSessionDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return date.toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
+}
+
+function chatIntentLabel(intent: string | null): string {
+  const labels: Record<string, string> = {
+    academic_advisor: "학업 상담",
+    career_advisor: "진로 상담",
+    startup_project_mentor: "창업/프로젝트",
+    schedule_assistant: "일정 정리",
+    general: "일반 상담",
+  };
+  return intent ? labels[intent] ?? "일반 상담" : "일반 상담";
 }
 
 function UtilityNav({
@@ -244,7 +299,7 @@ function UtilityNav({
         onClick={() => setActivePage("logs")}
       >
         <ClipboardList className="h-4 w-4" aria-hidden="true" />
-        LLM 기록
+        상담 기록
       </button>
       <button
         className={`flex ${itemHeight} w-full items-center gap-2 rounded-lg px-2.5 text-sm text-[#3d3b37] hover:bg-[#f7f2ea]`}

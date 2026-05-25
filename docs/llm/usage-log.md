@@ -123,13 +123,19 @@
 | 2026-05-23 | 김성빈 | Codex | SQL copy smoke api-base 안내 보정 | 8000번 stale backend 때문에 SQL 적용 뒤 검증 명령이 잘못된 port를 안내하지 않도록 `supabase:sql-copy -- --api-base ...` 옵션을 추가 | TDD로 copy helper 출력이 8001 smoke 명령을 포함하는지 먼저 실패시킨 뒤 구현했고, 실제 클립보드 복사 명령을 8001 기준으로 재실행 |
 | 2026-05-23 | 김성빈 | Codex | Supabase Dashboard access blocker 확인 | Chrome Supabase 세션으로 SQL Editor 접근을 시도해 schema 적용 가능 여부를 확인 | Dashboard가 `You do not have access to this project`를 반환해 env/schema/code 문제가 아니라 project owner/member 계정 또는 DB 접속 권한이 필요한 blocker로 문서화 |
 | 2026-05-23 | 김성빈 | Codex | Embedding ingest live failure 수정 | schema 적용 뒤 `live:smoke-run` 마지막 단계에서 Gemini embedding batch 결과 수가 chunk 수보다 적게 반환되어 `zip(strict=True)`가 실패하는 문제를 수정 | TDD로 batch embedding 개수 부족 시 chunk 단위 재시도 regression test를 먼저 실패시킨 뒤 구현했고, `pnpm rag:ingest:embeddings`와 `pnpm live:smoke-run --api-base http://127.0.0.1:8001` 전체 통과로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Supabase live smoke 전체 통과 기록 | SQL Editor schema+seed 적용 후 Supabase schema, API contract, DB/profile/memory, login/API, LLM log, Gemini, grounding, embedding ingest가 모두 live 경로에서 통과하는지 확인 | `pnpm supabase:schema-check`, `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`, `pnpm live:smoke-run --api-base http://127.0.0.1:8001`로 검증했고 Google Calendar OAuth env만 남은 blocker로 분리 |
+| 2026-05-23 | 김성빈 | Codex | Supabase live smoke 전체 통과 기록 | SQL Editor schema+seed 적용 후 Supabase schema, API contract, DB/profile/memory, login/API, LLM log, Gemini, grounding, embedding ingest가 모두 live 경로에서 통과하는지 확인 | `pnpm supabase:schema-check`, `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`, `pnpm live:smoke-run --api-base http://127.0.0.1:8001`로 검증했고 Google Calendar OAuth는 별도 확장 기능으로 분리 |
+| 2026-05-24 | 김성빈 | Codex | 제출 범위에서 Google Calendar OAuth 제외 | 팀 발표와 제출 기준을 내부 일정 관리 중심으로 재정리하고 Google Calendar는 OAuth가 필요한 선택 확장 기능으로 낮춤 | 실제 구현된 일정 저장, D-day, 완료/삭제가 과제 조건을 충족하므로 문서에서 Google Calendar live smoke를 필수 blocker로 보이지 않게 정리 |
+| 2026-05-25 | 김성빈 | Codex | OpenCairn chat UX 패턴 반영 | OpenCairn의 recent thread, message playback, SSE stream 구조를 참고해 KMU 앱에 최근 상담 자동 복원, 마지막 메시지 preview, active session 저장, `/api/chat/stream` 이벤트 응답을 추가 | `uv run python -m pytest tests/services/test_chat_store.py tests/api/test_chat_contract_api.py`, `pnpm build:frontend`, `pnpm docs:check`, `pnpm supabase:login-smoke`, live `/api/chat/stream` smoke로 검증 |
+| 2026-05-25 | 김성빈 | Codex | 로그인 후 로딩 UX 비차단 처리 | 로그인 세션이 있는 상태에서는 사용자 데이터 로딩 화면으로 앱 전체를 막지 않고 workspace shell, 상담 입력, inline 복구 UI를 먼저 보여주도록 수정 | `pnpm build:frontend`, `git diff --check`, 브라우저 DOM 확인으로 `사용자 데이터를 불러오는 중입니다.` 차단 문구가 사라진 것을 검증 |
+| 2026-05-25 | 김성빈 | Codex | 채팅 UX와 기록 관리 보강 | OpenCairn의 인용/근거 분리 패턴을 축소 적용해 raw 근거 chip을 중복 제거된 번호형 근거로 바꾸고, 상담 삭제, 자동 제목, 마크다운 강조 정규화, SSE 종료 버퍼 처리를 추가 | `pnpm build:frontend`, `uv run python -m pytest tests/services/test_chat_store.py tests/services/test_supabase_stores.py tests/api/test_chat_contract_api.py`, `pnpm lint:backend`로 검증 |
+| 2026-05-25 | 김성빈 | Codex | 채팅 hardcoded 후속 질문 제거 | 상담 답변에 LLM이 생성하지 않은 `학업 상담`/`진로 상담`/`일정 관리` 고정 칩과 입력창 하단 고정 칩이 붙어 실제 상담 경험을 해치는 문제를 제거 | backend contract test를 고정 choices 없음 기준으로 바꾸고 frontend build/backend focused test/Gemini answer smoke로 검증 |
+| 2026-05-25 | 김성빈 | Codex | 채팅 composer와 실제 streaming 보강 | 모드 선택, 빠름/균형 모델 선택, 텍스트 파일 첨부, 답변 중지, Gemini `generate_content_stream` SSE 흐름을 구현 | focused backend tests 14개, `pnpm build:frontend`, `pnpm lint:backend`, 실제 Gemini streaming TestClient smoke로 `gemini-3.1-flash-lite` fast 응답과 첨부 반영을 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
 | 기능 | 모델 | 목적 |
 | --- | --- | --- |
-| RAG 챗봇 | `gemini-3-flash-preview` | 검색된 자료를 바탕으로 신입생 질문에 답변 |
+| RAG 챗봇 | `gemini-3-flash-preview`, `gemini-3.1-flash-lite` | 검색된 자료, 상담 모드, 사용자가 첨부한 텍스트 파일을 바탕으로 신입생 질문에 스트리밍 답변 |
 | 일정 파싱 | `gemini-3.1-flash-lite` | 자연어 일정에서 제목, 과목, 마감일 JSON 추출 |
 | 질문 분류 | `gemini-3.1-flash-lite` | 질문 유형 분류와 간단 요약 |
 | 임베딩 | `gemini-embedding-2` | 문서 chunk와 사용자 질문 embedding 생성 |

@@ -14,6 +14,7 @@ export interface ChatMessage {
   role: "user" | "assistant";
   text: string;
   response?: ChatResponse;
+  isPending?: boolean;
 }
 
 export interface RecommendationInputContext {

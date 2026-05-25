@@ -1,12 +1,17 @@
 import {
   ChevronRight,
+  CheckCircle2,
+  Lightbulb,
   LogIn,
   LogOut,
+  Paperclip,
   Send,
+  SlidersHorizontal,
+  Square,
   X,
 } from "lucide-react";
 import { cjk } from "@streamdown/cjk";
-import { FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import { FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Toaster, toast } from "sonner";
 
@@ -15,23 +20,19 @@ import { TopBar } from "./components/TopBar";
 import {
   ApiError,
   createMemory,
+  deleteChatSession,
   getChatMessages,
   getChatSessions,
   createAssignment,
   deleteAssignment,
-  exportAssignmentToCalendar,
   getAssignments,
   getMemories,
-  getGoogleCalendarConnectUrl,
-  getGoogleCalendarStatus,
   getLLMUsageLogs,
   getProfile,
-  getPublicRuntimeStatus,
-  getRuntimeStatus,
   previewAssignment,
   recommendActivity,
   recommendTrack,
-  sendChatMessage,
+  streamChatMessage,
   updateAssignment,
   upsertProfile,
 } from "./lib/api";
@@ -45,9 +46,6 @@ import {
 } from "./lib/supabase";
 import {
   buildRecommendationInputContext,
-  pageDescription,
-  pageTitle,
-  placeholderCards,
   recommendationContextToDraft,
   recommendationDraftToContext,
 } from "./lib/navigator";
@@ -56,14 +54,15 @@ import type {
   ActivityRecommendResponse,
   AssignmentPreview,
   ChatResponse,
+  ChatAttachmentInput,
+  ChatMode,
+  ChatModelTier,
+  ChatMessageRecord,
   ChatSessionSummary,
-  GoogleCalendarStatus,
   LLMUsageLog,
   Memory,
   MissingProfile,
   Profile,
-  RuntimeComponentStatus,
-  RuntimeStatus,
   Department,
   CurriculumYear,
   TrackRecommendResponse,
@@ -77,9 +76,104 @@ import type {
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof ApiError && error.code === "supabase_schema_missing") {
-    return "Supabase schema.sql이 아직 적용되지 않아 live 저장소를 사용할 수 없습니다.";
+    return "서비스 저장소를 준비하는 중입니다. 잠시 후 다시 시도해 주세요.";
   }
   return error instanceof Error ? error.message : fallback;
+}
+
+function getAuthErrorMessage(error: unknown): string {
+  const rawMessage = error instanceof Error ? error.message : "";
+  const normalized = rawMessage.toLowerCase();
+  if (normalized.includes("anonymous sign-ins")) {
+    return "이메일과 비밀번호를 입력해 주세요.";
+  }
+  if (normalized.includes("invalid login credentials")) {
+    return "이메일 또는 비밀번호가 맞지 않습니다.";
+  }
+  if (normalized.includes("email not confirmed")) {
+    return "이메일 확인 후 다시 로그인해 주세요.";
+  }
+  if (normalized.includes("password should be at least")) {
+    return "비밀번호는 6자 이상으로 입력해 주세요.";
+  }
+  if (normalized.includes("unable to validate email") || normalized.includes("invalid email")) {
+    return "이메일 형식을 확인해 주세요.";
+  }
+  return rawMessage || "인증 요청에 실패했습니다.";
+}
+
+async function readAttachmentText(file: File): Promise<string | null> {
+  const textLike =
+    file.type.startsWith("text/") ||
+    [
+      ".md",
+      ".csv",
+      ".json",
+      ".py",
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".html",
+      ".css",
+    ].some((extension) => file.name.toLowerCase().endsWith(extension));
+  if (!textLike || file.size > 500_000) {
+    return null;
+  }
+  const text = await file.text();
+  return text.slice(0, 12_000);
+}
+
+const ACTIVE_CHAT_SESSION_KEY = "kmu:active_chat_session";
+const CHAT_RESPONSE_METADATA_KEY = "__response";
+
+function buildStoredChatResponse(record: ChatMessageRecord): ChatResponse | undefined {
+  if (record.role !== "assistant") {
+    return undefined;
+  }
+
+  const evidence = record.evidence ?? {};
+  const metadata = isRecord(evidence[CHAT_RESPONSE_METADATA_KEY])
+    ? evidence[CHAT_RESPONSE_METADATA_KEY]
+    : {};
+  const cleanEvidence = {
+    personalization: arrayOfStrings(evidence.personalization),
+    internal_sources: arrayOfRecords(evidence.internal_sources),
+    web_sources: arrayOfRecords(evidence.web_sources),
+    notes: arrayOfStrings(evidence.notes),
+  };
+
+  return {
+    session_id: record.session_id,
+    answer: record.content,
+    intent: typeof metadata.intent === "string" ? metadata.intent : "general",
+    model: typeof metadata.model === "string" ? metadata.model : null,
+    actions: arrayOfRecords(metadata.actions).map((action) => ({
+      type: typeof action.type === "string" ? action.type : "unknown",
+      label: typeof action.label === "string" ? action.label : "작업",
+      payload: isRecord(action.payload) ? action.payload : {},
+    })),
+    evidence: cleanEvidence,
+    choices: arrayOfRecords(metadata.choices).map((choice, index) => ({
+      id: typeof choice.id === "string" ? choice.id : `stored-choice-${index}`,
+      label: typeof choice.label === "string" ? choice.label : "이어서 질문하기",
+      message: typeof choice.message === "string" ? choice.message : "",
+    })).filter((choice) => choice.message),
+    memory_updates: record.memory_updates as unknown as Memory[],
+    needs_verification: arrayOfStrings(metadata.needs_verification),
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function arrayOfRecords(value: unknown): Array<Record<string, unknown>> {
+  return Array.isArray(value) ? value.filter(isRecord) : [];
+}
+
+function arrayOfStrings(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
 interface ProfileInput {
@@ -94,6 +188,10 @@ interface ProfileInput {
   weekly_hours: number;
 }
 
+interface ComposerAttachment extends ChatAttachmentInput {
+  id: string;
+}
+
 export default function App() {
   const [activePage, setActivePage] = useState<WorkspacePage>("chat");
   const [profile, setProfile] = useState<Profile | MissingProfile | null>(null);
@@ -102,6 +200,9 @@ export default function App() {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
+  const [chatMode, setChatMode] = useState<ChatMode>("auto");
+  const [chatModelTier, setChatModelTier] = useState<ChatModelTier>("balanced");
+  const [composerAttachments, setComposerAttachments] = useState<ComposerAttachment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
@@ -110,12 +211,11 @@ export default function App() {
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authStatus, setAuthStatus] = useState<string | null>(null);
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [isAuthBusy, setIsAuthBusy] = useState(false);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [assignmentDraft, setAssignmentDraft] = useState("자료구조 과제 다음주 금요일까지");
   const [assignmentPreview, setAssignmentPreview] = useState<AssignmentPreview | null>(null);
-  const [googleCalendarStatus, setGoogleCalendarStatus] = useState<GoogleCalendarStatus | null>(null);
-  const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus | null>(null);
   const [llmUsageLogs, setLlmUsageLogs] = useState<LLMUsageLog[]>([]);
   const [trackResult, setTrackResult] = useState<TrackRecommendResponse | null>(null);
   const [activityResult, setActivityResult] = useState<ActivityRecommendResponse | null>(null);
@@ -133,6 +233,7 @@ export default function App() {
     activity_style: "team",
     weekly_hours: 4,
   });
+  const activeChatAbortRef = useRef<AbortController | null>(null);
 
   const latestAssistantResponse = [...messages]
     .reverse()
@@ -161,6 +262,18 @@ export default function App() {
     }
   }, [automaticRecommendationInput, isRecommendationEdited]);
 
+  async function loadChatSessionMessages(sessionId: string): Promise<ChatMessage[]> {
+    const records = await getChatMessages(sessionId);
+    return records
+      .filter((record) => record.role !== "system")
+      .map((record) => ({
+        id: record.id,
+        role: record.role === "assistant" ? "assistant" : "user",
+        text: record.content,
+        response: buildStoredChatResponse(record),
+      }));
+  }
+
   async function refresh() {
     setError(null);
     setIsLoading(true);
@@ -173,35 +286,25 @@ export default function App() {
         setChatSessions([]);
         setAssignments([]);
         setLlmUsageLogs([]);
-        setGoogleCalendarStatus(null);
-        setRuntimeStatus(null);
         return;
       }
-      const [runtimeStatusResult, appDataResult] = await Promise.allSettled([
-        getRuntimeStatus(),
-        Promise.all([
-          getProfile(),
-          getMemories(),
-          getChatSessions(),
-          getGoogleCalendarStatus(),
-          getLLMUsageLogs(),
-        ]),
+      const [profileData, memoryData, sessionsData, llmLogData] = await Promise.all([
+        getProfile(),
+        getMemories(),
+        getChatSessions(),
+        getLLMUsageLogs(),
       ]);
-      if (runtimeStatusResult.status === "fulfilled") {
-        setRuntimeStatus(runtimeStatusResult.value);
-      } else {
-        setRuntimeStatus(null);
-      }
-      if (appDataResult.status === "rejected") {
-        throw appDataResult.reason;
-      }
-      const [profileData, memoryData, sessionsData, calendarStatusData, llmLogData] =
-        appDataResult.value;
       setProfile(profileData);
       setMemories(memoryData);
       setChatSessions(sessionsData);
-      setGoogleCalendarStatus(calendarStatusData);
       setLlmUsageLogs(llmLogData);
+      const savedSessionId = window.localStorage.getItem(ACTIVE_CHAT_SESSION_KEY);
+      const sessionToRestore =
+        sessionsData.find((session) => session.id === savedSessionId)?.id ?? sessionsData[0]?.id;
+      if (sessionToRestore && !activeSessionId && messages.length === 0) {
+        setActiveSessionId(sessionToRestore);
+        setMessages(await loadChatSessionMessages(sessionToRestore));
+      }
       setAssignments(await getAssignments());
     } catch (apiError) {
       const message = getErrorMessage(apiError, "데이터를 불러오지 못했습니다.");
@@ -220,6 +323,10 @@ export default function App() {
   async function handleAuthSubmit(mode: "signin" | "signup") {
     setAuthStatus(null);
     setError(null);
+    if (!authEmail.trim() || !authPassword.trim()) {
+      setAuthStatus("이메일과 비밀번호를 입력해 주세요.");
+      return;
+    }
     setIsAuthBusy(true);
     try {
       if (mode === "signin") {
@@ -228,13 +335,13 @@ export default function App() {
         toast.success("로그인되었습니다.");
       } else {
         await signUpWithEmailPassword(authEmail, authPassword);
-        setAuthStatus("가입 요청이 완료되었습니다. Supabase 설정에 따라 이메일 확인이 필요할 수 있습니다.");
+        setAuthStatus("가입 요청이 완료되었습니다. 이메일 확인이 필요할 수 있습니다.");
         toast.success("가입 요청이 완료되었습니다.");
       }
       await refreshAuthSession();
       await refresh();
     } catch (authError) {
-      const message = getErrorMessage(authError, "인증 요청에 실패했습니다.");
+      const message = getAuthErrorMessage(authError);
       setAuthStatus(message);
       toast.error(message);
     } finally {
@@ -253,12 +360,10 @@ export default function App() {
       setMemories([]);
       setChatSessions([]);
       setAssignments([]);
-      setGoogleCalendarStatus(null);
-      setRuntimeStatus(null);
       setMessages([]);
       setActiveSessionId(null);
+      window.localStorage.removeItem(ACTIVE_CHAT_SESSION_KEY);
       setAuthStatus("로그아웃되었습니다.");
-      await refreshPublicRuntimeStatus();
       toast.success("로그아웃되었습니다.");
     } catch (authError) {
       const message = getErrorMessage(authError, "로그아웃에 실패했습니다.");
@@ -329,47 +434,6 @@ export default function App() {
     }
   }
 
-  async function handleExportAssignment(assignmentId: string) {
-    setError(null);
-    try {
-      const exported = await exportAssignmentToCalendar(assignmentId);
-      setAssignments((current) =>
-        current.map((assignment) =>
-          assignment.id === assignmentId
-            ? {
-                ...assignment,
-                calendar_event_id: exported.calendar_event_id,
-                calendar_synced_at: exported.calendar_synced_at,
-              }
-            : assignment,
-        ),
-      );
-      toast.success("Google Calendar에 일정을 내보냈습니다.");
-    } catch (apiError) {
-      const message = getErrorMessage(apiError, "Calendar 내보내기에 실패했습니다.");
-      setError(message);
-      toast.error(message);
-    }
-  }
-
-  async function handleConnectGoogleCalendar() {
-    setError(null);
-    try {
-      const response = await getGoogleCalendarConnectUrl();
-      if (!response.authorization_url) {
-        const message = response.reason ?? "Google Calendar OAuth 설정이 필요합니다.";
-        setError(message);
-        toast.error(message);
-        return;
-      }
-      window.location.assign(response.authorization_url);
-    } catch (apiError) {
-      const message = getErrorMessage(apiError, "Calendar 연결 URL을 만들지 못했습니다.");
-      setError(message);
-      toast.error(message);
-    }
-  }
-
   async function handleRecommend() {
     setError(null);
     try {
@@ -407,6 +471,34 @@ export default function App() {
     setRecommendationDraft(recommendationContextToDraft(automaticRecommendationInput));
   }
 
+  async function handleComposerFiles(files: FileList | null) {
+    if (!files?.length) {
+      return;
+    }
+    const nextAttachments: ComposerAttachment[] = [];
+    for (const file of Array.from(files).slice(0, 3 - composerAttachments.length)) {
+      const textContent = await readAttachmentText(file);
+      nextAttachments.push({
+        id: `${file.name}-${file.size}-${file.lastModified}`,
+        name: file.name,
+        mime_type: file.type || "application/octet-stream",
+        size: file.size,
+        text_content: textContent,
+      });
+    }
+    setComposerAttachments((current) => [...current, ...nextAttachments].slice(0, 3));
+  }
+
+  function removeComposerAttachment(attachmentId: string) {
+    setComposerAttachments((current) =>
+      current.filter((attachment) => attachment.id !== attachmentId),
+    );
+  }
+
+  function stopChatResponse() {
+    activeChatAbortRef.current?.abort();
+  }
+
   async function saveOnboardingProfile() {
     setError(null);
     try {
@@ -442,15 +534,15 @@ export default function App() {
           preference: onboardingDraft.preference,
           activityStyle: onboardingDraft.activity_style,
           weeklyHours: onboardingDraft.weekly_hours,
-          sourceLabel: "온보딩 메모리",
+          sourceLabel: "처음 설정한 정보",
         }),
       );
       setIsRecommendationEdited(false);
       setActivePage("chat");
-      toast.success("프로필을 저장했습니다.");
+      toast.success("기본 정보를 저장했습니다.");
       await refresh();
     } catch (apiError) {
-      const message = getErrorMessage(apiError, "프로필 저장에 실패했습니다.");
+      const message = getErrorMessage(apiError, "기본 정보 저장에 실패했습니다.");
       setError(message);
       toast.error(message);
     }
@@ -466,31 +558,110 @@ export default function App() {
     setError(null);
     setIsSending(true);
     setDraft("");
+    const abortController = new AbortController();
+    activeChatAbortRef.current = abortController;
+    const attachmentsForRequest = composerAttachments.map(({ id: _id, ...attachment }) => attachment);
+    setComposerAttachments([]);
+    const now = Date.now();
+    const assistantMessageId = `assistant-${now}`;
+    let visibleText = "";
     setMessages((current) => [
       ...current,
-      { id: `user-${Date.now()}`, role: "user", text: message },
+      { id: `user-${now}`, role: "user", text: message },
+      { id: assistantMessageId, role: "assistant", text: "", isPending: true },
     ]);
 
     try {
-      const response = await sendChatMessage(message, activeSessionId);
-      setActiveSessionId(response.session_id);
-      void refreshChatSessions();
-      setMessages((current) => [
-        ...current,
+      const response = await streamChatMessage(
+        message,
+        activeSessionId,
         {
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          text: response.answer,
-          response,
+          mode: chatMode,
+          modelTier: chatModelTier,
+          attachments: attachmentsForRequest,
+          signal: abortController.signal,
         },
-      ]);
+        {
+          onSession: (sessionId) => {
+            setActiveSessionId(sessionId);
+            if (sessionId) {
+              window.localStorage.setItem(ACTIVE_CHAT_SESSION_KEY, sessionId);
+            }
+          },
+          onStatus: () => {
+            setMessages((current) =>
+              current.map((item) =>
+                item.id === assistantMessageId
+                  ? { ...item, isPending: true }
+                  : item,
+              ),
+            );
+          },
+          onText: (delta) => {
+            visibleText += delta;
+            setMessages((current) =>
+              current.map((item) =>
+                item.id === assistantMessageId
+                  ? { ...item, isPending: false, text: visibleText }
+                  : item,
+              ),
+            );
+          },
+          onDone: (doneResponse) => {
+            setActiveSessionId(doneResponse.session_id);
+            if (doneResponse.session_id) {
+              window.localStorage.setItem(ACTIVE_CHAT_SESSION_KEY, doneResponse.session_id);
+            }
+            setMessages((current) =>
+              current.map((item) =>
+                item.id === assistantMessageId
+                  ? {
+                      ...item,
+                      isPending: false,
+                      text: doneResponse.answer,
+                      response: doneResponse,
+                    }
+                  : item,
+              ),
+            );
+          },
+        },
+      );
+      if (response.session_id) {
+        setActiveSessionId(response.session_id);
+        window.localStorage.setItem(ACTIVE_CHAT_SESSION_KEY, response.session_id);
+      }
+      void refreshChatSessions();
       toast.success("AI 답변을 받았습니다.");
     } catch (apiError) {
+      if (apiError instanceof DOMException && apiError.name === "AbortError") {
+        setMessages((current) =>
+          current.map((item) =>
+            item.id === assistantMessageId
+              ? {
+                  ...item,
+                  isPending: false,
+                  text: visibleText || "답변 생성을 중지했습니다.",
+                }
+              : item,
+          ),
+        );
+        toast.info("답변 생성을 중지했습니다.");
+        return;
+      }
       const message = getErrorMessage(apiError, "채팅 요청에 실패했습니다.");
+      setMessages((current) => current.filter((item) => item.id !== assistantMessageId));
+      setComposerAttachments((current) => [...attachmentsForRequest.map((attachment) => ({
+        ...attachment,
+        id: `${attachment.name}-${attachment.size}-${Date.now()}`,
+      })), ...current].slice(0, 3));
       setError(message);
       toast.error(message);
     } finally {
       setIsSending(false);
+      if (activeChatAbortRef.current === abortController) {
+        activeChatAbortRef.current = null;
+      }
     }
   }
 
@@ -507,17 +678,30 @@ export default function App() {
     setActivePage("chat");
     setIsMobileNavOpen(false);
     setActiveSessionId(sessionId);
+    window.localStorage.setItem(ACTIVE_CHAT_SESSION_KEY, sessionId);
     try {
-      const records = await getChatMessages(sessionId);
-      setMessages(
-        records.map((record) => ({
-          id: record.id,
-          role: record.role === "assistant" ? "assistant" : "user",
-          text: record.content,
-        })),
-      );
+      setMessages(await loadChatSessionMessages(sessionId));
     } catch (apiError) {
       const message = getErrorMessage(apiError, "채팅 기록을 불러오지 못했습니다.");
+      setError(message);
+      toast.error(message);
+    }
+  }
+
+  async function handleDeleteChatSession(sessionId: string) {
+    setError(null);
+    try {
+      await deleteChatSession(sessionId);
+      setChatSessions((current) => current.filter((session) => session.id !== sessionId));
+      if (activeSessionId === sessionId) {
+        setActiveSessionId(null);
+        setMessages([]);
+        window.localStorage.removeItem(ACTIVE_CHAT_SESSION_KEY);
+      }
+      toast.success("상담 기록을 삭제했습니다.");
+      void refreshChatSessions();
+    } catch (apiError) {
+      const message = getErrorMessage(apiError, "상담 기록 삭제에 실패했습니다.");
       setError(message);
       toast.error(message);
     }
@@ -527,6 +711,7 @@ export default function App() {
     setActivePage("chat");
     setIsMobileNavOpen(false);
     setActiveSessionId(null);
+    window.localStorage.removeItem(ACTIVE_CHAT_SESSION_KEY);
     setMessages([]);
     setDraft("수강신청 전에 AI 트랙 기준으로 어떤 과목을 볼까?");
   }
@@ -537,7 +722,6 @@ export default function App() {
   }
 
   useEffect(() => {
-    void refreshPublicRuntimeStatus();
     void refreshAuthSession().then(() => void refresh());
     const supabase = getSupabaseClient();
     const subscription = supabase?.auth.onAuthStateChange((_event, session) => {
@@ -557,7 +741,9 @@ export default function App() {
         setChatSessions([]);
         setAssignments([]);
         setMessages([]);
+        setActiveSessionId(null);
         setLlmUsageLogs([]);
+        window.localStorage.removeItem(ACTIVE_CHAT_SESSION_KEY);
         setIsLoading(false);
       }
     });
@@ -565,14 +751,6 @@ export default function App() {
       subscription?.data.subscription.unsubscribe();
     };
   }, []);
-
-  async function refreshPublicRuntimeStatus() {
-    try {
-      setRuntimeStatus(await getPublicRuntimeStatus());
-    } catch {
-      setRuntimeStatus(null);
-    }
-  }
 
   if (!isAuthChecked) {
     return (
@@ -585,38 +763,21 @@ export default function App() {
   if (!authSession) {
     return (
       <LoginPage
+        authMode={authMode}
         authEmail={authEmail}
         authPassword={authPassword}
         authStatus={authStatus}
         isAuthBusy={isAuthBusy}
+        setAuthMode={setAuthMode}
+        clearAuthStatus={() => setAuthStatus(null)}
         setAuthEmail={setAuthEmail}
         setAuthPassword={setAuthPassword}
         onAuthSubmit={(mode) => void handleAuthSubmit(mode)}
-        runtimeStatus={runtimeStatus}
       />
     );
   }
 
-  if (!isLoading && profile === null && error) {
-    return (
-      <DataLoadErrorPage
-        error={error}
-        runtimeStatus={runtimeStatus}
-        onRefresh={() => void refresh()}
-        onSignOut={() => void handleSignOut()}
-      />
-    );
-  }
-
-  if (isLoading || profile === null) {
-    return (
-      <FullPageShell>
-        <div className="text-sm font-semibold text-[#716c63]">사용자 데이터를 불러오는 중입니다.</div>
-      </FullPageShell>
-    );
-  }
-
-  if (!profile.exists) {
+  if (!isLoading && profile && !profile.exists) {
     return (
       <OnboardingPage
         authSession={authSession}
@@ -634,16 +795,17 @@ export default function App() {
       <div className="grid h-full grid-cols-1 lg:grid-cols-[272px_minmax(0,1fr)_336px]">
         <Sidebar
           activePage={activePage}
+          activeSessionId={activeSessionId}
           sessions={chatSessions}
           setActivePage={handleSelectPage}
           onNewChat={startNewChat}
           onOpenSession={(sessionId) => void openChatSession(sessionId)}
+          onDeleteSession={(sessionId) => void handleDeleteChatSession(sessionId)}
         />
 
         <section className="grid min-w-0 grid-rows-[64px_minmax(0,1fr)] bg-[#faf8f3]">
           <TopBar
             activePage={activePage}
-            authSession={authSession}
             error={error}
             isLoading={isLoading}
             onOpenMobileContext={() => setIsMobileContextOpen(true)}
@@ -652,13 +814,30 @@ export default function App() {
           />
 
           {activePage === "chat" ? (
-            <ChatWorkspace
-              draft={draft}
-              messages={messages}
-              isSending={isSending}
-              setDraft={setDraft}
-              onSend={handleSend}
-            />
+            profile === null && error ? (
+              <InlineDataLoadError
+                error={error}
+                onRefresh={() => void refresh()}
+                onSignOut={() => void handleSignOut()}
+              />
+            ) : (
+              <ChatWorkspace
+                draft={draft}
+                mode={chatMode}
+                modelTier={chatModelTier}
+                attachments={composerAttachments}
+                messages={messages}
+                isBootstrapping={isLoading && messages.length === 0}
+                isSending={isSending}
+                setDraft={setDraft}
+                setMode={setChatMode}
+                setModelTier={setChatModelTier}
+                onAttachFiles={(files) => void handleComposerFiles(files)}
+                onRemoveAttachment={removeComposerAttachment}
+                onSend={handleSend}
+                onStop={stopChatResponse}
+              />
+            )
           ) : activePage === "schedule" ? (
             <SchedulePage
               assignments={assignments}
@@ -669,7 +848,6 @@ export default function App() {
               onSave={() => void handleSaveAssignment()}
               onComplete={(assignmentId) => void handleCompleteAssignment(assignmentId)}
               onDelete={(assignmentId) => void handleDeleteAssignment(assignmentId)}
-              onExport={(assignmentId) => void handleExportAssignment(assignmentId)}
             />
           ) : activePage === "logs" ? (
             <LogsPage logs={llmUsageLogs} />
@@ -695,15 +873,27 @@ export default function App() {
               setAuthPassword={setAuthPassword}
               onAuthSubmit={(mode) => void handleAuthSubmit(mode)}
               profile={profile}
-              googleCalendarStatus={googleCalendarStatus}
-              runtimeStatus={runtimeStatus}
               onSeedProfile={() => void saveOnboardingProfile()}
               onSignOut={() => void handleSignOut()}
               onRefresh={() => void refresh()}
-              onConnectGoogleCalendar={() => void handleConnectGoogleCalendar()}
             />
           ) : (
-            <WorkspacePlaceholder page={activePage} />
+            <ChatWorkspace
+              draft={draft}
+              mode={chatMode}
+              modelTier={chatModelTier}
+              attachments={composerAttachments}
+              messages={messages}
+              isBootstrapping={isLoading && messages.length === 0}
+              isSending={isSending}
+              setDraft={setDraft}
+              setMode={setChatMode}
+              setModelTier={setChatModelTier}
+              onAttachFiles={(files) => void handleComposerFiles(files)}
+              onRemoveAttachment={removeComposerAttachment}
+              onSend={handleSend}
+              onStop={stopChatResponse}
+            />
           )}
         </section>
 
@@ -716,12 +906,14 @@ export default function App() {
       </div>
       <MobileDrawer
         activePage={activePage}
+        activeSessionId={activeSessionId}
         isOpen={isMobileNavOpen}
         sessions={chatSessions}
         setActivePage={handleSelectPage}
         onClose={() => setIsMobileNavOpen(false)}
         onNewChat={startNewChat}
         onOpenSession={(sessionId) => void openChatSession(sessionId)}
+        onDeleteSession={(sessionId) => void handleDeleteChatSession(sessionId)}
       />
       <MobileContextDrawer
         activePage={activePage}
@@ -781,12 +973,10 @@ function FullPageShell({ children }: { children: ReactNode }) {
 
 function DataLoadErrorPage({
   error,
-  runtimeStatus,
   onRefresh,
   onSignOut,
 }: {
   error: string;
-  runtimeStatus: RuntimeStatus | null;
   onRefresh: () => void;
   onSignOut: () => void;
 }) {
@@ -797,24 +987,21 @@ function DataLoadErrorPage({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#938d83]">
             KMU SW Navigator
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-normal">
-            Live 데이터 로딩 확인 필요
-          </h1>
+          <h1 className="mt-2 text-2xl font-semibold tracking-normal">정보를 불러오지 못했습니다</h1>
           <p className="mt-2 text-sm leading-6 text-[#716c63]">
-            Supabase Auth 로그인은 유지됐지만 사용자별 저장소를 읽는 단계에서 문제가 발생했습니다.
+            계정은 유지되어 있습니다. 잠시 후 다시 시도하거나 로그아웃한 뒤 다시 로그인해 주세요.
           </p>
         </div>
         <div className="rounded-lg border border-[#e3c8bd] bg-[#fff7f2] p-3 text-sm leading-6 text-[#9b3f24]">
           {error}
         </div>
-        <LiveStatusPanel runtimeStatus={runtimeStatus} showGoogleCalendar />
         <div className="flex flex-wrap gap-2">
           <button
             className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8]"
             type="button"
             onClick={onRefresh}
           >
-            상태 새로고침
+            다시 시도
           </button>
           <button
             className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold"
@@ -830,25 +1017,71 @@ function DataLoadErrorPage({
   );
 }
 
+function InlineDataLoadError({
+  error,
+  onRefresh,
+  onSignOut,
+}: {
+  error: string;
+  onRefresh: () => void;
+  onSignOut: () => void;
+}) {
+  return (
+    <section className="min-h-0 overflow-y-auto px-6 py-7">
+      <div className="mx-auto max-w-[760px] rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-5">
+        <h2 className="text-xl font-semibold tracking-normal">정보를 다시 확인해야 합니다</h2>
+        <p className="mt-2 text-sm leading-6 text-[#716c63]">
+          계정 세션은 유지되어 있습니다. 현재 화면에서 바로 다시 시도할 수 있습니다.
+        </p>
+        <div className="mt-4 rounded-lg border border-[#e3c8bd] bg-[#fff7f2] p-3 text-sm leading-6 text-[#9b3f24]">
+          {error}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8]"
+            type="button"
+            onClick={onRefresh}
+          >
+            다시 시도
+          </button>
+          <button
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold"
+            type="button"
+            onClick={onSignOut}
+          >
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+            로그아웃
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function LoginPage({
+  authMode,
   authEmail,
   authPassword,
   authStatus,
   isAuthBusy,
+  setAuthMode,
+  clearAuthStatus,
   setAuthEmail,
   setAuthPassword,
   onAuthSubmit,
-  runtimeStatus,
 }: {
+  authMode: "signin" | "signup";
   authEmail: string;
   authPassword: string;
   authStatus: string | null;
   isAuthBusy: boolean;
+  setAuthMode: (mode: "signin" | "signup") => void;
+  clearAuthStatus: () => void;
   setAuthEmail: (value: string) => void;
   setAuthPassword: (value: string) => void;
   onAuthSubmit: (mode: "signin" | "signup") => void;
-  runtimeStatus: RuntimeStatus | null;
 }) {
+  const isSignup = authMode === "signup";
   return (
     <FullPageShell>
       <div className="space-y-5">
@@ -856,12 +1089,22 @@ function LoginPage({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#938d83]">
             KMU SW Navigator
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-normal">로그인</h1>
+          <h1 className="mt-2 text-2xl font-semibold tracking-normal">
+            {isSignup ? "가입" : "로그인"}
+          </h1>
           <p className="mt-2 text-sm leading-6 text-[#716c63]">
-            Supabase Auth 세션으로 로그인해야 학업 상담, 일정, 추천, LLM 기록을 사용할 수 있습니다.
+            {isSignup
+              ? "계정을 만들고 나에게 맞는 상담, 추천, 일정 관리를 시작합니다."
+              : "국민대 소프트웨어융합대학 생활에 맞춘 상담, 추천, 일정 관리를 시작합니다."}
           </p>
         </div>
-        <div className="grid gap-3">
+        <form
+          className="grid gap-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onAuthSubmit(authMode);
+          }}
+        >
           <label className="space-y-1 text-xs font-semibold text-[#716c63]">
             이메일
             <input
@@ -880,88 +1123,31 @@ function LoginPage({
               onChange={(event) => setAuthPassword(event.target.value)}
             />
           </label>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8] disabled:opacity-50"
-            type="button"
-            disabled={isAuthBusy}
-            onClick={() => onAuthSubmit("signin")}
-          >
-            <LogIn className="h-4 w-4" aria-hidden="true" />
-            로그인
-          </button>
-          <button
-            className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold disabled:opacity-50"
-            type="button"
-            disabled={isAuthBusy}
-            onClick={() => onAuthSubmit("signup")}
-          >
-            가입
-          </button>
-        </div>
-        <LiveStatusPanel runtimeStatus={runtimeStatus} />
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8] disabled:opacity-50"
+              type="submit"
+              disabled={isAuthBusy}
+            >
+              <LogIn className="h-4 w-4" aria-hidden="true" />
+              {isSignup ? "가입하기" : "로그인"}
+            </button>
+            <button
+              className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold disabled:opacity-50"
+              type="button"
+              disabled={isAuthBusy}
+              onClick={() => {
+                clearAuthStatus();
+                setAuthMode(isSignup ? "signin" : "signup");
+              }}
+            >
+              {isSignup ? "로그인으로 돌아가기" : "가입 페이지로 이동"}
+            </button>
+          </div>
+        </form>
         {authStatus ? <p className="text-xs leading-5 text-[#716c63]">{authStatus}</p> : null}
       </div>
     </FullPageShell>
-  );
-}
-
-function LiveStatusPanel({
-  runtimeStatus,
-  showGoogleCalendar = false,
-}: {
-  runtimeStatus: RuntimeStatus | null;
-  showGoogleCalendar?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4">
-      <h2 className="text-sm font-semibold">Live API 상태</h2>
-      <div className="mt-3 grid gap-2">
-        <RuntimeStatusRow
-          label="Supabase backend"
-          status={runtimeStatus?.supabase_backend}
-          readyText="env 연결됨"
-        />
-        <RuntimeStatusRow
-          label="Supabase schema"
-          status={runtimeStatus?.supabase_schema}
-          readyText="schema.sql 적용됨"
-        />
-        <RuntimeStatusRow label="Gemini" status={runtimeStatus?.gemini} readyText="API 키 연결됨" />
-        {showGoogleCalendar ? (
-          <RuntimeStatusRow
-            label="Google Calendar"
-            status={runtimeStatus?.google_calendar}
-            readyText="OAuth env 연결됨"
-          />
-        ) : null}
-      </div>
-      {runtimeStatus?.supabase_schema.next_actions.length ? (
-        <div className="mt-3 rounded-lg border border-[#e3c8bd] bg-[#fff7f2] p-3">
-          <p className="text-xs font-semibold text-[#9b3f24]">Supabase schema 다음 액션</p>
-          <ol className="mt-2 list-decimal space-y-1 pl-4 text-xs leading-5 text-[#716c63]">
-            {runtimeStatus.supabase_schema.next_actions.map((action) => (
-              <li key={action}>
-                <code className="break-all rounded bg-[#fffdf8] px-1 py-0.5 text-[#191817]">
-                  {action}
-                </code>
-              </li>
-            ))}
-          </ol>
-        </div>
-      ) : null}
-      <RuntimeStatusDetails
-        title="Supabase schema missing 항목"
-        items={runtimeStatus?.supabase_schema.missing_schema}
-      />
-      {showGoogleCalendar ? (
-        <RuntimeStatusDetails
-          title="Google Calendar missing env"
-          items={runtimeStatus?.google_calendar.missing_env}
-        />
-      ) : null}
-    </div>
   );
 }
 
@@ -987,7 +1173,7 @@ function OnboardingPage({
           </p>
           <h1 className="mt-2 text-2xl font-semibold tracking-normal">처음 설정</h1>
           <p className="mt-2 text-sm leading-6 text-[#716c63]">
-            상담과 추천에 사용할 기본 학업 정보를 저장합니다. 이 값은 Supabase의 현재 로그인 사용자 프로필에 저장됩니다.
+            상담과 추천에 사용할 기본 학업 정보를 알려주세요. 나중에 설정에서 바꿀 수 있습니다.
           </p>
         </div>
         <div className="grid gap-3">
@@ -1147,21 +1333,54 @@ function OnboardingPage({
 
 function ChatWorkspace({
   draft,
+  mode,
+  modelTier,
+  attachments,
   messages,
+  isBootstrapping,
   isSending,
   setDraft,
+  setMode,
+  setModelTier,
+  onAttachFiles,
+  onRemoveAttachment,
   onSend,
+  onStop,
 }: {
   draft: string;
+  mode: ChatMode;
+  modelTier: ChatModelTier;
+  attachments: ComposerAttachment[];
   messages: ChatMessage[];
+  isBootstrapping: boolean;
   isSending: boolean;
   setDraft: (value: string) => void;
+  setMode: (value: ChatMode) => void;
+  setModelTier: (value: ChatModelTier) => void;
+  onAttachFiles: (files: FileList | null) => void;
+  onRemoveAttachment: (attachmentId: string) => void;
   onSend: (event: FormEvent<HTMLFormElement>) => void;
+  onStop: () => void;
 }) {
+  const scrollRef = useRef<HTMLElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    const target = scrollRef.current;
+    if (!target) {
+      return;
+    }
+    target.scrollTo({ top: target.scrollHeight, behavior: "smooth" });
+  }, [messages, isSending]);
+
   return (
     <div className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto]">
-      <section className="min-h-0 overflow-y-auto px-5 py-7">
+      <section ref={scrollRef} className="min-h-0 overflow-y-auto px-5 py-7">
         <div className="mx-auto max-w-[820px] space-y-6">
+          {isBootstrapping ? <ChatHistorySkeleton /> : null}
+          {!isBootstrapping && messages.length === 0 ? (
+            <ChatEmptyState setDraft={setDraft} />
+          ) : null}
           {messages.map((message) => (
             <MessageBubble key={message.id} message={message} setDraft={setDraft} />
           ))}
@@ -1170,35 +1389,170 @@ function ChatWorkspace({
 
       <form className="border-t border-[#ded7cb] px-5 py-4" onSubmit={onSend}>
         <div className="mx-auto max-w-[820px] rounded-xl border border-[#c9c0b3] bg-[#fffdf8] p-2">
+          <div className="mb-2 flex flex-wrap items-center gap-2 px-1">
+            <label className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs font-semibold text-[#3d3b37]">
+              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+              <select
+                className="bg-transparent outline-none"
+                value={mode}
+                onChange={(event) => setMode(event.target.value as ChatMode)}
+                title="상담 모드"
+              >
+                <option value="auto">자동</option>
+                <option value="academic">학업</option>
+                <option value="career">진로</option>
+                <option value="schedule">일정</option>
+              </select>
+            </label>
+            <label className="inline-flex min-h-8 items-center rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs font-semibold text-[#3d3b37]">
+              <select
+                className="bg-transparent outline-none"
+                value={modelTier}
+                onChange={(event) => setModelTier(event.target.value as ChatModelTier)}
+                title="응답 품질"
+              >
+                <option value="balanced">균형 · Gemini 3 Flash</option>
+                <option value="fast">빠름 · Flash-Lite</option>
+              </select>
+            </label>
+            <input
+              ref={fileInputRef}
+              className="hidden"
+              type="file"
+              multiple
+              accept=".txt,.md,.csv,.json,.py,.ts,.tsx,.js,.jsx,.html,.css,text/*,application/json"
+              onChange={(event) => {
+                onAttachFiles(event.target.files);
+                event.target.value = "";
+              }}
+            />
+            <button
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs font-semibold text-[#3d3b37] disabled:opacity-50"
+              type="button"
+              disabled={attachments.length >= 3 || isSending}
+              onClick={() => fileInputRef.current?.click()}
+              title="파일 첨부"
+            >
+              <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
+              파일
+            </button>
+          </div>
+          {attachments.length ? (
+            <div className="mb-2 flex flex-wrap gap-2 px-1">
+              {attachments.map((attachment) => (
+                <span
+                  className="inline-flex min-h-8 max-w-full items-center gap-2 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs text-[#3d3b37]"
+                  key={attachment.id}
+                  title={attachment.text_content ? "본문을 이번 질문에 함께 보냅니다." : "파일명만 첨부됩니다."}
+                >
+                  <Paperclip className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span className="max-w-[220px] truncate">{attachment.name}</span>
+                  <button
+                    className="grid h-5 w-5 place-items-center rounded hover:bg-[#ebe4d8]"
+                    type="button"
+                    onClick={() => onRemoveAttachment(attachment.id)}
+                    title="첨부 제거"
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          ) : null}
           <textarea
             className="block min-h-[76px] w-full resize-none bg-transparent px-2 py-2 text-[15px] leading-6 text-[#191817] outline-none"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
+            placeholder="예: AI 트랙을 준비하려면 이번 학기에 어떤 과목과 활동을 먼저 하면 좋을까?"
             aria-label="AI 상담 입력"
           />
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2">
-              {["학업", "진로", "일정 추출"].map((label) => (
-                <button
-                  className="min-h-7 rounded-full border border-[#ded7cb] bg-[#faf8f3] px-3 text-xs text-[#716c63]"
-                  key={label}
-                  type="button"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center justify-end gap-3">
             <button
               className="grid h-9 w-9 place-items-center rounded-lg bg-[#191817] text-[#fffdf8] disabled:opacity-50"
-              type="submit"
-              disabled={isSending}
-              title="전송"
+              type={isSending ? "button" : "submit"}
+              disabled={!isSending && !draft.trim()}
+              onClick={isSending ? onStop : undefined}
+              title={isSending ? "답변 중지" : "전송"}
             >
-              <Send className="h-4 w-4" aria-hidden="true" />
+              {isSending ? (
+                <Square className="h-4 w-4 fill-current" aria-hidden="true" />
+              ) : (
+                <Send className="h-4 w-4" aria-hidden="true" />
+              )}
             </button>
           </div>
         </div>
       </form>
+    </div>
+  );
+}
+
+function ChatEmptyState({ setDraft }: { setDraft: (value: string) => void }) {
+  const starterPrompts = [
+    {
+      title: "수강신청 상담",
+      description: "관심 분야와 학년 기준으로 먼저 볼 과목을 정리합니다.",
+      prompt: "수강신청 전에 AI 트랙 기준으로 어떤 과목을 먼저 보면 좋을까?",
+    },
+    {
+      title: "진로 준비",
+      description: "백엔드, AI, 데이터 등 목표 직무별 준비 순서를 잡습니다.",
+      prompt: "AI 서비스 개발과 백엔드에 관심 있어. 이번 학기에 포트폴리오로 뭘 준비하면 좋을까?",
+    },
+    {
+      title: "일정 정리",
+      description: "과제, 시험, 신청 마감 문장을 내부 일정으로 바꿉니다.",
+      prompt: "캡스톤 회의는 금요일 오후 3시, 자료구조 과제는 다음 주 월요일까지야. 일정으로 정리해줘.",
+    },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-[#ded7cb] bg-[#fffdf8] p-5 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#ded7cb] bg-[#faf8f3] text-[#3d3b37]">
+          <Lightbulb className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold tracking-normal">무엇을 상담할까요?</h2>
+          <p className="mt-1 text-sm leading-6 text-[#716c63]">
+            예시를 누르면 입력창에 질문이 들어갑니다. 그대로 보내거나 내 상황에 맞게 고쳐서 보내세요.
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-2 md:grid-cols-3">
+        {starterPrompts.map((item) => (
+          <button
+            className="rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4 text-left hover:border-[#b8ad9f] hover:bg-[#f4efe6]"
+            key={item.title}
+            type="button"
+            onClick={() => setDraft(item.prompt)}
+          >
+            <span className="block text-sm font-semibold text-[#191817]">{item.title}</span>
+            <span className="mt-1 block text-xs leading-5 text-[#716c63]">{item.description}</span>
+            <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#3d3b37]">
+              질문 넣기
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChatHistorySkeleton() {
+  return (
+    <div className="space-y-5" aria-label="상담 기록 동기화 중">
+      <div className="max-w-[640px] space-y-3 py-1">
+        <div className="h-4 w-3/5 rounded bg-[#ebe4d8]" />
+        <div className="h-4 w-5/6 rounded bg-[#f1ede5]" />
+        <div className="h-4 w-2/3 rounded bg-[#f1ede5]" />
+      </div>
+      <div className="flex justify-end opacity-70">
+        <div className="w-[min(620px,88%)] rounded-2xl border border-[#ded7cb] bg-[#fffdf8] px-4 py-3">
+          <div className="h-4 w-3/5 rounded bg-[#ebe4d8]" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -1211,61 +1565,155 @@ function MessageBubble({
   setDraft: (value: string) => void;
 }) {
   const isUser = message.role === "user";
-  const evidence = message.response?.evidence;
+  const sources = message.response ? buildSourceSummaries(message.response) : [];
+  const isAssistantDone = !isUser && Boolean(message.response);
+  const isAssistantWriting = !isUser && !message.isPending && message.text && !message.response;
   return (
-    <article className="grid grid-cols-[32px_minmax(0,1fr)] gap-3">
-      <div className="grid h-8 w-8 place-items-center rounded-lg border border-[#ded7cb] bg-[#fffdf8] text-xs font-bold text-[#716c63]">
-        {isUser ? "나" : "AI"}
-      </div>
+    <article className={isUser ? "flex justify-end" : "flex justify-start"}>
       <div
         className={
           isUser
-            ? "max-w-[720px] rounded-xl border border-[#ded7cb] bg-[#fffdf8] px-4 py-3 text-[15px] leading-7"
-            : "max-w-[720px] py-1 text-[15px] leading-7"
+            ? "w-fit max-w-[min(720px,88%)] rounded-2xl border border-[#ded7cb] bg-[#fffdf8] px-4 py-3 text-[15px] leading-7 shadow-sm"
+            : "max-w-[min(720px,100%)] py-1 text-[15px] leading-7"
         }
       >
         {isUser ? (
           <p>{message.text}</p>
+        ) : message.isPending ? (
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#ded7cb] bg-[#fffdf8] px-3 py-2 text-sm text-[#716c63]">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-[#938d83]" />
+            답변을 준비하고 있습니다
+          </div>
         ) : (
           <Streamdown
             className="assistant-markdown"
             mode="static"
             plugins={{ cjk }}
           >
-            {message.text}
+            {normalizeAssistantMarkdown(message.text)}
           </Streamdown>
         )}
-        {message.response ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            <EvidenceChip label={`intent · ${message.response.intent}`} />
-            {evidence?.personalization.map((item) => (
-              <EvidenceChip key={item} label={`개인화 · ${item}`} />
-            ))}
-            {evidence?.internal_sources.map((source) => (
-              <EvidenceChip key={String(source.title)} label={`출처 · ${String(source.title)}`} />
-            ))}
-            {evidence?.web_sources.map((source) => (
-              <EvidenceChip key={String(source.uri ?? source.title)} label={`웹 · ${String(source.title)}`} />
-            ))}
+        {isAssistantDone || isAssistantWriting ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[#716c63]">
+            {isAssistantDone ? (
+              <span
+                className="inline-flex min-h-7 items-center gap-1.5 rounded-full border border-[#c7d8c4] bg-[#f3f8f0] px-3 text-[#3c6b35]"
+                title={message.response?.model ?? "기본 응답"}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                {message.response?.model ? "Gemini 답변" : "답변 완료"}
+              </span>
+            ) : (
+              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-full border border-[#ded7cb] bg-[#fffdf8] px-3">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-[#938d83]" />
+                답변 작성 중
+              </span>
+            )}
           </div>
         ) : null}
+        {sources.length ? <SourceReferenceStrip sources={sources} /> : null}
         {message.response?.choices.length ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {message.response.choices.map((choice) => (
-              <button
-                className="inline-flex min-h-8 items-center gap-1 rounded-full border border-[#ded7cb] bg-[#fffdf8] px-3 text-xs text-[#3d3b37]"
-                key={choice.id}
-                type="button"
-                onClick={() => setDraft(choice.message)}
-              >
-                {choice.label}
-                <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
-            ))}
+          <div className="mt-3">
+            <p className="mb-2 text-xs font-semibold text-[#716c63]">이어서 물어볼 수 있는 질문</p>
+            <div className="flex flex-wrap gap-2">
+              {message.response.choices.map((choice, index) => (
+                <button
+                  className="inline-flex min-h-8 items-center gap-1 rounded-full border border-[#ded7cb] bg-[#fffdf8] px-3 text-xs text-[#3d3b37]"
+                  key={`${choice.id}-${index}`}
+                  type="button"
+                  onClick={() => setDraft(choice.message)}
+                  title="후속 질문을 입력창에 넣기"
+                >
+                  {choice.label}
+                  <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
       </div>
     </article>
+  );
+}
+
+interface SourceSummary {
+  index: number;
+  title: string;
+  label: string;
+  detail: string | null;
+}
+
+function normalizeAssistantMarkdown(text: string): string {
+  const normalized = text
+    .replace(/\\\*\\\*/g, "**")
+    .replace(/\\_\\_/g, "__");
+  const markerCount = (normalized.match(/\*\*/g) ?? []).length;
+  return markerCount % 2 === 0 ? normalized : normalized.replace(/\*\*$/, "").replace(/\*\*/g, "");
+}
+
+function buildSourceSummaries(response: ChatResponse): SourceSummary[] {
+  const seen = new Set<string>();
+  const rawSources = [
+    ...response.evidence.internal_sources.map((source) => ({ source, label: "학교 자료" })),
+    ...response.evidence.web_sources.map((source) => ({ source, label: "웹 자료" })),
+  ];
+
+  return rawSources.flatMap(({ source, label }) => {
+    const title = sourceTitle(source);
+    const key = `${label}:${title}`;
+    if (seen.has(key)) {
+      return [];
+    }
+    seen.add(key);
+    return [
+      {
+        index: seen.size,
+        title,
+        label,
+        detail: sourceDetail(source),
+      },
+    ];
+  }).slice(0, 4);
+}
+
+function sourceTitle(source: Record<string, unknown>): string {
+  const title = String(source.title ?? source.heading_path ?? source.uri ?? "").trim();
+  return title || "학교 자료";
+}
+
+function sourceDetail(source: Record<string, unknown>): string | null {
+  const heading = String(source.heading_path ?? source.section ?? "").trim();
+  const uri = String(source.uri ?? "").trim();
+  if (heading && heading !== sourceTitle(source)) {
+    return heading;
+  }
+  return uri || null;
+}
+
+function SourceReferenceStrip({ sources }: { sources: SourceSummary[] }) {
+  return (
+    <div className="mt-4 rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="text-xs font-semibold text-[#716c63]">답변 근거</span>
+        <span className="text-[11px] text-[#938d83]">{sources.length}개 자료</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {sources.map((source) => (
+          <span
+            className="inline-flex min-h-8 max-w-full items-center gap-2 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs text-[#3d3b37]"
+            key={`${source.label}-${source.title}-${source.index}`}
+            title={source.detail ?? source.title}
+          >
+            <span className="grid h-5 min-w-5 place-items-center rounded bg-[#191817] px-1 text-[11px] font-semibold text-[#fffdf8]">
+              {source.index}
+            </span>
+            <span className="truncate">
+              {source.label} · {source.title}
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1316,19 +1764,19 @@ function MobileContextDrawer({
       <button
         className="absolute inset-0 bg-[#191817]/30"
         type="button"
-        aria-label="모바일 컨텍스트 닫기"
+        aria-label="참고 정보 닫기"
         onClick={onClose}
       />
       <aside className="absolute right-0 z-10 h-full w-[min(340px,90vw)] overflow-y-auto border-l border-[#ded7cb] bg-[#f7f2ea] p-3.5 shadow-xl">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <strong className="block text-sm font-semibold">컨텍스트</strong>
-            <span className="block text-xs text-[#716c63]">프로필, 메모리, 근거</span>
+            <strong className="block text-sm font-semibold">참고 정보</strong>
+            <span className="block text-xs text-[#716c63]">내 정보와 답변 근거</span>
           </div>
           <button
             className="grid h-9 w-9 place-items-center rounded-lg border border-[#c9c0b3] bg-[#fffdf8]"
             type="button"
-            aria-label="컨텍스트 닫기"
+            aria-label="참고 정보 닫기"
             onClick={onClose}
           >
             <X className="h-4 w-4" aria-hidden="true" />
@@ -1367,10 +1815,11 @@ function ContextPanelContent({
       ["관심", memories[0]?.natural_text ?? "미설정"],
     ];
   }, [profile, memories]);
+  const panelSources = latestResponse ? buildSourceSummaries(latestResponse) : [];
 
   return (
     <>
-      <Panel title="현재 프로필">
+      <Panel title="내 정보">
         {profileSummary ? (
           <div className="grid grid-cols-2 gap-2">
             {profileSummary.map(([label, value]) => (
@@ -1382,12 +1831,12 @@ function ContextPanelContent({
           </div>
         ) : (
           <p className="text-xs leading-5 text-[#716c63]">
-            설정에서 기본 프로필을 저장하면 상담 근거로 사용됩니다.
+            설정에서 기본 정보를 저장하면 상담에 반영됩니다.
           </p>
         )}
       </Panel>
 
-      <Panel title="저장된 메모리">
+      <Panel title="관심 정보">
         {memories.length ? (
           <ul className="list-disc space-y-1 pl-4 text-xs leading-5 text-[#3d3b37]">
             {memories.map((memory) => (
@@ -1395,47 +1844,33 @@ function ContextPanelContent({
             ))}
           </ul>
         ) : (
-          <p className="text-xs leading-5 text-[#716c63]">아직 활성 메모리가 없습니다.</p>
+          <p className="text-xs leading-5 text-[#716c63]">아직 저장된 관심 정보가 없습니다.</p>
         )}
       </Panel>
 
-      <Panel title={activePage === "chat" ? "답변 근거" : "페이지 컨텍스트"}>
-        {latestResponse?.evidence.internal_sources.length || latestResponse?.evidence.web_sources.length ? (
+      <Panel title={activePage === "chat" ? "답변 근거" : "참고 자료"}>
+        {panelSources.length ? (
           <div className="space-y-2">
-            {latestResponse?.evidence.internal_sources.map((source) => (
+            {panelSources.map((source) => (
               <SourceCard
-                key={String(source.title)}
-                label={String(source.status ?? "internal")}
-                title={String(source.title ?? "내부 자료")}
-              />
-            ))}
-            {latestResponse?.evidence.web_sources.map((source) => (
-              <SourceCard
-                key={String(source.uri ?? source.title)}
-                label="web"
-                title={String(source.title ?? "웹 근거")}
+                key={`panel-source-${source.index}-${source.label}-${source.title}`}
+                label={`[${source.index}] ${source.label}`}
+                title={source.title}
               />
             ))}
           </div>
         ) : (
           <>
-            <SourceCard label="Mini Wiki" title="소프트웨어학부 트랙 안내" />
-            <SourceCard label="Mini Wiki" title="신입생 수강신청 안내" />
+            <SourceCard label="학교 자료" title="소프트웨어학부 트랙 안내" />
+            <SourceCard label="학교 자료" title="신입생 수강신청 안내" />
           </>
         )}
       </Panel>
 
-      <Panel title="다가오는 일정">
-        <p className="text-xs leading-5 text-[#3d3b37]">D-3 자료구조 과제</p>
-        <p className="text-xs leading-5 text-[#3d3b37]">D-8 동아리 지원 마감</p>
-      </Panel>
-
-      <Panel title="추천 액션">
-        <ul className="list-disc space-y-1 pl-4 text-xs leading-5 text-[#3d3b37]">
-          <li>Python 기초 로드맵 저장</li>
-          <li>AI 관련 동아리 후보 저장</li>
-          <li>다음 주 과제 일정 추출</li>
-        </ul>
+      <Panel title="다음 행동">
+        <p className="text-xs leading-5 text-[#716c63]">
+          상담을 진행하면 답변에서 이어서 할 수 있는 질문과 일정 후보가 표시됩니다.
+        </p>
       </Panel>
     </>
   );
@@ -1459,46 +1894,23 @@ function SourceCard({ label, title }: { label: string; title: string }) {
   );
 }
 
-function WorkspacePlaceholder({ page }: { page: WorkspacePage }) {
-  const title = pageTitle(page);
-  const cards = placeholderCards(page);
-  return (
-    <section className="min-h-0 overflow-y-auto px-6 py-7">
-      <div className="mx-auto max-w-[920px]">
-        <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#938d83]">workspace</p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-normal">{title}</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#716c63]">
-          이 화면은 다음 구현 slice에서 실제 API와 연결됩니다. 지금은 전체 앱 내비게이션과
-          페이지 전환 구조를 먼저 고정합니다.
-        </p>
-        <div className="mt-6 grid gap-3 md:grid-cols-3">
-          {cards.map((card) => (
-            <article className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4" key={card.title}>
-              <h3 className="text-sm font-semibold">{card.title}</h3>
-              <p className="mt-2 text-xs leading-5 text-[#716c63]">{card.description}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function LogsPage({ logs }: { logs: LLMUsageLog[] }) {
   return (
     <section className="min-h-0 overflow-y-auto px-6 py-7">
       <div className="mx-auto max-w-[900px] rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-5">
-        <h2 className="text-xl font-semibold tracking-normal">LLM 활용 기록</h2>
+        <h2 className="text-xl font-semibold tracking-normal">상담 기록</h2>
         <p className="mt-2 text-sm leading-6 text-[#716c63]">
-          앱 내부 Gemini 호출 기록과 제출용 문서 기록을 함께 확인합니다.
+          AI 상담에서 어떤 도움을 받았는지 간단히 확인합니다.
         </p>
         <div className="mt-5 space-y-3">
           {logs.length ? (
             logs.slice(0, 10).map((log) => (
               <article className="rounded-lg bg-[#f1ede5] p-3" key={log.id}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <strong className="text-sm">{log.feature}</strong>
-                  <span className="text-xs text-[#716c63]">{log.model ?? "local"}</span>
+                  <strong className="text-sm">{usageLogFeatureLabel(log.feature)}</strong>
+                  <span className="text-xs text-[#716c63]">
+                    {new Date(log.created_at).toLocaleDateString()}
+                  </span>
                 </div>
                 <p className="mt-2 text-xs leading-5 text-[#3d3b37]">{log.purpose}</p>
                 <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#716c63]">
@@ -1513,14 +1925,23 @@ function LogsPage({ logs }: { logs: LLMUsageLog[] }) {
             ))
           ) : (
             <div className="rounded-lg bg-[#f1ede5] p-3 text-sm leading-6 text-[#716c63]">
-              아직 앱 내부 LLM 호출 기록이 없습니다. Gemini key가 있는 상태로 채팅 답변을
-              생성하면 이 화면에 기록됩니다.
+              아직 상담 기록이 없습니다. AI 상담을 사용하면 이 화면에 기록됩니다.
             </div>
           )}
         </div>
       </div>
     </section>
   );
+}
+
+function usageLogFeatureLabel(feature: string): string {
+  const labels: Record<string, string> = {
+    rag_chat: "AI 상담",
+    google_grounding: "진로 정보 보강",
+    schedule_parser: "일정 정리",
+    embedding_ingest: "자료 정리",
+  };
+  return labels[feature] ?? "상담 활동";
 }
 
 function SchedulePage({
@@ -1532,7 +1953,6 @@ function SchedulePage({
   onSave,
   onComplete,
   onDelete,
-  onExport,
 }: {
   assignments: Assignment[];
   draft: string;
@@ -1542,7 +1962,6 @@ function SchedulePage({
   onSave: () => void;
   onComplete: (assignmentId: string) => void;
   onDelete: (assignmentId: string) => void;
-  onExport: (assignmentId: string) => void;
 }) {
   return (
     <section className="min-h-0 overflow-y-auto px-6 py-7">
@@ -1583,7 +2002,7 @@ function SchedulePage({
                     {preview.course ?? "과목 미지정"} · {new Date(preview.due_at).toLocaleDateString()}
                   </p>
                   <p className="mt-1 text-[11px] text-[#938d83]">
-                    {preview.parser === "gemini" ? "Gemini parser" : "Python rules"}
+                    {preview.parser === "gemini" ? "자동 추출" : "기본 추출"}
                   </p>
                 </div>
                 <strong className="rounded-full bg-[#191817] px-3 py-1 text-xs text-[#fffdf8]">
@@ -1614,14 +2033,6 @@ function SchedulePage({
                   onClick={() => onComplete(assignment.id)}
                 >
                   완료
-                </button>
-                <button
-                  className="h-8 rounded-lg border border-[#c9c0b3] px-3 text-xs font-semibold disabled:opacity-50"
-                  type="button"
-                  disabled={Boolean(assignment.calendar_event_id)}
-                  onClick={() => onExport(assignment.id)}
-                >
-                  {assignment.calendar_event_id ? "Calendar 완료" : "Calendar"}
                 </button>
                 <button
                   className="h-8 rounded-lg border border-[#c9c0b3] px-3 text-xs font-semibold text-[#716c63]"
@@ -1666,11 +2077,11 @@ function RecommendationPage({
             <div>
               <h2 className="text-xl font-semibold tracking-normal">진로/활동 추천</h2>
               <p className="mt-2 text-sm leading-6 text-[#716c63]">
-                {inputContext.sourceLabel} 기준으로 Python 추천 규칙을 실행합니다.
+                {inputContext.sourceLabel}를 바탕으로 지금 필요한 준비를 추천합니다.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {[...inputContext.trackInterests, inputContext.goal].slice(0, 5).map((item) => (
-                  <EvidenceChip key={item} label={item} />
+                {[...inputContext.trackInterests, inputContext.goal].slice(0, 5).map((item, index) => (
+                  <EvidenceChip key={`input-context-${index}-${item}`} label={item} />
                 ))}
               </div>
             </div>
@@ -1833,16 +2244,16 @@ function RecommendationPanel({
       </div>
       {actions.length ? (
         <ul className="mt-3 list-disc space-y-1 pl-4 text-xs leading-5 text-[#3d3b37]">
-          {actions.slice(0, 3).map((action) => (
-            <li key={action}>{action}</li>
+          {actions.slice(0, 3).map((action, index) => (
+            <li key={`action-${index}-${action}`}>{action}</li>
           ))}
         </ul>
       ) : null}
       {sources.length ? (
         <div className="mt-3 flex flex-wrap gap-2">
-          {sources.slice(0, 3).map((source) => (
+          {sources.slice(0, 3).map((source, index) => (
             <EvidenceChip
-              key={`${String(source.title ?? "source")}-${String(source.heading_path ?? "")}`}
+              key={`recommendation-source-${index}-${String(source.title ?? "source")}-${String(source.heading_path ?? "")}`}
               label={`근거 · ${String(source.title ?? "내부 자료")}`}
             />
           ))}
@@ -1862,12 +2273,9 @@ function SettingsPage({
   setAuthPassword,
   onAuthSubmit,
   profile,
-  googleCalendarStatus,
-  runtimeStatus,
   onSeedProfile,
   onSignOut,
   onRefresh,
-  onConnectGoogleCalendar,
 }: {
   authEmail: string;
   authPassword: string;
@@ -1878,29 +2286,23 @@ function SettingsPage({
   setAuthPassword: (value: string) => void;
   onAuthSubmit: (mode: "signin" | "signup") => void;
   profile: Profile | MissingProfile | null;
-  googleCalendarStatus: GoogleCalendarStatus | null;
-  runtimeStatus: RuntimeStatus | null;
   onSeedProfile: () => void;
   onSignOut: () => void;
   onRefresh: () => void;
-  onConnectGoogleCalendar: () => void;
 }) {
   return (
     <section className="min-h-0 overflow-y-auto px-6 py-7">
       <div className="mx-auto max-w-[760px] rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-5">
         <h2 className="text-xl font-semibold tracking-normal">설정</h2>
         <p className="mt-2 text-sm leading-6 text-[#716c63]">
-          프로필, 메모리, API live 연결 상태를 관리하는 화면입니다.
+          계정과 기본 학업 정보를 관리합니다.
         </p>
-        <div className="mt-5">
-          <LiveStatusPanel runtimeStatus={runtimeStatus} showGoogleCalendar />
-        </div>
         <div className="mt-5 rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4">
-          <h3 className="text-sm font-semibold">Supabase 로그인</h3>
+          <h3 className="text-sm font-semibold">계정</h3>
           <p className="mt-1 text-xs leading-5 text-[#716c63]">
             {authSession
               ? `${authSession.email ?? authSession.userId} 계정으로 연결됨`
-              : "Supabase env와 계정이 있으면 실제 세션으로 API를 호출합니다."}
+              : "로그인하면 상담과 일정이 계정에 저장됩니다."}
           </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <input
@@ -1948,27 +2350,6 @@ function SettingsPage({
           </div>
           {authStatus ? <p className="mt-3 text-xs leading-5 text-[#716c63]">{authStatus}</p> : null}
         </div>
-        <div className="mt-5 rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4">
-          <h3 className="text-sm font-semibold">Google Calendar</h3>
-          <p className="mt-1 text-xs leading-5 text-[#716c63]">
-            {googleCalendarStatus?.configured
-              ? "OAuth 설정이 감지되었습니다. 연결하면 일정 내보내기에 실제 Google consent를 사용할 수 있습니다."
-              : "GOOGLE_OAUTH_CLIENT_ID / SECRET 설정 후 실제 Calendar consent를 사용할 수 있습니다."}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-[#ded7cb] bg-[#fffdf8] px-3 py-1 text-xs font-semibold text-[#716c63]">
-              {googleCalendarStatus?.connected ? "connected" : "not connected"}
-            </span>
-            <button
-              className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold disabled:opacity-50"
-              type="button"
-              disabled={!googleCalendarStatus?.configured}
-              onClick={onConnectGoogleCalendar}
-            >
-              Calendar 연결
-            </button>
-          </div>
-        </div>
         <div className="mt-5 flex flex-wrap gap-2">
           {!profile?.exists ? (
             <button
@@ -1976,7 +2357,7 @@ function SettingsPage({
               type="button"
               onClick={onSeedProfile}
             >
-              기본 프로필 저장
+              기본 정보 저장
             </button>
           ) : null}
           <button
@@ -1984,71 +2365,11 @@ function SettingsPage({
             type="button"
             onClick={onRefresh}
           >
-            상태 새로고침
+            새로고침
           </button>
         </div>
       </div>
     </section>
-  );
-}
-
-function RuntimeStatusRow({
-  label,
-  status,
-  readyText,
-}: {
-  label: string;
-  status?: RuntimeComponentStatus | null;
-  readyText: string;
-}) {
-  const problemItems = status ? [...status.missing_env, ...status.missing_schema] : [];
-  const hiddenCount = Math.max(problemItems.length - 3, 0);
-  const detail = status?.ready
-    ? readyText
-    : problemItems.length
-      ? `${problemItems.slice(0, 3).join(", ")}${hiddenCount ? ` 외 ${hiddenCount}개` : ""}`
-      : status?.blocker ?? "확인 전";
-
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#ded7cb] bg-[#fffdf8] px-3 py-2">
-      <span className="text-xs font-semibold text-[#191817]">{label}</span>
-      <span className="text-xs text-[#716c63]">{detail}</span>
-      <span
-        className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
-          status?.ready ? "bg-[#dff1df] text-[#1f6b36]" : "bg-[#f8e1d8] text-[#9b3f24]"
-        }`}
-      >
-        {status?.ready ? "live" : "blocked"}
-      </span>
-    </div>
-  );
-}
-
-function RuntimeStatusDetails({
-  title,
-  items,
-}: {
-  title: string;
-  items?: string[] | null;
-}) {
-  if (!items?.length) {
-    return null;
-  }
-
-  return (
-    <div className="mt-3 rounded-lg border border-[#ded7cb] bg-[#fffdf8] p-3">
-      <p className="text-xs font-semibold text-[#716c63]">{title}</p>
-      <div className="mt-2 flex max-h-32 flex-wrap gap-1 overflow-y-auto">
-        {items.map((item) => (
-          <code
-            className="rounded border border-[#ded7cb] bg-[#faf8f3] px-2 py-1 text-[11px] text-[#191817]"
-            key={item}
-          >
-            {item}
-          </code>
-        ))}
-      </div>
-    </div>
   );
 }
 

@@ -19,7 +19,7 @@ export function buildRecommendationInputContext(memories: Memory[]): Recommendat
     preference: deriveLearningPreference(memoryText),
     activityStyle: deriveActivityStyle(memoryText),
     weeklyHours: deriveWeeklyHours(memoryText),
-    sourceLabel: memories.length ? "프로필/메모리" : "온보딩 프로필",
+    sourceLabel: memories.length ? "내 관심 정보" : "처음 설정한 정보",
   };
 }
 
@@ -60,20 +60,20 @@ export function pageTitle(page: WorkspacePage): string {
     career: "진로/취업",
     project: "프로젝트",
     schedule: "일정",
-    logs: "LLM 활용 기록",
+    logs: "상담 기록",
     settings: "설정",
   }[page];
 }
 
 export function pageDescription(page: WorkspacePage): string {
   return {
-    chat: "프로필, 메모리, Mini Wiki, 일정 컨텍스트를 함께 보는 상담",
+    chat: "내 관심사와 학업 정보를 바탕으로 상담합니다.",
     roadmap: "학기별 과목과 트랙 준비 순서를 정리합니다.",
     career: "진로 고민과 최신 취업 정보를 분리해서 확인합니다.",
     project: "프로젝트와 창업 아이디어를 작은 실행 단위로 정리합니다.",
     schedule: "과제, 시험, 마감일과 D-day를 관리합니다.",
-    logs: "LLM 사용 목적과 검토 내용을 제출용으로 정리합니다.",
-    settings: "프로필, 메모리, 외부 연동 상태를 관리합니다.",
+    logs: "AI 상담으로 받은 도움을 다시 확인합니다.",
+    settings: "계정과 기본 학업 정보를 관리합니다.",
   }[page];
 }
 
@@ -86,18 +86,18 @@ export function placeholderCards(page: WorkspacePage) {
     ],
     career: [
       ["관심 직무", "백엔드, AI, 데이터 등 직무별 준비 항목을 정리합니다."],
-      ["최신 정보", "추후 Google grounding으로 공고와 공모전 정보를 보강합니다."],
+      ["최신 정보", "진로와 공모전 정보를 함께 확인합니다."],
       ["포트폴리오", "프로젝트 경험과 기록할 산출물을 연결합니다."],
     ],
     project: [
       ["아이디어", "문제 정의와 대상 사용자를 먼저 기록합니다."],
-      ["실행 단위", "1주 안에 검증할 수 있는 작은 출시 단위로 쪼갭니다."],
+      ["실행 단위", "1주 안에 끝낼 수 있는 작은 작업으로 쪼갭니다."],
       ["근거", "전공 로드맵과 진로 목표에 맞는 프로젝트인지 확인합니다."],
     ],
     schedule: [
       ["자연어 입력", "과제 문장을 제목, 과목, 마감일로 추출합니다."],
       ["D-day", "다가오는 과제와 시험을 우선순위로 보여줍니다."],
-      ["Calendar", "저장된 일정을 Google Calendar event payload로 내보냅니다."],
+      ["완료 관리", "끝낸 일정은 완료 처리하고 목록에서 정리합니다."],
     ],
   } as const;
 

@@ -84,13 +84,36 @@
 | 2026-05-23 | Live readiness API contract preflight | schema 적용 전에도 `live:readiness`가 `/api/runtime/public-status`를 확인해 Supabase schema blocker와 stale backend blocker를 분리 | `scripts/live_readiness_report.py`, `tests/test_live_readiness_report_script.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | SQL copy api-base hint | `supabase:sql-copy`가 현재 backend port에 맞는 `live:smoke-run --api-base`를 출력하도록 `--api-base` 옵션 추가 | `scripts/copy_supabase_sql_bundle.py`, `tests/test_copy_supabase_sql_bundle.py`, `docs/contributing/supabase-live-apply.md` |
 | 2026-05-23 | Supabase Dashboard access blocker | Chrome 로그인 계정이 `abbwnqwvvtxrizutswws` 프로젝트에 접근 권한이 없어 SQL Editor 적용을 project owner/member 계정 작업으로 분리 | `docs/contributing/supabase-live-apply.md`, `docs/report/submission-checklist.md` |
-| 2026-05-23 | Supabase live smoke passed | schema+seed 적용 뒤 Supabase DB/LLM/login, Gemini, grounding, embedding ingest live smoke 전체 통과. Google Calendar OAuth env만 남은 blocker | `pnpm supabase:schema-check`, `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`, `pnpm live:smoke-run --api-base http://127.0.0.1:8001`, `docs/report/submission-checklist.md` |
+| 2026-05-23 | Supabase live smoke passed | schema+seed 적용 뒤 Supabase DB/LLM/login, Gemini, grounding, embedding ingest live smoke 전체 통과. Google Calendar OAuth는 제출 필수가 아니라 선택 확장으로 분리 | `pnpm supabase:schema-check`, `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`, `pnpm live:smoke-run --api-base http://127.0.0.1:8001`, `docs/report/submission-checklist.md` |
+| 2026-05-24 | 제출 범위 재정리 | Google Calendar OAuth live 연동은 제외하고, 내부 일정 관리와 D-day를 제출 시연의 일정 기능으로 확정 | `docs/product/live-scenario.md`, `docs/report/submission-checklist.md`, `docs/contributing/roadmap.md` |
+| 2026-05-25 | Chat UX service polish | 최근 상담 삭제, intent 기반 자동 제목, 새 상담 empty state, 사용자 메시지 우측 정렬, 답변 완료 상태, 중복 제거된 번호형 근거 표시, SSE 종료 버퍼 처리 보강 | `frontend/src/App.tsx`, `frontend/src/components/navigation.tsx`, `frontend/src/lib/api.ts`, `backend/app/api/chat.py`, `backend/app/services/chat_store.py`, `backend/app/services/supabase_stores.py` |
+| 2026-05-25 | Chat hardcoded follow-up 제거 | 상담 답변 아래의 `학업 상담`/`진로 상담`/`일정 관리` 고정 후속 칩과 입력창 하단 고정 칩을 제거해 Gemini/RAG 답변과 근거만 표시하도록 정리 | `backend/app/services/chat_contract_service.py`, `frontend/src/App.tsx`, `backend/tests/api/test_chat_contract_api.py` |
+| 2026-05-25 | Chat composer controls | 하단 composer에 상담 모드, 응답 품질 선택, 파일 첨부, 답변 중지 버튼을 추가하고 Gemini `generate_content_stream` 기반 실제 SSE 스트리밍으로 변경 | `frontend/src/App.tsx`, `frontend/src/lib/api.ts`, `frontend/src/types/api.ts`, `backend/app/schemas/chat.py`, `backend/app/api/chat.py`, `backend/app/services/answer_generation_service.py` |
+| 2026-05-25 | RAG 과목/수강신청 데이터 수집 기준 | 공식 과목/제도 데이터와 비공식 수강신청 팁/과목 후기를 분리해 수집하는 템플릿과 팀원 요청 항목을 문서화 | `docs/architecture/rag-course-data-collection.md`, `docs/product/team-data-request.md` |
+
+## 팀원 공유용 개발 현황
+
+처음에는 국민대 소프트웨어융합대학 신입생을 위한 정보 탐색 도우미로 시작했고, 이후 범위를 전체 학년을 지원하는 개인화 RAG 학업 내비게이터로 확장했다.
+
+지금까지 구현한 핵심 흐름은 다음과 같다.
+
+1. 문서/과제 기반: PRD, 로드맵, 기능 레지스트리, LLM 사용 기록, 제출 체크리스트를 만들었다.
+2. 데이터 기반: Supabase schema에 profile, memory, chat, assignment, document chunk, LLM log 테이블과 RAG 검색 RPC를 준비했다.
+3. RAG 기반: 국민대/학부 공식 자료를 `data/raw`와 Mini LLM Wiki로 정리하고, Gemini embedding과 Supabase pgvector 검색으로 연결했다.
+4. 백엔드: FastAPI에서 로그인 사용자 기준 profile, memory, chat, recommendation, assignment, LLM log API를 구현했다.
+5. 프론트엔드: Supabase 로그인, 온보딩, AI 상담, 진로/활동 추천, 일정 관리, 설정/live status 화면을 구현했다.
+6. 개인화: 온보딩에서 관심 분야, 목표, 코딩 경험, 학습 선호를 받아 `user_memories`에 저장하고 채팅/추천 입력에 반영한다.
+7. 일정 관리: 자연어로 과제/시험 일정을 입력하면 제목, 과목, 마감일을 추출하고 Supabase에 저장하며, 앱 내부에서 D-day, 완료, 삭제를 제공한다.
+8. LLM 기록: 채팅 답변, Google grounding, 일정 parser, embedding ingest 같은 앱 내부 LLM 사용을 로그로 남기고, 개발 과정의 Codex/Gemini 활용도 문서화했다.
+9. 검증: `pnpm verify:local` 기준 문서 검사, RAG dry-run, 제출 조건 검사, backend 178 tests, root 42 tests, lint, frontend build가 통과한다.
+
+현재 제출 시연의 중심은 Supabase 로그인, 온보딩, 개인화 RAG 채팅, 추천, 내부 일정 관리, LLM 활용 기록이다. Google Calendar OAuth는 구현 기반은 있지만 외부 OAuth 설정 부담이 커서 이번 제출에서는 선택 확장 기능으로만 설명한다.
 
 ## 다음 작업 후보
 
-1. Google Calendar OAuth env 설정: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`
-2. Google Calendar live 검증: OAuth 연결 후 `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`
-3. 앱에서 실제 로그인, 온보딩, 채팅, 추천, 일정 저장, LLM 로그 조회를 화면 기준으로 리허설하고 캡처
+1. 앱에서 실제 로그인, 온보딩, 채팅, 추천, 일정 저장, 완료/삭제, LLM 로그 조회를 화면 기준으로 리허설하고 캡처
+2. 보고서/발표자료에 위 구현 범위와 검증 결과를 반영
+3. 시간이 남으면 Google Calendar OAuth는 선택 확장 기능으로만 추가 검증
 
 ## 상태 기록 규칙
 

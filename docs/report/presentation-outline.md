@@ -16,17 +16,17 @@
 - Gemini API
 - Mini LLM Wiki와 RAG 흐름
 - 사용자 프로필/메모리와 memory events
-- Google Search grounding과 Google Calendar API
+- Google Search grounding, 내부 일정 관리, 선택 확장으로서의 Google Calendar API
 
 ## 3. 라이브 기능 시연
 
 1. 메인 workspace: 왼쪽 사이드바, 중앙 상담, 오른쪽 context panel
-2. 설정 화면: Supabase 로그인 구조와 Google Calendar 연결 상태
+2. 설정 화면: Supabase 로그인 구조와 live readiness 상태
 3. 개인화 RAG 상담 질문
 4. 개인화 근거, 내부 자료, 최신 웹 근거 확인
 5. 진로/활동 추천 입력 직접 수정과 추천 결과 확인
 6. 자연어 일정 등록
-7. D-day, 완료/삭제, Google Calendar 내보내기
+7. D-day, 완료/삭제
 8. 메모리와 LLM 활용 기록 확인
 
 ## 4. 코드 설명
@@ -37,7 +37,7 @@
 - 조건문 분기
 - chunk 반복 처리
 - D-day 계산 함수
-- Calendar 내보내기 중복 방지
+- Calendar 내보내기는 선택 확장 기능으로 분리한 이유
 - Supabase Direct/backend와 Framework/frontend env 분리
 - `env:check`와 live smoke 절차
 - LLM usage log 저장
@@ -56,7 +56,7 @@
 
 - 자료 최신화
 - 더 많은 학과 확장
-- Google Calendar 양방향 동기화
+- Google Calendar OAuth 연동은 후속 선택 확장
 - eCampus 직접 연동
 - RAG 평가 자동화
 - 실제 Supabase/Gemini/Google 키를 넣은 live smoke 추가

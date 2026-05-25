@@ -341,14 +341,14 @@ Calendar OAuth는 앱 로그인과 분리한다. Supabase Auth는 앱 사용자 
 | `pnpm supabase:auth-smoke -- --access-token <supabase-access-token>` | 실제 Supabase access token으로 FastAPI Bearer 인증과 profile API write/read |
 | `pnpm supabase:login-smoke -- --email <email> --password <password>` | Supabase email/password login 후 받은 access token으로 FastAPI profile API write/read |
 | `pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>` | 실제 Supabase `llm_usage_logs` insert/list |
-| `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>` | 저장된 Google OAuth token으로 실제 Calendar event insert |
+| `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>` | 선택 확장 검증. 저장된 Google OAuth token으로 실제 Calendar event insert |
 | `pnpm gemini:smoke` | 실제 Gemini embedding과 일정 parser 호출 |
 | `pnpm gemini:answer-smoke` | 실제 Gemini 답변 생성 호출 |
 | `pnpm gemini:grounding-smoke` | 실제 Gemini Google Search grounding 호출 |
 
 현재 구조에서는 Supabase Dashboard의 Direct/backend 값과 Framework/frontend 값을 분리해서 사용한다. `SUPABASE_SERVICE_ROLE_KEY`는 backend 전용이며 frontend env에 넣지 않는다.
 
-2026-05-23 live 점검에서는 backend Supabase Direct 값, frontend Supabase Framework 값, Gemini API key가 존재해 `pnpm env:check:strict`, `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`가 통과했다. service role로 Supabase Auth smoke user를 생성해 UUID/email/password를 gitignored root `.env`에 저장했고, `pnpm supabase:schema-check`는 live 프로젝트에서 `schema.sql`의 table/function이 schema cache에 없다고 확인했다. `pnpm supabase:smoke`, `pnpm supabase:llm-smoke`, `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`은 입력/env가 아니라 schema 미적용 때문에 실패한다. 필요한 schema 구성은 `profiles`, `raw_documents`, `wiki_pages`, `wiki_logs`, `document_chunks`, `assignments`, `chat_sessions`, `chat_messages`, `chat_logs`, `llm_usage_logs`, `user_memories`, `memory_events`, `google_oauth_tokens`, `search_document_chunks_text`, `match_document_chunks`다.
+2026-05-23 live 점검에서는 backend Supabase Direct 값, frontend Supabase Framework 값, Gemini API key가 존재해 `pnpm env:check:strict`, `pnpm gemini:smoke`, `pnpm gemini:answer-smoke`, `pnpm gemini:grounding-smoke`가 통과했다. 이후 Supabase SQL Editor로 schema+seed를 적용하고 `pnpm supabase:schema-check`, `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`, `pnpm live:smoke-run --api-base http://127.0.0.1:8001`까지 통과했다. Google Calendar OAuth는 외부 consent 설정이 필요한 선택 확장 기능으로 분리했고, 제출 필수 일정 기능은 앱 내부 일정 저장, D-day, 완료/삭제다.
 
 Python 핵심 로직 주석은 이번 점검에서 `recommendation_service.py`, `retrieval_service.py`, `assignment_service.py`, `memory_service.py`, `chat_contract_service.py`를 다시 확인했다. 추천 점수, Mini Wiki 우선 RAG 검색, Gemini 일정 parser fallback, 메모리 민감도 차단, 일정 intent 우선 분류처럼 발표에서 질문받을 판단 기준에는 이미 의도 주석이 있고, 단순 문법 설명 주석은 추가하지 않았다.
 
@@ -378,21 +378,20 @@ Python 핵심 로직 주석은 이번 점검에서 `recommendation_service.py`, 
 
 현재 구현은 Supabase 로그인 세션이 있어야 프론트 앱과 API를 사용할 수 있고, 키가 있으면 Supabase/Gemini/Google adapter가 live 경로를 사용하도록 설계되어 있다. in-memory와 deterministic 경로는 외부 키가 없는 테스트 보조 수단이며, 제출 목표는 live 연결이 가능한 항목을 실제 smoke로 확인하고 결과를 문서에 남기는 것이다.
 
-아직 live 환경에서 검증해야 하는 부분:
+아직 발표 전에 다시 확인할 부분:
 
-- 실제 Supabase 프로젝트에 `supabase/schema.sql` 적용 후 `pnpm supabase:schema-check`, `pnpm supabase:smoke`, `pnpm supabase:llm-smoke`, `pnpm supabase:login-smoke --api-base http://127.0.0.1:8001`
+- `pnpm verify:local`
+- 로컬 FastAPI/frontend 실행 후 로그인, 온보딩, 채팅, 추천, 일정 저장, D-day, 완료/삭제, LLM 로그 조회 화면 리허설
 - 로컬 FastAPI 서버 실행 후 실제 Supabase session token으로 `pnpm supabase:auth-smoke -- --access-token <supabase-access-token>` 실행. `SUPABASE_JWT_SECRET`이 있으면 로컬 JWT 검증, 없으면 Supabase Auth API 검증 경로를 쓴다.
 - 수동 token 복사 없이 확인하려면 `SUPABASE_SMOKE_EMAIL`, `SUPABASE_SMOKE_PASSWORD` 또는 CLI 인자로 실제 Supabase 계정을 제공한 뒤 `pnpm supabase:login-smoke -- --email <email> --password <password>`
-- 실제 Supabase DB에서 `llm_usage_logs` 기록을 확인하려면 `pnpm supabase:llm-smoke -- --user-id <supabase-auth-user-uuid>`
-- 저장된 Google Calendar token으로 실제 event insert를 확인하려면 `pnpm google:calendar-smoke -- --user-id <supabase-auth-user-uuid>`
 - 실제 Gemini key를 넣은 `pnpm gemini:smoke`, embedding ingest
 - Supabase text/vector retrieval live RPC smoke
 - 실제 Gemini key를 넣은 `pnpm gemini:answer-smoke`
 - chat session/message live DB smoke
 - assignment live DB smoke
-- 실제 Google OAuth consent와 Calendar event insert live smoke
 - 실제 Gemini key를 넣은 일정 parsing live smoke
 - 실제 Gemini key를 넣은 `pnpm gemini:grounding-smoke`
 - Gemini 일정 parser, Google grounding, embedding ingest의 feature별 LLM usage log 세분화
+- 시간이 남으면 실제 Google OAuth consent와 Calendar event insert live smoke
 
 다음 단계에서는 이 문서의 Python 규칙을 유지하면서 live key가 필요한 검증을 순서대로 수행한다.

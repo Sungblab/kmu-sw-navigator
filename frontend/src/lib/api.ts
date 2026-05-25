@@ -3,7 +3,10 @@ import type {
   AssignmentPreview,
   ActivityRecommendResponse,
   CalendarExportResponse,
+  ChatAttachmentInput,
   ChatMessageRecord,
+  ChatMode,
+  ChatModelTier,
   ChatResponse,
   ChatSessionSummary,
   CurriculumYear,
@@ -19,7 +22,7 @@ import type {
 } from "../types/api";
 import { getSupabaseAccessToken } from "./supabase";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 interface ProfileInput {
   department: Department;
@@ -42,7 +45,7 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const accessToken = await getSupabaseAccessToken();
   if (!accessToken) {
-    throw new Error("Supabase 로그인 세션이 필요합니다.");
+    throw new Error("로그인이 필요합니다.");
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -82,7 +85,7 @@ async function publicRequest<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 async function buildApiError(response: Response): Promise<ApiError> {
-  const fallback = `API 요청 실패: ${response.status}`;
+  const fallback = `요청 실패: ${response.status}`;
   try {
     const payload = await response.json();
     const detail = typeof payload.detail === "string" ? payload.detail : fallback;
@@ -146,11 +149,142 @@ export async function getChatMessages(sessionId: string): Promise<ChatMessageRec
   return data.messages;
 }
 
-export function sendChatMessage(message: string, sessionId?: string | null): Promise<ChatResponse> {
+export function deleteChatSession(sessionId: string): Promise<void> {
+  return request<void>(`/api/chat/sessions/${sessionId}`, {
+    method: "DELETE",
+  });
+}
+
+export function sendChatMessage(
+  message: string,
+  sessionId?: string | null,
+  options?: {
+    mode?: ChatMode;
+    modelTier?: ChatModelTier;
+    attachments?: ChatAttachmentInput[];
+  },
+): Promise<ChatResponse> {
   return request<ChatResponse>("/api/chat", {
     method: "POST",
-    body: JSON.stringify({ message, session_id: sessionId ?? null }),
+    body: JSON.stringify({
+      message,
+      session_id: sessionId ?? null,
+      mode: options?.mode ?? "auto",
+      model_tier: options?.modelTier ?? "balanced",
+      attachments: options?.attachments ?? [],
+    }),
   });
+}
+
+export async function streamChatMessage(
+  message: string,
+  sessionId: string | null | undefined,
+  options: {
+    mode?: ChatMode;
+    modelTier?: ChatModelTier;
+    attachments?: ChatAttachmentInput[];
+    signal?: AbortSignal;
+  },
+  handlers: {
+    onSession?: (sessionId: string | null) => void;
+    onText?: (delta: string) => void;
+    onDone?: (response: ChatResponse) => void;
+    onStatus?: (message: string) => void;
+  },
+): Promise<ChatResponse> {
+  const accessToken = await getSupabaseAccessToken();
+  if (!accessToken) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/chat/stream`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "text/event-stream",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      message,
+      session_id: sessionId ?? null,
+      mode: options.mode ?? "auto",
+      model_tier: options.modelTier ?? "balanced",
+      attachments: options.attachments ?? [],
+    }),
+    signal: options.signal,
+  });
+
+  if (!response.ok) {
+    throw await buildApiError(response);
+  }
+  if (!response.body) {
+    throw new Error("스트리밍 응답을 열 수 없습니다.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let finalResponse: ChatResponse | null = null;
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) {
+      break;
+    }
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split(/\r?\n\r?\n/);
+    buffer = frames.pop() ?? "";
+    for (const frame of frames) {
+      const parsed = parseSseFrame(frame);
+      if (!parsed) {
+        continue;
+      }
+      if (parsed.event === "status") {
+        handlers.onStatus?.(String(parsed.data.message ?? ""));
+      } else if (parsed.event === "session") {
+        handlers.onSession?.(typeof parsed.data.session_id === "string" ? parsed.data.session_id : null);
+      } else if (parsed.event === "text") {
+        handlers.onText?.(String(parsed.data.delta ?? ""));
+      } else if (parsed.event === "done") {
+        finalResponse = parsed.data as unknown as ChatResponse;
+        handlers.onDone?.(finalResponse);
+      } else if (parsed.event === "error") {
+        throw new Error(String(parsed.data.message ?? "채팅 스트리밍에 실패했습니다."));
+      }
+    }
+  }
+  const trailingFrame = buffer.trim();
+  if (trailingFrame) {
+    const parsed = parseSseFrame(trailingFrame);
+    if (parsed?.event === "done") {
+      finalResponse = parsed.data as unknown as ChatResponse;
+      handlers.onDone?.(finalResponse);
+    } else if (parsed?.event === "error") {
+      throw new Error(String(parsed.data.message ?? "채팅 스트리밍에 실패했습니다."));
+    }
+  }
+
+  if (!finalResponse) {
+    throw new Error("채팅 응답이 완료되지 않았습니다.");
+  }
+  return finalResponse;
+}
+
+function parseSseFrame(frame: string): { event: string; data: Record<string, unknown> } | null {
+  let event = "message";
+  const dataLines: string[] = [];
+  for (const line of frame.split(/\r?\n/)) {
+    if (line.startsWith("event:")) {
+      event = line.slice("event:".length).trim();
+    }
+    if (line.startsWith("data:")) {
+      dataLines.push(line.slice("data:".length).trimStart());
+    }
+  }
+  if (!dataLines.length) {
+    return null;
+  }
+  return { event, data: JSON.parse(dataLines.join("\n")) as Record<string, unknown> };
 }
 
 export function previewAssignment(text: string): Promise<AssignmentPreview> {

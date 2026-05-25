@@ -37,7 +37,7 @@
 - 관심 분야, 진로 고민, 수강 과목, 프로젝트 경험은 대화형 선택지와 직접 입력으로 메모리에 저장한다.
 - 학교 내부 자료는 Mini LLM Wiki와 embedding RAG로 검색한다.
 - 최신 진로/취업/창업 정보는 Google Search grounding으로 보강한다.
-- 자연어 과제 등록, D-day, Google Calendar 내보내기를 MVP 범위에 포함한다.
+- 자연어 과제 등록, 앱 내부 일정 목록, D-day를 MVP 범위에 포함한다. Google Calendar 내보내기는 OAuth가 필요한 선택 확장 기능으로 두며, 제출 시연의 필수 흐름에서는 제외한다.
 
 ---
 
@@ -60,7 +60,7 @@
 3. 관심사 기반 동아리/활동 추천
 4. 과제/일정 등록 및 D-day 관리
 
-eCampus 자동 크롤링은 개발 시간이 많이 들고 인증/보안 이슈가 있으므로 향후 개선 기능으로 둔다. Google Calendar 연동은 foundation과 OAuth 경로를 구현하되, 제출 전 live OAuth smoke 가능 여부를 별도로 기록한다.
+eCampus 자동 크롤링은 개발 시간이 많이 들고 인증/보안 이슈가 있으므로 향후 개선 기능으로 둔다. Google Calendar 연동은 foundation과 OAuth 경로를 구현했지만, 이번 제출의 핵심 시연은 앱 내부 일정 등록, 저장, D-day, 완료/삭제 흐름으로 진행한다.
 
 ---
 
@@ -520,7 +520,7 @@ chat_logs / llm_usage_logs 저장
 ### 6.4 확장성
 
 - 향후 다른 학과 자료를 추가할 수 있도록 `category`, `department`, `source` 필드를 둔다.
-- Google Calendar 연동은 별도 모듈로 확장 가능하게 설계한다.
+- Google Calendar 연동은 별도 모듈로 확장 가능하게 설계하되, 제출 필수 기능은 앱 내부 일정 관리로 한정한다.
 - eCampus 연동은 보안 이슈를 고려해 향후 기능으로 분리한다.
 
 ---
@@ -1733,7 +1733,7 @@ LLM 활용 기록
 
 ### Could Have
 
-- Google Calendar 연동
+- Google Calendar 연동은 선택 확장 기능
 - PDF 업로드 후 자동 ingest
 - 관리자용 문서 관리 페이지
 - 모델 라우팅 기능

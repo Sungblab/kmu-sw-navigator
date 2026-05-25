@@ -75,7 +75,7 @@ export async function signOutSupabase(): Promise<void> {
 function requireSupabaseClient(): SupabaseClient {
   const supabase = getSupabaseClient();
   if (!supabase) {
-    throw new Error("Supabase 환경 변수가 설정되지 않았습니다.");
+    throw new Error("로그인 설정을 불러오지 못했습니다.");
   }
   return supabase;
 }

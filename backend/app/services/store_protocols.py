@@ -42,6 +42,8 @@ class ChatStore(Protocol):
 
     def list_messages(self, user_id: str, session_id: str) -> list[ChatMessageRecord]: ...
 
+    def delete_session(self, user_id: str, session_id: str) -> None: ...
+
 
 class AssignmentStore(Protocol):
     def create_assignment(

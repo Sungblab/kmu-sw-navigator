@@ -173,6 +173,29 @@ def test_supabase_profile_store_gets_missing_and_upserts_profile() -> None:
     assert store.get_profile("user-1") == profile
 
 
+def test_supabase_profile_store_treats_none_result_as_missing_profile() -> None:
+    class NoneResultQuery:
+        def select(self, _columns: str) -> NoneResultQuery:
+            return self
+
+        def eq(self, _column: str, _value: str) -> NoneResultQuery:
+            return self
+
+        def maybe_single(self) -> NoneResultQuery:
+            return self
+
+        def execute(self) -> None:
+            return None
+
+    class NoneResultClient:
+        def table(self, _name: str) -> NoneResultQuery:
+            return NoneResultQuery()
+
+    store = SupabaseProfileStore(NoneResultClient())
+
+    assert store.get_profile("user-1") is None
+
+
 def test_supabase_memory_store_persists_memory_and_event_payloads() -> None:
     client = FakeSupabaseClient()
     store = SupabaseMemoryStore(client)

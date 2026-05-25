@@ -52,10 +52,21 @@ export interface ChoiceOption {
   message: string;
 }
 
+export type ChatMode = "auto" | "academic" | "career" | "schedule";
+export type ChatModelTier = "balanced" | "fast";
+
+export interface ChatAttachmentInput {
+  name: string;
+  mime_type: string;
+  size: number;
+  text_content: string | null;
+}
+
 export interface ChatResponse {
   session_id: string | null;
   answer: string;
   intent: string;
+  model: string | null;
   actions: ChatAction[];
   evidence: ChatEvidence;
   choices: ChoiceOption[];
@@ -67,6 +78,9 @@ export interface ChatSessionSummary {
   id: string;
   title: string | null;
   intent: string | null;
+  last_message_preview: string | null;
+  updated_at: string | null;
+  created_at: string | null;
 }
 
 export interface ChatMessageRecord {

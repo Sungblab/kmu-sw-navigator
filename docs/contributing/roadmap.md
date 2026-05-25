@@ -19,7 +19,7 @@
 | RAG chat API | 1차 구현 완료 | local/text/vector retrieval, Gemini 답변, 출처, session 저장 |
 | Google grounding | 1차 구현 완료 | 최신 진로/취업/창업/공모전 정보 보강, live smoke 대기 |
 | 추천 기능 | 1차 구현 완료 | 조건문/딕셔너리 기반 트랙/활동 추천, RAG 출처, 메모리 입력 |
-| 일정 관리 | 1차 구현 완료 | 자연어 일정 추출, 저장, D-day 계산, Google Calendar 내보내기 |
+| 일정 관리 | 1차 구현 완료 | 자연어 일정 추출, 사용자별 저장, D-day 계산, 완료/삭제. Google Calendar 내보내기는 선택 확장 |
 | React UI | 1차 구현 완료 | Claude/NotebookLM식 workspace, 모바일 drawer, 기능 탭 |
 | 보고서/발표 | 진행 중 | SaaS 목표, Python 핵심 로직, LLM 활용 기록, 6-10페이지 보고서, 20-25분 발표영상 |
 
@@ -31,7 +31,7 @@
 4. Mini LLM Wiki와 Supabase schema
 5. Gemini 연결과 RAG ingest
 6. RAG chat API와 Google grounding
-7. 추천/일정/Calendar 기능
+7. 추천/앱 내부 일정 관리 기능
 8. React UI
 9. Supabase/Gemini live smoke와 Python 핵심 로직 문서화
 10. 테스트, 보고서, 발표자료, 라이브 시연 영상
@@ -43,6 +43,6 @@
 - RAG 답변에 출처가 표시됩니다.
 - 답변에는 개인화 근거, 내부 자료 근거, 최신 웹 근거가 분리 표시됩니다.
 - 추천과 일정 기능이 Python 코드로 설명 가능합니다.
-- 자연어 과제 등록 후 D-day와 Google Calendar live 내보내기를 시연할 수 있습니다.
+- 자연어 과제 등록 후 앱 내부 일정 목록에서 D-day, 완료, 삭제를 시연할 수 있습니다.
 - LLM 활용 기록이 개발 과정과 함께 남아 있습니다.
 - 발표 시연이 실제 로그인 사용자 데이터로 재현되고, 장애 시에는 미리 실행한 live smoke 결과와 캡처로 검증 근거를 제시할 수 있습니다.
