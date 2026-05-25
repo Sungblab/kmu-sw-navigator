@@ -1,4 +1,5 @@
 import {
+  ChevronDown,
   ChevronRight,
   CheckCircle2,
   Lightbulb,
@@ -790,7 +791,7 @@ export default function App() {
   }
 
   return (
-    <main className="h-screen min-h-[720px] overflow-hidden bg-[#faf8f3] text-[#191817]">
+    <main className="h-screen overflow-hidden bg-[#faf8f3] text-[#191817]">
       <Toaster richColors position="top-right" />
       <div className="grid h-full grid-cols-1 lg:grid-cols-[272px_minmax(0,1fr)_336px]">
         <Sidebar
@@ -1364,6 +1365,7 @@ function ChatWorkspace({
 }) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [openMenu, setOpenMenu] = useState<"mode" | "model" | null>(null);
   const modeOptions: Array<{ value: ChatMode; label: string }> = [
     { value: "auto", label: "자동" },
     { value: "academic", label: "학업" },
@@ -1430,55 +1432,35 @@ function ChatWorkspace({
           />
           <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-1">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <div
-                className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-[#ded7cb] bg-[#faf8f3] p-0.5"
-                aria-label="상담 모드"
-                role="radiogroup"
-              >
-                <SlidersHorizontal
-                  className="ml-1.5 h-3.5 w-3.5 text-[#716c63]"
-                  aria-hidden="true"
-                />
-                {modeOptions.map((item) => (
-                  <button
-                    className={`min-h-7 rounded-md px-2 text-xs font-semibold ${
-                      mode === item.value
-                        ? "bg-[#191817] text-[#fffdf8]"
-                        : "text-[#716c63] hover:bg-[#ebe4d8]"
-                    }`}
-                    key={item.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={mode === item.value}
-                    onClick={() => setMode(item.value)}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-              <div
-                className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-[#ded7cb] bg-[#faf8f3] p-0.5"
-                aria-label="응답 품질"
-                role="radiogroup"
-              >
-                {modelTierOptions.map((item) => (
-                  <button
-                    className={`min-h-7 rounded-md px-2 text-xs font-semibold ${
-                      modelTier === item.value
-                        ? "bg-[#191817] text-[#fffdf8]"
-                        : "text-[#716c63] hover:bg-[#ebe4d8]"
-                    }`}
-                    key={item.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={modelTier === item.value}
-                    onClick={() => setModelTier(item.value)}
-                    title={item.value === "balanced" ? "Gemini 3 Flash" : "Flash-Lite"}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
+              <ComposerDropdown
+                icon={<SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />}
+                isOpen={openMenu === "mode"}
+                label={modeOptions.find((item) => item.value === mode)?.label ?? "자동"}
+                onToggle={() => setOpenMenu((current) => (current === "mode" ? null : "mode"))}
+                options={modeOptions}
+                title="상담 모드"
+                value={mode}
+                onChange={(value) => {
+                  setMode(value);
+                  setOpenMenu(null);
+                }}
+              />
+              <ComposerDropdown
+                isOpen={openMenu === "model"}
+                label={
+                  modelTier === "balanced"
+                    ? "균형 · Gemini 3 Flash"
+                    : "빠름 · Flash-Lite"
+                }
+                onToggle={() => setOpenMenu((current) => (current === "model" ? null : "model"))}
+                options={modelTierOptions}
+                title="응답 품질"
+                value={modelTier}
+                onChange={(value) => {
+                  setModelTier(value);
+                  setOpenMenu(null);
+                }}
+              />
               <input
                 ref={fileInputRef}
                 className="hidden"
@@ -1517,6 +1499,60 @@ function ChatWorkspace({
           </div>
         </div>
       </form>
+    </div>
+  );
+}
+
+function ComposerDropdown<TValue extends string>({
+  icon,
+  isOpen,
+  label,
+  onChange,
+  onToggle,
+  options,
+  title,
+  value,
+}: {
+  icon?: ReactNode;
+  isOpen: boolean;
+  label: string;
+  onChange: (value: TValue) => void;
+  onToggle: () => void;
+  options: Array<{ value: TValue; label: string }>;
+  title: string;
+  value: TValue;
+}) {
+  return (
+    <div className="relative">
+      <button
+        className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-2.5 text-xs font-semibold text-[#3d3b37] hover:border-[#b8ad9f] hover:bg-[#f4efe6]"
+        type="button"
+        aria-expanded={isOpen}
+        title={title}
+        onClick={onToggle}
+      >
+        {icon}
+        <span>{label}</span>
+        <ChevronDown className="h-3.5 w-3.5 text-[#716c63]" aria-hidden="true" />
+      </button>
+      {isOpen ? (
+        <div className="absolute bottom-[calc(100%+6px)] left-0 z-30 min-w-full overflow-hidden rounded-lg border border-[#c9c0b3] bg-[#fffdf8] p-1 shadow-lg">
+          {options.map((item) => (
+            <button
+              className={`flex min-h-8 w-full items-center whitespace-nowrap rounded-md px-2.5 text-left text-xs font-semibold ${
+                value === item.value
+                  ? "bg-[#191817] text-[#fffdf8]"
+                  : "text-[#3d3b37] hover:bg-[#f1ede5]"
+              }`}
+              key={item.value}
+              type="button"
+              onClick={() => onChange(item.value)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
