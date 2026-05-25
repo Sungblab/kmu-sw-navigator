@@ -142,6 +142,47 @@ def test_career_question_includes_personalization_evidence_key() -> None:
     assert response.json()["needs_verification"] == []
 
 
+def test_chat_saves_low_sensitivity_learning_context_from_conversation() -> None:
+    store = InMemoryMemoryStore()
+    chat_store = InMemoryChatStore()
+    app.dependency_overrides[get_current_user_id] = lambda: "user-1"
+    app.dependency_overrides[get_memory_store] = lambda: store
+    app.dependency_overrides[get_chat_store] = lambda: chat_store
+    app.dependency_overrides[get_document_retriever] = lambda: LocalDocumentRetriever([])
+    app.dependency_overrides[get_answer_generator] = lambda: None
+    app.dependency_overrides[get_grounding_answer_generator] = lambda: None
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/chat",
+        json={
+            "mode": "career",
+            "message": (
+                "AI랑 백엔드에 관심 있고 목표는 포트폴리오 준비야. "
+                "코딩은 초급이고 프로젝트로 배우고 싶어. 주 4시간 가능해."
+            ),
+        },
+    )
+
+    app.dependency_overrides.clear()
+    body = response.json()
+    saved_memories = store.list_active_memories("user-1")
+    assert response.status_code == 200
+    assert body["memory_updates"]
+    assert body["memory_updates"][0]["category"] == "conversation"
+    assert body["memory_updates"][0]["key"] == "learning_context"
+    assert body["memory_updates"][0]["value_json"] == {
+        "track_interests": ["AI", "백엔드"],
+        "activity_interests": ["개발"],
+        "goal": "포트폴리오 준비",
+        "coding_level": "beginner",
+        "preference": "project",
+        "activity_style": "unknown",
+        "weekly_hours": 4,
+    }
+    assert saved_memories[0].natural_text.startswith("대화에서 파악한 학습/진로 정보")
+
+
 def test_assignment_sentence_returns_schedule_intent_without_hardcoded_choices() -> None:
     store = InMemoryMemoryStore()
     chat_store = InMemoryChatStore()

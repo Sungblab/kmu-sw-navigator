@@ -133,6 +133,8 @@
 | 2026-05-26 | 김성빈 | Codex | Gemini 스트리밍 답변 끊김 복구 | 스트리밍 chunk의 종료 메타데이터를 보존하고 `MAX_TOKENS`처럼 중간 종료된 답변은 기존 비스트리밍 재시도 경로로 완성 답변을 만들어 최종 `done` 응답과 저장본에 반영 | cutoff regression test를 먼저 실패시킨 뒤 구현했고 `uv run python -m pytest tests/api/test_chat_contract_api.py tests/services/test_answer_generation_service.py`, `uv run ruff check app tests/api/test_chat_contract_api.py tests/services/test_answer_generation_service.py`로 검증 |
 | 2026-05-26 | 김성빈 | Codex | 추천 화면 기본값 제거 | 진로/활동 추천 화면이 사용자 정보를 이미 아는 것처럼 보이지 않도록 기본 관심사/목표/활동값을 비우고, 정보가 부족하면 AI 상담으로 이동해 관심사와 목표를 먼저 정리하게 변경 | `pnpm build:frontend`, `git diff --check`로 검증 |
 | 2026-05-26 | 김성빈 | Codex | 중복 상담 기록 메뉴와 문서 스크롤 제거 | 사이드바 최근 상담이 실제 기록 탐색 역할을 하므로 별도 `상담 기록` 페이지 진입점을 제거하고 앱 레이아웃을 viewport 안에 고정 | `pnpm build:frontend`, `pnpm docs:check`, `git diff --check`로 검증 |
+| 2026-05-26 | 김성빈 | Codex | AI 상담 중심 추천 UX 전환 | 별도 `진로/취업` 폼 화면을 `내 추천` 현황 화면으로 낮추고, 추천 정보가 부족하면 진로 상담 페르소나로 이동해 관심사/목표/코딩 경험을 먼저 물어보게 변경 | `pnpm build:frontend`, `pnpm docs:check`, `git diff --check`로 검증 |
+| 2026-05-26 | 김성빈 | Codex | 설정 모달 관리 화면 | 설정을 페이지가 아니라 모달로 띄우고 계정, 내 정보, 메모리 보관, AI 상담 모드와 모델 선택을 한 화면에서 관리하도록 변경 | `pnpm build:frontend`, `pnpm docs:check`, `git diff --check`로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

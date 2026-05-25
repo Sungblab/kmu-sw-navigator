@@ -26,6 +26,7 @@ from app.services.answer_generation_service import (
     _looks_incomplete_answer,
 )
 from app.services.chat_contract_service import build_chat_response, detect_intent
+from app.services.memory_service import create_learning_context_memory_from_chat
 from app.services.retrieval_service import (
     LocalDocumentRetriever,
     SupabaseTextRetriever,
@@ -199,6 +200,11 @@ def _build_and_store_streaming_chat_response(
     )
     response.answer = answer
     response.model = model
+    response.memory_updates = create_learning_context_memory_from_chat(
+        store=store,
+        user_id=user_id,
+        message=request.message,
+    )
     response = chat_store.save_exchange(user_id, request, response)
     llm_usage_log_store.create_log(
         user_id,
@@ -240,6 +246,11 @@ def _build_and_store_chat_response(
         retrieval_results,
         answer_generator,
         grounding_answer_generator,
+    )
+    response.memory_updates = create_learning_context_memory_from_chat(
+        store=store,
+        user_id=user_id,
+        message=request.message,
     )
     if answer_generator is not None:
         llm_usage_log_store.create_log(

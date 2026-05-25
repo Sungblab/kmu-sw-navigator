@@ -8,6 +8,7 @@ import {
   Send,
   SlidersHorizontal,
   Square,
+  UserRound,
   X,
 } from "lucide-react";
 import { cjk } from "@streamdown/cjk";
@@ -34,6 +35,7 @@ import {
   createAssignment,
   deleteAssignment,
   getAssignments,
+  deleteMemory,
   getMemories,
   getProfile,
   previewAssignment,
@@ -226,6 +228,7 @@ export default function App() {
   const [activityResult, setActivityResult] = useState<ActivityRecommendResponse | null>(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isMobileContextOpen, setIsMobileContextOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRecommendationEdited, setIsRecommendationEdited] = useState(false);
   const [onboardingDraft, setOnboardingDraft] = useState<ProfileInput>({
     department: "software",
@@ -444,11 +447,8 @@ export default function App() {
       !recommendationInput.goal ||
       recommendationInput.codingLevel === "unknown"
     ) {
-      setActivePage("chat");
-      setDraft(
-        "내 관심 분야, 목표, 코딩 경험을 먼저 물어보고 추천에 필요한 정보로 정리해줘.",
-      );
-      toast.message("추천에 필요한 정보가 부족해요. 먼저 AI 상담에서 관심사와 목표를 정리해 주세요.");
+      startRecommendationChat();
+      toast.message("추천에 필요한 정보가 부족해요. AI 상담에서 먼저 정리해 주세요.");
       return;
     }
     try {
@@ -484,6 +484,24 @@ export default function App() {
   function resetRecommendationDraft() {
     setIsRecommendationEdited(false);
     setRecommendationDraft(recommendationContextToDraft(automaticRecommendationInput));
+  }
+
+  function mergeMemoryUpdates(updates: Memory[]) {
+    if (!updates.length) {
+      return;
+    }
+    setMemories((current) => {
+      const existingIds = new Set(current.map((memory) => memory.id));
+      return [...updates.filter((memory) => !existingIds.has(memory.id)), ...current];
+    });
+  }
+
+  function startRecommendationChat() {
+    setChatMode("career");
+    setActivePage("chat");
+    setDraft(
+      "내 관심 분야, 목표, 코딩 경험, 선호 활동 방식을 먼저 물어보고 추천에 필요한 정보로 정리해줘.",
+    );
   }
 
   async function handleComposerFiles(files: FileList | null) {
@@ -639,9 +657,11 @@ export default function App() {
                   : item,
               ),
             );
+            mergeMemoryUpdates(doneResponse.memory_updates);
           },
         },
       );
+      mergeMemoryUpdates(response.memory_updates);
       if (response.session_id) {
         setActiveSessionId(response.session_id);
         window.localStorage.setItem(ACTIVE_CHAT_SESSION_KEY, response.session_id);
@@ -722,6 +742,19 @@ export default function App() {
     }
   }
 
+  async function handleDeleteMemory(memoryId: string) {
+    setError(null);
+    try {
+      await deleteMemory(memoryId);
+      setMemories((current) => current.filter((memory) => memory.id !== memoryId));
+      toast.success("메모리를 보관했습니다.");
+    } catch (apiError) {
+      const message = getErrorMessage(apiError, "메모리 보관에 실패했습니다.");
+      setError(message);
+      toast.error(message);
+    }
+  }
+
   function startNewChat() {
     setActivePage("chat");
     setIsMobileNavOpen(false);
@@ -732,6 +765,12 @@ export default function App() {
   }
 
   function handleSelectPage(page: WorkspacePage) {
+    if (page === "settings") {
+      setOnboardingDraft((current) => buildSettingsDraft(current, profile, memories));
+      setIsSettingsOpen(true);
+      setIsMobileNavOpen(false);
+      return;
+    }
     setActivePage(page);
     setIsMobileNavOpen(false);
   }
@@ -821,9 +860,7 @@ export default function App() {
           <TopBar
             activePage={activePage}
             error={error}
-            isLoading={isLoading}
             onOpenMobileContext={() => setIsMobileContextOpen(true)}
-            onRefresh={() => void refresh()}
             onOpenMobileNav={() => setIsMobileNavOpen(true)}
           />
 
@@ -872,22 +909,8 @@ export default function App() {
               isEdited={isRecommendationEdited}
               onRecommend={() => void handleRecommend()}
               onResetInput={resetRecommendationDraft}
+              onStartAdvisor={startRecommendationChat}
               onUpdateInput={updateRecommendationDraft}
-            />
-          ) : activePage === "settings" ? (
-            <SettingsPage
-              authEmail={authEmail}
-              authPassword={authPassword}
-              authSession={authSession}
-              authStatus={authStatus}
-              isAuthBusy={isAuthBusy}
-              setAuthEmail={setAuthEmail}
-              setAuthPassword={setAuthPassword}
-              onAuthSubmit={(mode) => void handleAuthSubmit(mode)}
-              profile={profile}
-              onSeedProfile={() => void saveOnboardingProfile()}
-              onSignOut={() => void handleSignOut()}
-              onRefresh={() => void refresh()}
             />
           ) : (
             <ChatWorkspace
@@ -935,8 +958,54 @@ export default function App() {
         onClose={() => setIsMobileContextOpen(false)}
         profile={profile}
       />
+      <SettingsModal
+        authEmail={authEmail}
+        authPassword={authPassword}
+        authSession={authSession}
+        authStatus={authStatus}
+        chatMode={chatMode}
+        isAuthBusy={isAuthBusy}
+        isOpen={isSettingsOpen}
+        memories={memories}
+        modelTier={chatModelTier}
+        profile={profile}
+        settingsDraft={onboardingDraft}
+        setAuthEmail={setAuthEmail}
+        setAuthPassword={setAuthPassword}
+        setChatMode={setChatMode}
+        setModelTier={setChatModelTier}
+        setSettingsDraft={setOnboardingDraft}
+        onAuthSubmit={(mode) => void handleAuthSubmit(mode)}
+        onClose={() => setIsSettingsOpen(false)}
+        onDeleteMemory={(memoryId) => void handleDeleteMemory(memoryId)}
+        onRefresh={() => void refresh()}
+        onSaveProfile={() => void saveOnboardingProfile()}
+        onSignOut={() => void handleSignOut()}
+      />
     </main>
   );
+}
+
+function buildSettingsDraft(
+  current: ProfileInput,
+  profile: Profile | MissingProfile | null,
+  memories: Memory[],
+): ProfileInput {
+  const context = buildRecommendationInputContext(memories);
+  return {
+    ...current,
+    department: profile?.exists ? profile.department : current.department,
+    grade: profile?.exists ? profile.grade : current.grade,
+    curriculum_year: profile?.exists ? profile.curriculum_year : current.curriculum_year,
+    interests_text: context.trackInterests.length
+      ? context.trackInterests.join(", ")
+      : current.interests_text,
+    goal: context.goal || current.goal,
+    coding_level: context.codingLevel,
+    preference: context.preference,
+    activity_style: context.activityStyle,
+    weekly_hours: context.weeklyHours || current.weekly_hours,
+  };
 }
 
 function splitOnboardingTerms(value: string): string[] {
@@ -1187,7 +1256,7 @@ function OnboardingPage({
           </p>
           <h1 className="mt-2 text-2xl font-semibold tracking-normal">처음 설정</h1>
           <p className="mt-2 text-sm leading-6 text-[#716c63]">
-            상담과 추천에 사용할 기본 학업 정보를 알려주세요. 나중에 설정에서 바꿀 수 있습니다.
+            학부와 학년만 먼저 저장해도 됩니다. 관심사와 목표는 AI 상담이 질문하면서 채워갑니다.
           </p>
         </div>
         <div className="grid gap-3">
@@ -1240,7 +1309,7 @@ function OnboardingPage({
               className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
               value={draft.interests_text}
               onChange={(event) => setDraft({ ...draft, interests_text: event.target.value })}
-              placeholder="AI, 백엔드, 데이터"
+              placeholder="아직 모르겠으면 비워두세요"
             />
           </label>
           <label className="space-y-1 text-xs font-semibold text-[#716c63]">
@@ -1249,7 +1318,7 @@ function OnboardingPage({
               className="h-11 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
               value={draft.goal}
               onChange={(event) => setDraft({ ...draft, goal: event.target.value })}
-              placeholder="AI 서비스 개발"
+              placeholder="AI 상담에서 같이 정해도 됩니다"
             />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -2105,6 +2174,7 @@ function RecommendationPage({
   isEdited,
   onRecommend,
   onResetInput,
+  onStartAdvisor,
   onUpdateInput,
 }: {
   trackResult: TrackRecommendResponse | null;
@@ -2114,11 +2184,15 @@ function RecommendationPage({
   isEdited: boolean;
   onRecommend: () => void;
   onResetInput: () => void;
+  onStartAdvisor: () => void;
   onUpdateInput: (patch: Partial<RecommendationInputDraft>) => void;
 }) {
+  const [isManualInputOpen, setIsManualInputOpen] = useState(false);
   const contextTags = [...inputContext.trackInterests, inputContext.goal]
     .filter(Boolean)
     .slice(0, 5);
+  const missingItems = recommendationMissingItems(inputContext);
+  const hasEnoughContext = missingItems.length === 0;
 
   return (
     <section className="min-h-0 overflow-y-auto px-6 py-7">
@@ -2126,9 +2200,9 @@ function RecommendationPage({
         <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold tracking-normal">진로/활동 추천</h2>
+              <h2 className="text-xl font-semibold tracking-normal">내 추천</h2>
               <p className="mt-2 text-sm leading-6 text-[#716c63]">
-                {inputContext.sourceLabel}를 바탕으로 지금 필요한 준비를 추천합니다.
+                AI 상담에서 파악한 정보를 바탕으로 트랙과 활동 준비를 정리합니다.
               </p>
               {contextTags.length ? (
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -2138,117 +2212,157 @@ function RecommendationPage({
                 </div>
               ) : (
                 <p className="mt-3 text-xs leading-5 text-[#716c63]">
-                  AI 상담에서 관심 분야와 목표를 말하면 이 입력값이 자동으로 채워집니다.
+                  아직 파악한 관심 분야가 없습니다. 먼저 AI 상담에서 진로 페르소나와 대화해 주세요.
                 </p>
               )}
             </div>
-            <button
-              className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8]"
-              type="button"
-              onClick={onRecommend}
-            >
-              추천 실행
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold text-[#3d3b37]"
+                type="button"
+                onClick={onStartAdvisor}
+              >
+                AI 상담에서 정리
+              </button>
+              <button
+                className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8]"
+                type="button"
+                onClick={onRecommend}
+              >
+                추천 실행
+              </button>
+            </div>
           </div>
-          <div className="mt-5 grid gap-3 lg:grid-cols-2">
-            <label className="space-y-1 text-xs font-semibold text-[#716c63]">
-              트랙 관심사
-              <input
-                className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
-                value={inputDraft.trackInterestsText}
-                onChange={(event) => onUpdateInput({ trackInterestsText: event.target.value })}
-                placeholder="예: AI, 백엔드"
-              />
-            </label>
-            <label className="space-y-1 text-xs font-semibold text-[#716c63]">
-              활동 관심사
-              <input
-                className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
-                value={inputDraft.activityInterestsText}
-                onChange={(event) => onUpdateInput({ activityInterestsText: event.target.value })}
-                placeholder="예: 개발, 알고리즘"
-              />
-            </label>
-            <label className="space-y-1 text-xs font-semibold text-[#716c63] lg:col-span-2">
-              목표
-              <input
-                className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
-                value={inputDraft.goal}
-                onChange={(event) => onUpdateInput({ goal: event.target.value })}
-                placeholder="예: 포트폴리오 준비"
-              />
-            </label>
-            <label className="space-y-1 text-xs font-semibold text-[#716c63]">
-              코딩 경험
-              <select
-                className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
-                value={inputDraft.codingLevel}
-                onChange={(event) =>
-                  onUpdateInput({
-                    codingLevel: event.target.value as RecommendationInputContext["codingLevel"],
-                  })
-                }
-              >
-                <option value="unknown">미정</option>
-                <option value="beginner">초급</option>
-                <option value="intermediate">중급</option>
-                <option value="advanced">고급</option>
-              </select>
-            </label>
-            <label className="space-y-1 text-xs font-semibold text-[#716c63]">
-              학습 선호
-              <select
-                className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
-                value={inputDraft.preference}
-                onChange={(event) =>
-                  onUpdateInput({
-                    preference: event.target.value as RecommendationInputContext["preference"],
-                  })
-                }
-              >
-                <option value="project">프로젝트</option>
-                <option value="lecture">강의</option>
-                <option value="study">스터디</option>
-                <option value="unknown">미정</option>
-              </select>
-            </label>
-            <label className="space-y-1 text-xs font-semibold text-[#716c63]">
-              활동 방식
-              <select
-                className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
-                value={inputDraft.activityStyle}
-                onChange={(event) =>
-                  onUpdateInput({
-                    activityStyle: event.target.value as RecommendationInputContext["activityStyle"],
-                  })
-                }
-              >
-                <option value="team">팀</option>
-                <option value="solo">개인</option>
-                <option value="mixed">혼합</option>
-                <option value="unknown">미정</option>
-              </select>
-            </label>
-            <label className="space-y-1 text-xs font-semibold text-[#716c63]">
-              주간 가능 시간
-              <input
-                className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
-                min={0}
-                max={40}
-                type="number"
-                value={inputDraft.weeklyHours}
-                onChange={(event) => onUpdateInput({ weeklyHours: Number(event.target.value) })}
-              />
-            </label>
+
+          <div className="mt-5 grid gap-3 lg:grid-cols-3">
+            <RecommendationFact label="트랙 관심사" value={inputContext.trackInterests.join(", ")} />
+            <RecommendationFact label="활동 관심사" value={inputContext.activityInterests.join(", ")} />
+            <RecommendationFact label="목표" value={inputContext.goal} />
+            <RecommendationFact label="코딩 경험" value={codingLevelLabel(inputContext.codingLevel)} />
+            <RecommendationFact label="학습 선호" value={learningPreferenceLabel(inputContext.preference)} />
+            <RecommendationFact
+              label="활동 방식/시간"
+              value={`${activityStyleLabel(inputContext.activityStyle)} · ${inputContext.weeklyHours ? `주 ${inputContext.weeklyHours}시간` : "시간 미정"}`}
+            />
           </div>
-          {isEdited ? (
+
+          <div className="mt-4 rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-3 py-2 text-xs leading-5 text-[#716c63]">
+            {hasEnoughContext
+              ? "추천에 필요한 핵심 정보가 준비됐습니다. 결과가 낡았다고 느껴지면 AI 상담에서 현재 목표를 다시 정리해 주세요."
+              : `추천 전 AI가 더 물어볼 정보: ${missingItems.join(", ")}`}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
             <button
-              className="mt-4 h-9 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-xs font-semibold text-[#3d3b37]"
+              className="h-9 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-xs font-semibold text-[#3d3b37]"
               type="button"
-              onClick={onResetInput}
+              onClick={() => setIsManualInputOpen((current) => !current)}
             >
-              자동값으로 되돌리기
+              {isManualInputOpen ? "직접 수정 닫기" : "직접 수정"}
             </button>
+            {isEdited ? (
+              <button
+                className="h-9 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-xs font-semibold text-[#3d3b37]"
+                type="button"
+                onClick={onResetInput}
+              >
+                AI가 파악한 값으로 되돌리기
+              </button>
+            ) : null}
+          </div>
+
+          {isManualInputOpen ? (
+            <div className="mt-4 grid gap-3 border-t border-[#ded7cb] pt-4 lg:grid-cols-2">
+              <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+                트랙 관심사
+                <input
+                  className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                  value={inputDraft.trackInterestsText}
+                  onChange={(event) => onUpdateInput({ trackInterestsText: event.target.value })}
+                  placeholder="예: AI, 백엔드"
+                />
+              </label>
+              <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+                활동 관심사
+                <input
+                  className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                  value={inputDraft.activityInterestsText}
+                  onChange={(event) => onUpdateInput({ activityInterestsText: event.target.value })}
+                  placeholder="예: 개발, 알고리즘"
+                />
+              </label>
+              <label className="space-y-1 text-xs font-semibold text-[#716c63] lg:col-span-2">
+                목표
+                <input
+                  className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                  value={inputDraft.goal}
+                  onChange={(event) => onUpdateInput({ goal: event.target.value })}
+                  placeholder="예: 포트폴리오 준비"
+                />
+              </label>
+              <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+                코딩 경험
+                <select
+                  className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                  value={inputDraft.codingLevel}
+                  onChange={(event) =>
+                    onUpdateInput({
+                      codingLevel: event.target.value as RecommendationInputContext["codingLevel"],
+                    })
+                  }
+                >
+                  <option value="unknown">미정</option>
+                  <option value="beginner">초급</option>
+                  <option value="intermediate">중급</option>
+                  <option value="advanced">고급</option>
+                </select>
+              </label>
+              <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+                학습 선호
+                <select
+                  className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                  value={inputDraft.preference}
+                  onChange={(event) =>
+                    onUpdateInput({
+                      preference: event.target.value as RecommendationInputContext["preference"],
+                    })
+                  }
+                >
+                  <option value="unknown">미정</option>
+                  <option value="project">프로젝트</option>
+                  <option value="lecture">강의</option>
+                  <option value="study">스터디</option>
+                </select>
+              </label>
+              <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+                활동 방식
+                <select
+                  className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                  value={inputDraft.activityStyle}
+                  onChange={(event) =>
+                    onUpdateInput({
+                      activityStyle: event.target.value as RecommendationInputContext["activityStyle"],
+                    })
+                  }
+                >
+                  <option value="unknown">미정</option>
+                  <option value="team">팀</option>
+                  <option value="solo">개인</option>
+                  <option value="mixed">혼합</option>
+                </select>
+              </label>
+              <label className="space-y-1 text-xs font-semibold text-[#716c63]">
+                주간 가능 시간
+                <input
+                  className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-normal text-[#191817] outline-none"
+                  min={0}
+                  max={40}
+                  type="number"
+                  value={inputDraft.weeklyHours}
+                  onChange={(event) => onUpdateInput({ weeklyHours: Number(event.target.value) })}
+                />
+              </label>
+            </div>
           ) : null}
         </div>
 
@@ -2269,6 +2383,61 @@ function RecommendationPage({
       </div>
     </section>
   );
+}
+
+function RecommendationFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-[#ded7cb] bg-[#faf8f3] px-3 py-2">
+      <span className="block text-[11px] font-semibold text-[#938d83]">{label}</span>
+      <strong className="mt-1 block min-h-5 text-sm font-semibold text-[#191817]">
+        {value.trim() || "AI 상담에서 확인 필요"}
+      </strong>
+    </div>
+  );
+}
+
+function recommendationMissingItems(context: RecommendationInputContext): string[] {
+  const items: string[] = [];
+  if (!context.trackInterests.length) {
+    items.push("관심 트랙");
+  }
+  if (!context.activityInterests.length) {
+    items.push("선호 활동");
+  }
+  if (!context.goal.trim()) {
+    items.push("목표");
+  }
+  if (context.codingLevel === "unknown") {
+    items.push("코딩 경험");
+  }
+  return items;
+}
+
+function codingLevelLabel(value: RecommendationInputContext["codingLevel"]): string {
+  return {
+    beginner: "초급",
+    intermediate: "중급",
+    advanced: "고급",
+    unknown: "",
+  }[value];
+}
+
+function learningPreferenceLabel(value: RecommendationInputContext["preference"]): string {
+  return {
+    lecture: "강의",
+    project: "프로젝트",
+    study: "스터디",
+    unknown: "",
+  }[value];
+}
+
+function activityStyleLabel(value: RecommendationInputContext["activityStyle"]): string {
+  return {
+    solo: "개인",
+    team: "팀",
+    mixed: "혼합",
+    unknown: "방식 미정",
+  }[value];
 }
 
 function RecommendationPanel({
@@ -2321,17 +2490,27 @@ function RecommendationPanel({
   );
 }
 
-function SettingsPage({
+function SettingsModal({
   authEmail,
   authPassword,
   authSession,
   authStatus,
+  chatMode,
   isAuthBusy,
+  isOpen,
+  memories,
+  modelTier,
+  profile,
+  settingsDraft,
   setAuthEmail,
   setAuthPassword,
+  setChatMode,
+  setModelTier,
+  setSettingsDraft,
   onAuthSubmit,
-  profile,
-  onSeedProfile,
+  onClose,
+  onDeleteMemory,
+  onSaveProfile,
   onSignOut,
   onRefresh,
 }: {
@@ -2339,95 +2518,382 @@ function SettingsPage({
   authPassword: string;
   authSession: AuthSessionSummary | null;
   authStatus: string | null;
+  chatMode: ChatMode;
   isAuthBusy: boolean;
+  isOpen: boolean;
+  memories: Memory[];
+  modelTier: ChatModelTier;
+  profile: Profile | MissingProfile | null;
+  settingsDraft: ProfileInput;
   setAuthEmail: (value: string) => void;
   setAuthPassword: (value: string) => void;
+  setChatMode: (value: ChatMode) => void;
+  setModelTier: (value: ChatModelTier) => void;
+  setSettingsDraft: (value: ProfileInput | ((current: ProfileInput) => ProfileInput)) => void;
   onAuthSubmit: (mode: "signin" | "signup") => void;
-  profile: Profile | MissingProfile | null;
-  onSeedProfile: () => void;
+  onClose: () => void;
+  onDeleteMemory: (memoryId: string) => void;
+  onSaveProfile: () => void;
   onSignOut: () => void;
   onRefresh: () => void;
 }) {
+  if (!isOpen) {
+    return null;
+  }
+
+  const activeMemories = memories.filter((memory) => memory.status === "active");
+
   return (
-    <section className="min-h-0 overflow-y-auto px-6 py-7">
-      <div className="mx-auto max-w-[760px] rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-5">
-        <h2 className="text-xl font-semibold tracking-normal">설정</h2>
-        <p className="mt-2 text-sm leading-6 text-[#716c63]">
-          계정과 기본 학업 정보를 관리합니다.
-        </p>
-        <div className="mt-5 rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-4">
-          <h3 className="text-sm font-semibold">계정</h3>
-          <p className="mt-1 text-xs leading-5 text-[#716c63]">
-            {authSession
-              ? `${authSession.email ?? authSession.userId} 계정으로 연결됨`
-              : "로그인하면 상담과 일정이 계정에 저장됩니다."}
-          </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <input
-              className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none"
-              type="email"
-              placeholder="email"
-              value={authEmail}
-              onChange={(event) => setAuthEmail(event.target.value)}
-            />
-            <input
-              className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none"
-              type="password"
-              placeholder="password"
-              value={authPassword}
-              onChange={(event) => setAuthPassword(event.target.value)}
-            />
+    <div className="fixed inset-0 z-50 grid place-items-center bg-[#191817]/35 px-4 py-6" role="dialog" aria-modal="true">
+      <button
+        className="absolute inset-0 cursor-default"
+        type="button"
+        aria-label="설정 닫기"
+        onClick={onClose}
+      />
+      <div className="relative max-h-[min(760px,92dvh)] w-full max-w-[860px] overflow-hidden rounded-xl border border-[#ded7cb] bg-[#fffdf8] shadow-2xl">
+        <header className="flex items-start justify-between gap-4 border-b border-[#ded7cb] px-5 py-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-normal">설정</h2>
+            <p className="mt-1 text-sm leading-6 text-[#716c63]">
+              계정, 내 정보, AI 상담 설정과 저장된 메모리를 관리합니다.
+            </p>
           </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8] disabled:opacity-50"
-              type="button"
-              disabled={isAuthBusy}
-              onClick={() => onAuthSubmit("signin")}
-            >
-              <LogIn className="h-4 w-4" aria-hidden="true" />
-              로그인
-            </button>
-            <button
-              className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold disabled:opacity-50"
-              type="button"
-              disabled={isAuthBusy}
-              onClick={() => onAuthSubmit("signup")}
-            >
-              가입
-            </button>
-            <button
-              className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold disabled:opacity-50"
-              type="button"
-              disabled={isAuthBusy || !authSession}
-              onClick={onSignOut}
-            >
-              <LogOut className="h-4 w-4" aria-hidden="true" />
-              로그아웃
-            </button>
-          </div>
-          {authStatus ? <p className="mt-3 text-xs leading-5 text-[#716c63]">{authStatus}</p> : null}
-        </div>
-        <div className="mt-5 flex flex-wrap gap-2">
-          {!profile?.exists ? (
-            <button
-              className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8]"
-              type="button"
-              onClick={onSeedProfile}
-            >
-              기본 정보 저장
-            </button>
-          ) : null}
           <button
-            className="h-10 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-4 text-sm font-semibold"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#c9c0b3] bg-[#fffdf8] hover:bg-[#f1ede5]"
             type="button"
-            onClick={onRefresh}
+            aria-label="설정 닫기"
+            onClick={onClose}
           >
-            새로고침
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
+        </header>
+
+        <div className="max-h-[calc(min(760px,92dvh)-88px)] overflow-y-auto p-5">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="space-y-4">
+              <SettingsSection
+                title="내 정보"
+                description="학부, 학년, 교과과정은 상담과 추천의 기본 조건으로 사용됩니다."
+                icon={<UserRound className="h-4 w-4" aria-hidden="true" />}
+              >
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <FieldLabel label="소속">
+                    <select
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none hover:bg-[#faf8f3]"
+                      value={settingsDraft.department}
+                      onChange={(event) =>
+                        setSettingsDraft((current) => ({
+                          ...current,
+                          department: event.target.value as Department,
+                        }))
+                      }
+                    >
+                      <option value="software">소프트웨어학부</option>
+                      <option value="ai">인공지능학부</option>
+                      <option value="other">기타</option>
+                      <option value="unknown">미정</option>
+                    </select>
+                  </FieldLabel>
+                  <FieldLabel label="학년">
+                    <select
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none hover:bg-[#faf8f3]"
+                      value={settingsDraft.grade}
+                      onChange={(event) =>
+                        setSettingsDraft((current) => ({
+                          ...current,
+                          grade: Number(event.target.value),
+                        }))
+                      }
+                    >
+                      {[1, 2, 3, 4].map((grade) => (
+                        <option key={grade} value={grade}>{grade}학년</option>
+                      ))}
+                    </select>
+                  </FieldLabel>
+                  <FieldLabel label="교과과정">
+                    <select
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none hover:bg-[#faf8f3]"
+                      value={settingsDraft.curriculum_year}
+                      onChange={(event) =>
+                        setSettingsDraft((current) => ({
+                          ...current,
+                          curriculum_year: event.target.value as CurriculumYear,
+                        }))
+                      }
+                    >
+                      <option value="2025">2025</option>
+                      <option value="2024">2024</option>
+                      <option value="2023">2023</option>
+                      <option value="unknown">미정</option>
+                    </select>
+                  </FieldLabel>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <FieldLabel label="관심 분야">
+                    <input
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none"
+                      value={settingsDraft.interests_text}
+                      placeholder="AI, 백엔드"
+                      onChange={(event) =>
+                        setSettingsDraft((current) => ({
+                          ...current,
+                          interests_text: event.target.value,
+                        }))
+                      }
+                    />
+                  </FieldLabel>
+                  <FieldLabel label="목표">
+                    <input
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none"
+                      value={settingsDraft.goal}
+                      placeholder="AI 서비스 개발"
+                      onChange={(event) =>
+                        setSettingsDraft((current) => ({ ...current, goal: event.target.value }))
+                      }
+                    />
+                  </FieldLabel>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-4">
+                  <FieldLabel label="코딩 경험">
+                    <select
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none hover:bg-[#faf8f3]"
+                      value={settingsDraft.coding_level}
+                      onChange={(event) =>
+                        setSettingsDraft((current) => ({
+                          ...current,
+                          coding_level: event.target.value as ProfileInput["coding_level"],
+                        }))
+                      }
+                    >
+                      <option value="beginner">초급</option>
+                      <option value="intermediate">중급</option>
+                      <option value="advanced">고급</option>
+                      <option value="unknown">미정</option>
+                    </select>
+                  </FieldLabel>
+                  <FieldLabel label="학습 선호">
+                    <select
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none hover:bg-[#faf8f3]"
+                      value={settingsDraft.preference}
+                      onChange={(event) =>
+                        setSettingsDraft((current) => ({
+                          ...current,
+                          preference: event.target.value as ProfileInput["preference"],
+                        }))
+                      }
+                    >
+                      <option value="project">프로젝트</option>
+                      <option value="lecture">강의</option>
+                      <option value="study">스터디</option>
+                      <option value="unknown">미정</option>
+                    </select>
+                  </FieldLabel>
+                  <FieldLabel label="활동 방식">
+                    <select
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none hover:bg-[#faf8f3]"
+                      value={settingsDraft.activity_style}
+                      onChange={(event) =>
+                        setSettingsDraft((current) => ({
+                          ...current,
+                          activity_style: event.target.value as ProfileInput["activity_style"],
+                        }))
+                      }
+                    >
+                      <option value="team">팀</option>
+                      <option value="solo">개인</option>
+                      <option value="mixed">혼합</option>
+                      <option value="unknown">미정</option>
+                    </select>
+                  </FieldLabel>
+                  <FieldLabel label="주간 가능 시간">
+                    <input
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none"
+                      type="number"
+                      min={0}
+                      max={40}
+                      value={settingsDraft.weekly_hours}
+                      onChange={(event) =>
+                        setSettingsDraft((current) => ({
+                          ...current,
+                          weekly_hours: Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </FieldLabel>
+                </div>
+                <div className="mt-3 flex justify-end">
+                  <button
+                    className="h-10 rounded-lg bg-[#191817] px-4 text-sm font-semibold text-[#fffdf8] hover:bg-[#2b2926]"
+                    type="button"
+                    onClick={onSaveProfile}
+                  >
+                    내 정보 저장
+                  </button>
+                </div>
+              </SettingsSection>
+
+              <SettingsSection title="메모리" description="AI가 상담에 반영하는 사용자 컨텍스트입니다.">
+                {activeMemories.length ? (
+                  <div className="space-y-2">
+                    {activeMemories.slice(0, 5).map((memory) => (
+                      <div className="rounded-lg border border-[#ded7cb] bg-[#faf8f3] p-3" key={memory.id}>
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="text-xs font-semibold">{memory.category}</strong>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="text-[11px] text-[#716c63]">
+                              신뢰도 {Math.round(memory.confidence * 100)}%
+                            </span>
+                            <button
+                              className="h-7 rounded-md border border-[#d9d0c3] bg-[#fffdf8] px-2 text-[11px] font-semibold text-[#716c63] hover:bg-[#f1ede5]"
+                              type="button"
+                              onClick={() => onDeleteMemory(memory.id)}
+                            >
+                              보관
+                            </button>
+                          </div>
+                        </div>
+                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#3d3b37]">
+                          {memory.natural_text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm leading-6 text-[#716c63]">
+                    아직 저장된 활성 메모리가 없습니다. 상담을 진행하거나 내 정보를 저장하면 여기에 쌓입니다.
+                  </p>
+                )}
+              </SettingsSection>
+            </div>
+
+            <div className="space-y-4">
+              <SettingsSection title="계정" description="현재 로그인 상태와 인증 작업입니다.">
+                <p className="mb-3 rounded-lg bg-[#f1ede5] px-3 py-2 text-xs leading-5 text-[#3d3b37]">
+                  {authSession
+                    ? `${authSession.email ?? authSession.userId} 계정으로 연결됨`
+                    : "로그인하면 상담과 일정이 계정에 저장됩니다."}
+                </p>
+                <div className="space-y-2">
+                  <input
+                    className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none"
+                    type="email"
+                    placeholder="email"
+                    value={authEmail}
+                    onChange={(event) => setAuthEmail(event.target.value)}
+                  />
+                  <input
+                    className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none"
+                    type="password"
+                    placeholder="password"
+                    value={authPassword}
+                    onChange={(event) => setAuthPassword(event.target.value)}
+                  />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#191817] px-3 text-sm font-semibold text-[#fffdf8] hover:bg-[#2b2926] disabled:opacity-50"
+                    type="button"
+                    disabled={isAuthBusy}
+                    onClick={() => onAuthSubmit("signin")}
+                  >
+                    <LogIn className="h-4 w-4" aria-hidden="true" />
+                    로그인
+                  </button>
+                  <button
+                    className="h-9 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-semibold hover:bg-[#f1ede5] disabled:opacity-50"
+                    type="button"
+                    disabled={isAuthBusy}
+                    onClick={() => onAuthSubmit("signup")}
+                  >
+                    가입
+                  </button>
+                  <button
+                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-semibold hover:bg-[#f1ede5] disabled:opacity-50"
+                    type="button"
+                    disabled={isAuthBusy || !authSession}
+                    onClick={onSignOut}
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    로그아웃
+                  </button>
+                </div>
+                {authStatus ? <p className="mt-3 text-xs leading-5 text-[#716c63]">{authStatus}</p> : null}
+              </SettingsSection>
+
+              <SettingsSection title="AI 설정" description="새 질문에 적용할 상담 모드와 응답 속도입니다.">
+                <div className="space-y-3">
+                  <FieldLabel label="상담 모드">
+                    <select
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none hover:bg-[#faf8f3]"
+                      value={chatMode}
+                      onChange={(event) => setChatMode(event.target.value as ChatMode)}
+                    >
+                      <option value="auto">자동</option>
+                      <option value="academic">학업</option>
+                      <option value="career">진로</option>
+                      <option value="schedule">일정</option>
+                    </select>
+                  </FieldLabel>
+                  <FieldLabel label="모델">
+                    <select
+                      className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm outline-none hover:bg-[#faf8f3]"
+                      value={modelTier}
+                      onChange={(event) => setModelTier(event.target.value as ChatModelTier)}
+                    >
+                      <option value="balanced">균형 · Gemini 3 Flash</option>
+                      <option value="fast">빠름 · Flash-Lite</option>
+                    </select>
+                  </FieldLabel>
+                </div>
+              </SettingsSection>
+
+              <button
+                className="h-10 w-full rounded-lg border border-[#c9c0b3] bg-[#fffdf8] text-sm font-semibold hover:bg-[#f1ede5]"
+                type="button"
+                onClick={onRefresh}
+              >
+                데이터 새로고침
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SettingsSection({
+  title,
+  description,
+  icon,
+  children,
+}: {
+  title: string;
+  description: string;
+  icon?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4">
+      <div className="mb-3 flex items-start gap-2">
+        {icon ? <span className="mt-0.5 text-[#716c63]">{icon}</span> : null}
+        <div>
+          <h3 className="text-sm font-semibold">{title}</h3>
+          <p className="mt-1 text-xs leading-5 text-[#716c63]">{description}</p>
+        </div>
+      </div>
+      {children}
     </section>
+  );
+}
+
+function FieldLabel({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[11px] font-semibold text-[#716c63]">{label}</span>
+      {children}
+    </label>
   );
 }
 

@@ -57,7 +57,7 @@ export function pageTitle(page: WorkspacePage): string {
   return {
     chat: "AI 트랙을 어떻게 준비할까?",
     roadmap: "학업 로드맵",
-    career: "진로/취업",
+    career: "내 추천",
     project: "프로젝트",
     schedule: "일정",
     settings: "설정",
@@ -68,7 +68,7 @@ export function pageDescription(page: WorkspacePage): string {
   return {
     chat: "내 관심사와 학업 정보를 바탕으로 상담합니다.",
     roadmap: "학기별 과목과 트랙 준비 순서를 정리합니다.",
-    career: "진로 고민과 최신 취업 정보를 분리해서 확인합니다.",
+    career: "AI 상담에서 파악한 관심사와 목표를 바탕으로 추천을 확인합니다.",
     project: "프로젝트와 창업 아이디어를 작은 실행 단위로 정리합니다.",
     schedule: "과제, 시험, 마감일과 D-day를 관리합니다.",
     settings: "계정과 기본 학업 정보를 관리합니다.",
@@ -83,9 +83,9 @@ export function placeholderCards(page: WorkspacePage) {
       ["다음 행동", "현재 학년 기준으로 이번 주에 할 일을 추천합니다."],
     ],
     career: [
-      ["관심 직무", "백엔드, AI, 데이터 등 직무별 준비 항목을 정리합니다."],
-      ["최신 정보", "진로와 공모전 정보를 함께 확인합니다."],
-      ["포트폴리오", "프로젝트 경험과 기록할 산출물을 연결합니다."],
+      ["파악한 정보", "AI 상담에서 나온 관심 분야와 목표를 요약합니다."],
+      ["추천 결과", "트랙, 활동, 포트폴리오 준비를 한곳에서 확인합니다."],
+      ["부족한 정보", "추천에 필요한 정보가 모자라면 상담에서 먼저 물어봅니다."],
     ],
     project: [
       ["아이디어", "문제 정의와 대상 사용자를 먼저 기록합니다."],

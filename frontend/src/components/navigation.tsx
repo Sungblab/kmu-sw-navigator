@@ -16,7 +16,7 @@ const workspaceItems: Array<{
   icon: typeof MessageSquareText;
 }> = [
   { id: "chat", label: "AI 상담", icon: MessageSquareText },
-  { id: "career", label: "진로/취업", icon: BriefcaseBusiness },
+  { id: "career", label: "내 추천", icon: BriefcaseBusiness },
   { id: "schedule", label: "일정", icon: CalendarDays },
 ];
 
