@@ -140,6 +140,7 @@
 | 2026-05-26 | 김성빈 | Codex | 우측 참고 패널 인터랙션 보강 | 내 정보 수정 버튼, 근거 카드 기반 후속 질문, 다음 행동 질문 버튼을 추가해 참고 패널에서 바로 상담 입력으로 이어지도록 변경 | `pnpm build:frontend`, `pnpm docs:check`, `git diff --check`로 검증 |
 | 2026-05-26 | 김성빈 | Codex | 데스크톱 사이드바 접기/폭 조절 추가 | 왼쪽 내비게이션과 오른쪽 참고 패널을 접을 수 있게 하고, 펼친 상태에서는 패널 경계선을 드래그해 폭을 조절하도록 변경 | `pnpm build:frontend`로 검증 |
 | 2026-05-26 | 김성빈 | Codex | 추천 보드와 일정 캘린더 UX 보강 | `내 추천`을 `추천 보드`로 바꾸고 상담 기반 추천 현황/로드맵 화면으로 재구성했으며, 일정 탭에 월간 캘린더와 다가오는 일정 목록을 추가 | `pnpm build:frontend`, `pnpm lint:backend`, `pnpm test:backend -- tests/services/test_answer_generation_service.py tests/api/test_chat_contract_api.py`, `pnpm docs:check`, `git diff --check`로 검증 |
+| 2026-05-27 | 김성빈 | Codex | 오픈소스 비교 기반 RAG 평가 게이트 추가 | 대학 RAG 챗봇과 product-grade RAG 오픈소스 비교에서 약점으로 드러난 “근거 검증 가능성”을 보강하기 위해 `pnpm rag:evaluate`를 추가 | 테스트를 먼저 실패시킨 뒤 로컬 raw/wiki 근거 평가 스크립트를 구현했고, `pnpm rag:evaluate`, focused backend test, docs check로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

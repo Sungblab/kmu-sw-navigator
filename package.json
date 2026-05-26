@@ -12,6 +12,7 @@
     "lint:backend": "cd backend && uv run python -m ruff check .",
     "wiki:build": "cd backend && uv run python -m app.scripts.build_wiki --raw-dir ../data/raw --wiki-dir ../data/wiki",
     "rag:ingest:dry": "cd backend && uv run python -m app.scripts.ingest_documents --raw-dir ../data/raw --wiki-dir ../data/wiki --dry-run",
+    "rag:evaluate": "cd backend && uv run python -m app.scripts.rag_quality_eval --raw-dir ../data/raw --wiki-dir ../data/wiki",
     "rag:ingest": "cd backend && uv run python -m app.scripts.ingest_documents --raw-dir ../data/raw --wiki-dir ../data/wiki",
     "rag:ingest:embeddings": "cd backend && uv run python -m app.scripts.ingest_documents --raw-dir ../data/raw --wiki-dir ../data/wiki --with-embeddings",
     "rag:prepare-raw": "cd backend && uv run python -m app.scripts.prepare_raw_document",
@@ -39,7 +40,7 @@
     "rag:intake-check": "python scripts/check_rag_intake.py",
     "rag:source-check": "python scripts/check_rag_source_mode.py",
     "submission:check": "python scripts/check_submission_evidence.py",
-    "verify:local": "pnpm docs:check && pnpm live-language:check && pnpm product:check && pnpm supabase:sql-bundle && pnpm rag:intake-check && pnpm wiki:build && pnpm rag:source-check && pnpm rag:ingest:dry && pnpm submission:check && python -m pytest tests && pnpm test:backend && pnpm lint:backend && pnpm build:frontend"
+    "verify:local": "pnpm docs:check && pnpm live-language:check && pnpm product:check && pnpm supabase:sql-bundle && pnpm rag:intake-check && pnpm wiki:build && pnpm rag:source-check && pnpm rag:ingest:dry && pnpm rag:evaluate && pnpm submission:check && python -m pytest tests && pnpm test:backend && pnpm lint:backend && pnpm build:frontend"
   },
   "packageManager": "pnpm@10.0.0",
   "engines": {

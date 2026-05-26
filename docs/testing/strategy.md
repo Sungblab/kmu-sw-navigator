@@ -18,6 +18,7 @@
 | 추천 service | 조건문/딕셔너리 추천 결과 확인 |
 | D-day service | 날짜 차이 계산 확인 |
 | RAG service | 검색 결과 없음/있음 분기 확인 |
+| RAG quality evaluation | 시연 질문의 내부 출처 후보, 기대 category, 범위 밖 질문 처리 확인 |
 | LLM log service | 사용 기록 저장 payload 확인 |
 
 ## 과제 조건 검증 체크리스트
@@ -45,3 +46,13 @@ pnpm docs:check
 ```
 
 문서 검증은 제출 자료 누락을 막기 위한 최소 안전장치입니다.
+
+## RAG 평가
+
+시연 전에는 live API와 별개로 로컬 자료 기준 근거 후보를 먼저 확인합니다.
+
+```powershell
+pnpm rag:evaluate
+```
+
+이 명령은 `data/raw`, `data/wiki`를 검색해 대표 질문 4개와 범위 밖 질문 1개를 평가한다. 답변 문장 자체가 아니라 답변 생성 전에 사용할 내부 근거가 충분한지 확인하는 용도다.

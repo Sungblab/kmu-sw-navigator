@@ -99,6 +99,7 @@
 | 2026-05-26 | Interactive context panel | 우측 참고 패널의 내 정보, 답변 근거, 다음 행동을 클릭 가능한 상담 진입점으로 바꿔 설정 수정과 후속 질문 입력을 바로 이어갈 수 있게 정리 | `frontend/src/App.tsx` |
 | 2026-05-26 | Resizable workspace side panels | 데스크톱에서 왼쪽 내비게이션과 오른쪽 참고 패널을 접거나 경계선 드래그로 폭을 조절할 수 있게 정리 | `frontend/src/App.tsx`, `frontend/src/components/navigation.tsx` |
 | 2026-05-26 | Recommendation board and calendar workspace | `내 추천`을 `추천 보드`로 바꾸고 상담 기반 추천 현황/로드맵을 보여주며, 일정 화면을 월간 캘린더와 다가오는 일정 보드 중심으로 재구성 | `frontend/src/App.tsx`, `frontend/src/components/navigation.tsx`, `frontend/src/lib/navigator.ts` |
+| 2026-05-27 | RAG quality evaluation gate | 제출 시연 질문의 내부 근거 후보를 로컬 raw/wiki 자료로 자동 점검하는 `pnpm rag:evaluate` 추가. AI/트랙, 수강신청, 개발/활동, 교학팀 문의, 범위 밖 질문 5개 평가 통과 | `backend/app/scripts/rag_quality_eval.py`, `backend/tests/test_rag_quality_eval_script.py`, `docs/testing/rag-evaluation.md` |
 | 2026-05-25 | RAG 과목/수강신청 데이터 수집 기준 | 공식 과목/제도 데이터와 비공식 수강신청 팁/과목 후기를 분리해 수집하는 템플릿과 팀원 요청 항목을 문서화 | `docs/architecture/rag-course-data-collection.md`, `docs/product/team-data-request.md` |
 
 ## 팀원 공유용 개발 현황
@@ -115,7 +116,7 @@
 6. 개인화: 온보딩에서 관심 분야, 목표, 코딩 경험, 학습 선호를 받아 `user_memories`에 저장하고 채팅/추천 입력에 반영한다.
 7. 일정 관리: 자연어로 과제/시험 일정을 입력하면 제목, 과목, 마감일을 추출하고 Supabase에 저장하며, 앱 내부에서 D-day, 완료, 삭제를 제공한다.
 8. LLM 기록: 채팅 답변, Google grounding, 일정 parser, embedding ingest 같은 앱 내부 LLM 사용을 로그로 남기고, 개발 과정의 Codex/Gemini 활용도 문서화했다.
-9. 검증: `pnpm verify:local` 기준 문서 검사, RAG dry-run, 제출 조건 검사, backend 178 tests, root 42 tests, lint, frontend build가 통과한다.
+9. 검증: `pnpm verify:local` 기준 문서 검사, RAG dry-run, RAG quality evaluation, 제출 조건 검사, backend 194 tests, root 42 tests, lint, frontend build가 통과한다.
 
 현재 제출 시연의 중심은 Supabase 로그인, 온보딩, 개인화 RAG 채팅, 추천, 내부 일정 관리, LLM 활용 기록이다. Google Calendar OAuth는 구현 기반은 있지만 외부 OAuth 설정 부담이 커서 이번 제출에서는 선택 확장 기능으로만 설명한다.
 

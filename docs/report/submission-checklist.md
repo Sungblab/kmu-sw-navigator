@@ -54,6 +54,7 @@ pnpm rag:intake-check
 pnpm wiki:build
 pnpm rag:source-check
 pnpm rag:ingest:dry
+pnpm rag:evaluate
 pnpm submission:check
 python -m pytest tests
 pnpm test:backend
@@ -78,7 +79,7 @@ pnpm build:frontend
 - `pnpm gemini:grounding-smoke`: 실제 Gemini Google Search grounding 통과
 - Browser smoke: `http://127.0.0.1:5173`에서 로그인 세션 없을 때 로그인 화면으로 gate 확인, Gemini key 설정 뒤 채팅 응답이 live Gemini 문구로 렌더링되는 것 확인
 - Python 핵심 로직 주석 점검: `recommendation_service.py`, `retrieval_service.py`, `assignment_service.py`, `memory_service.py`, `chat_contract_service.py`의 판단 기준 주석은 충분해 코드 주석 변경은 하지 않음
-- `pnpm verify:local`: docs/live-language/product/Supabase SQL bundle/wiki/RAG source/RAG dry-run/submission check/root test/backend test/backend lint/frontend build 전체 통과
+- `pnpm verify:local`: docs/live-language/product/Supabase SQL bundle/wiki/RAG source/RAG dry-run/RAG quality evaluation/submission check/root test/backend test/backend lint/frontend build 전체 통과
 - `pnpm docs:check`: 필수 문서 20개 확인 완료
 - `pnpm live-language:check`: 활성 제출/제품/아키텍처/기여 문서가 live 로그인, 온보딩, 채팅 흐름 기준으로 정렬됨
 - `pnpm product:check`: `frontend/src`, `backend/app` 런타임에 예전 우회 인증이나 샘플 전용 fallback 표현이 남아 있지 않음
@@ -99,8 +100,9 @@ pnpm build:frontend
 - `pnpm wiki:build`: raw_documents=12, wiki_pages=7 생성 완료
 - `pnpm rag:source-check`: `data/raw`, `data/wiki`, `supabase/seed.sql`에 샘플 전용 출처 표현 없음
 - `pnpm rag:ingest:dry`: documents=19, chunks=118, wiki_chunks=72, raw_chunks=46 준비 완료
+- `pnpm rag:evaluate`: AI/트랙, 수강신청, 개발/활동, 교학팀 문의, 범위 밖 질문 5개 로컬 근거 평가 통과
 - `pnpm rag:ingest:embeddings`: live Gemini embedding 118개 생성 후 Supabase `document_chunks` upsert 통과
-- `pnpm test:backend`: 178 passed
+- `pnpm test:backend`: 194 passed
 - `python -m pytest tests`: 42 passed
 - `pnpm lint:backend`: All checks passed
 - `pnpm build:frontend`: Vite production build 통과
