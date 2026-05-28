@@ -22,7 +22,53 @@ import type {
 } from "../types/api";
 import { getSupabaseAccessToken } from "./supabase";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL || "");
+const API_BASE_URLS = buildApiBaseUrls(API_BASE_URL);
+
+function normalizeApiBaseUrl(url: string): string {
+  return url.trim().replace(/\/+$/, "");
+}
+
+function buildApiBaseUrls(configuredBaseUrl: string): string[] {
+  const urls = [configuredBaseUrl];
+  if (import.meta.env.DEV) {
+    urls.push("", "http://127.0.0.1:8000", "http://localhost:8000");
+  }
+  return [...new Set(urls.map(normalizeApiBaseUrl))];
+}
+
+function apiUrl(baseUrl: string, path: string): string {
+  return `${baseUrl}${path}`;
+}
+
+async function fetchApi(path: string, init?: RequestInit): Promise<Response> {
+  for (let attempt = 0; attempt < API_BASE_URLS.length; attempt += 1) {
+    try {
+      return await fetch(apiUrl(API_BASE_URLS[attempt], path), init);
+    } catch (error) {
+      if (isAbortError(error, init?.signal)) {
+        throw error;
+      }
+      if (attempt === API_BASE_URLS.length - 1) {
+        throw buildApiConnectionError();
+      }
+    }
+  }
+  throw buildApiConnectionError();
+}
+
+function isAbortError(error: unknown, signal?: AbortSignal | null): boolean {
+  return Boolean(
+    signal?.aborted || (error instanceof DOMException && error.name === "AbortError"),
+  );
+}
+
+function buildApiConnectionError(): Error {
+  if (import.meta.env.DEV) {
+    return new Error("백엔드 API에 연결할 수 없습니다. 8000 포트 서버를 확인해 주세요.");
+  }
+  return new Error("서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+}
 
 interface ProfileInput {
   department: Department;
@@ -48,7 +94,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error("로그인이 필요합니다.");
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetchApi(path, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -69,7 +115,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 async function publicRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetchApi(path, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -197,7 +243,7 @@ export async function streamChatMessage(
     throw new Error("로그인이 필요합니다.");
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/chat/stream`, {
+  const response = await fetchApi("/api/chat/stream", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
