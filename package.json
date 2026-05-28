@@ -7,7 +7,7 @@
   "scripts": {
     "dev:frontend": "pnpm --dir frontend dev",
     "build:frontend": "pnpm --dir frontend build",
-    "dev:backend": "cd backend && uv run python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
+    "dev:backend": "cd backend && uv run python -m uvicorn app.main:app --reload --reload-dir app --host 127.0.0.1 --port 8000",
     "test:backend": "cd backend && uv run python -m pytest",
     "lint:backend": "cd backend && uv run python -m ruff check .",
     "wiki:build": "cd backend && uv run python -m app.scripts.build_wiki --raw-dir ../data/raw --wiki-dir ../data/wiki",
