@@ -8,8 +8,10 @@
 | --- | --- |
 | 프로젝트명 | kmu-sw-navigator |
 | 주제 | 국민대 소프트웨어융합대학 학생 개인화 RAG AI 내비게이터 |
-| PM / 개발 리드 | 김성빈 |
-| 팀원 | 정재훈, 이가은, 차성민, 최승범, 비타 |
+| PM | 김성빈 |
+| 개발 | 차성민 |
+| 데이터 수집/정리 | 이가은, 정재훈 |
+| 발표자료 | 비타, 최승범 |
 | 제출 마감 | 2026년 6월 11일 |
 | 과제 조건 | Python 사용, 사용자 입력, 조건문, 반복문, 함수, 리스트/딕셔너리, 의미 있는 출력, 실행 가능한 코드, LLM 활용 기록 |
 
@@ -245,7 +247,8 @@ pnpm submission:check
 - 공개 repo로 운영합니다.
 - 이슈로 작업 단위를 만들고, 브랜치와 PR을 연결합니다.
 - 팀원이 구현한 기능은 PR 리뷰 후 병합합니다.
-- 김성빈은 PM/개발 리드로 설계, 통합, 검증, 발표 흐름을 관리합니다.
+- 김성빈은 PM으로 설계, 통합, 검증, 발표 흐름을 관리합니다.
+- 차성민은 개발, 이가은과 정재훈은 데이터 수집/정리, 비타와 최승범은 발표자료를 담당합니다.
 
 ## 과제 조건 매핑
 
@@ -266,6 +269,7 @@ pnpm submission:check
 | 목적 | 문서 |
 | --- | --- |
 | 라이브 시연 흐름 | [docs/product/live-scenario.md](docs/product/live-scenario.md) |
+| 최종보고서 초안 | [docs/report/final-report.md](docs/report/final-report.md) |
 | 보고서 목차와 문장 초안 | [docs/report/report-outline.md](docs/report/report-outline.md) |
 | 발표 구성과 시간 배분 | [docs/report/presentation-outline.md](docs/report/presentation-outline.md) |
 | 제출 전 체크리스트 | [docs/report/submission-checklist.md](docs/report/submission-checklist.md) |

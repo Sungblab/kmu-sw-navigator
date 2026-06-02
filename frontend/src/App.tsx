@@ -72,6 +72,7 @@ import type {
   Assignment,
   ActivityRecommendResponse,
   AssignmentPreview,
+  ChatAction,
   ChatResponse,
   ChatAttachmentInput,
   ChatMode,
@@ -473,6 +474,27 @@ export default function App() {
       setAssignments((current) => [saved, ...current]);
       setAssignmentPreview(null);
       toast.success("일정을 저장했습니다.");
+    } catch (apiError) {
+      const message = getErrorMessage(apiError, "일정 저장에 실패했습니다.");
+      setError(message);
+      toast.error(message);
+    }
+  }
+
+  async function handleSaveAssignmentPreview(preview: AssignmentPreview, sourceText: string) {
+    setError(null);
+    try {
+      const saved = await createAssignment({
+        title: preview.title,
+        due_at: preview.due_at,
+        course: preview.course,
+        memo: preview.memo ?? sourceText,
+      });
+      setAssignments((current) => [saved, ...current]);
+      setAssignmentDraft(sourceText || preview.memo || preview.title);
+      setAssignmentPreview(null);
+      setActivePage("schedule");
+      toast.success("채팅에서 찾은 일정을 캘린더에 추가했습니다.");
     } catch (apiError) {
       const message = getErrorMessage(apiError, "일정 저장에 실패했습니다.");
       setError(message);
@@ -969,6 +991,7 @@ export default function App() {
                 onAttachFiles={(files) => void handleComposerFiles(files)}
                 onRemoveAttachment={removeComposerAttachment}
                 onSend={handleSend}
+                onSaveAssignmentPreview={handleSaveAssignmentPreview}
                 onStop={stopChatResponse}
               />
             )
@@ -1010,6 +1033,7 @@ export default function App() {
               onAttachFiles={(files) => void handleComposerFiles(files)}
               onRemoveAttachment={removeComposerAttachment}
               onSend={handleSend}
+              onSaveAssignmentPreview={handleSaveAssignmentPreview}
               onStop={stopChatResponse}
             />
           )}
@@ -1519,6 +1543,7 @@ function ChatWorkspace({
   onAttachFiles,
   onRemoveAttachment,
   onSend,
+  onSaveAssignmentPreview,
   onStop,
 }: {
   draft: string;
@@ -1534,6 +1559,7 @@ function ChatWorkspace({
   onAttachFiles: (files: FileList | null) => void;
   onRemoveAttachment: (attachmentId: string) => void;
   onSend: (event: FormEvent<HTMLFormElement>) => void;
+  onSaveAssignmentPreview: (preview: AssignmentPreview, sourceText: string) => Promise<void>;
   onStop: () => void;
 }) {
   const scrollRef = useRef<HTMLElement | null>(null);
@@ -1592,7 +1618,12 @@ function ChatWorkspace({
             <ChatEmptyState setDraft={setDraft} />
           ) : null}
           {messages.map((message) => (
-            <MessageBubble key={message.id} message={message} setDraft={setDraft} />
+            <MessageBubble
+              key={message.id}
+              message={message}
+              setDraft={setDraft}
+              onSaveAssignmentPreview={onSaveAssignmentPreview}
+            />
           ))}
         </div>
       </section>
@@ -1830,13 +1861,16 @@ function ChatHistorySkeleton() {
 
 function MessageBubble({
   message,
+  onSaveAssignmentPreview,
   setDraft,
 }: {
   message: ChatMessage;
+  onSaveAssignmentPreview: (preview: AssignmentPreview, sourceText: string) => Promise<void>;
   setDraft: (value: string) => void;
 }) {
   const isUser = message.role === "user";
   const sources = message.response ? buildSourceSummaries(message.response) : [];
+  const assignmentActions = message.response ? buildAssignmentPreviewActions(message.response) : [];
   const isAssistantWriting = !isUser && !message.isPending && message.text && !message.response;
   return (
     <article className={isUser ? "flex justify-end" : "flex justify-start"}>
@@ -1872,6 +1906,32 @@ function MessageBubble({
           </div>
         ) : null}
         {sources.length ? <SourceReferenceStrip sources={sources} /> : null}
+        {assignmentActions.length ? (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs font-semibold text-[#716c63]">일정 후보</p>
+            {assignmentActions.map(({ action, preview, sourceText }, index) => (
+              <div
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#ded7cb] bg-[#fffdf8] px-3 py-3"
+                key={`${action.type}-${preview.title}-${index}`}
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-[#191817]">{preview.title}</p>
+                  <p className="mt-1 text-xs text-[#716c63]">
+                    {preview.course ?? "과목 미지정"} · {new Date(preview.due_at).toLocaleDateString("ko-KR")} · {preview.d_day_label}
+                  </p>
+                </div>
+                <button
+                  className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#191817] px-3 text-sm font-semibold text-[#fffdf8] hover:bg-[#2b2926]"
+                  type="button"
+                  onClick={() => void onSaveAssignmentPreview(preview, sourceText)}
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  {action.label}
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
         {message.response?.choices.length ? (
           <div className="mt-3">
             <p className="mb-2 text-xs font-semibold text-[#716c63]">이어서 물어볼 수 있는 질문</p>
@@ -1964,6 +2024,42 @@ function SourceReferenceStrip({ sources }: { sources: SourceSummary[] }) {
         </span>
       ))}
     </div>
+  );
+}
+
+function buildAssignmentPreviewActions(response: ChatResponse): Array<{
+  action: ChatAction;
+  preview: AssignmentPreview;
+  sourceText: string;
+}> {
+  return response.actions.flatMap((action) => {
+    if (action.type !== "assignment_preview") {
+      return [];
+    }
+    const preview = action.payload.preview;
+    if (!isAssignmentPreview(preview)) {
+      return [];
+    }
+    const sourceText =
+      typeof action.payload.source_text === "string" ? action.payload.source_text : preview.memo ?? preview.title;
+    return [{ action, preview, sourceText }];
+  });
+}
+
+function isAssignmentPreview(value: unknown): value is AssignmentPreview {
+  if (!isRecord(value)) {
+    return false;
+  }
+  return (
+    typeof value.title === "string" &&
+    (typeof value.course === "string" || value.course === null) &&
+    typeof value.due_at === "string" &&
+    (typeof value.memo === "string" || value.memo === null) &&
+    typeof value.d_day === "number" &&
+    typeof value.d_day_label === "string" &&
+    typeof value.confidence === "number" &&
+    Array.isArray(value.missing_fields) &&
+    (value.parser === "python_rules" || value.parser === "gemini")
   );
 }
 

@@ -364,6 +364,7 @@ function chatIntentLabel(intent: string | null): string {
     academic_advisor: "학업 상담",
     career_advisor: "진로 상담",
     startup_project_mentor: "창업/프로젝트",
+    latest_notice_advisor: "최신 공지",
     schedule_assistant: "일정 정리",
     general: "일반 상담",
   };

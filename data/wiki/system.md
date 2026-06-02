@@ -4,7 +4,7 @@ type: topic
 category: system
 status: active
 sources: 2
-last_touched: 2026-05-23
+last_touched: 2026-06-02
 ---
 
 # 학교 시스템

@@ -57,6 +57,7 @@
 | --- | --- |
 | 테스트 전략 | `testing/strategy.md` |
 | RAG 평가 기준 | `testing/rag-evaluation.md` |
+| 최종보고서 초안 | `report/final-report.md` |
 | 보고서 목차 | `report/report-outline.md` |
 | 발표자료 목차 | `report/presentation-outline.md` |
 | 제출 전 체크리스트 | `report/submission-checklist.md` |

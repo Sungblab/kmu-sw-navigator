@@ -141,6 +141,11 @@
 | 2026-05-26 | 김성빈 | Codex | 데스크톱 사이드바 접기/폭 조절 추가 | 왼쪽 내비게이션과 오른쪽 참고 패널을 접을 수 있게 하고, 펼친 상태에서는 패널 경계선을 드래그해 폭을 조절하도록 변경 | `pnpm build:frontend`로 검증 |
 | 2026-05-26 | 김성빈 | Codex | 추천 보드와 일정 캘린더 UX 보강 | `내 추천`을 `추천 보드`로 바꾸고 상담 기반 추천 현황/로드맵 화면으로 재구성했으며, 일정 탭에 월간 캘린더와 다가오는 일정 목록을 추가 | `pnpm build:frontend`, `pnpm lint:backend`, `pnpm test:backend -- tests/services/test_answer_generation_service.py tests/api/test_chat_contract_api.py`, `pnpm docs:check`, `git diff --check`로 검증 |
 | 2026-05-27 | 김성빈 | Codex | 오픈소스 비교 기반 RAG 평가 게이트 추가 | 대학 RAG 챗봇과 product-grade RAG 오픈소스 비교에서 약점으로 드러난 “근거 검증 가능성”을 보강하기 위해 `pnpm rag:evaluate`를 추가 | 테스트를 먼저 실패시킨 뒤 로컬 raw/wiki 근거 평가 스크립트를 구현했고, `pnpm rag:evaluate`, focused backend test, docs check로 검증 |
+| 2026-06-02 | 김성빈 | Codex | 팀원 제공 동아리 데이터 정형화 | `clubs_information.json`의 두음, WINK, AIM, KOSS 정보를 `data/raw/kmu-team-clubs-information.md`로 정리하고 WINK/AIM 공식 확인 링크와 출처 확인 필요 문구를 반영 | `pnpm wiki:build`, `pnpm rag:ingest:dry`, `pnpm rag:evaluate`, `pnpm docs:check`, `git diff --check`로 검증했고, `data/inbox`의 JSON/빈 파일은 intake-check blocked 입력으로 남아 있음을 확인 |
+| 2026-06-02 | 김성빈 | Codex | 최신 소융대 공지 Google grounding 라우팅 | `최신`, `공지`, `모집`, `장학`, `행사`와 소융대/학부/국민대 맥락이 함께 있는 질문을 `latest_notice_advisor`로 분류하고 Google Search grounding 경로에 연결 | TDD로 latest notice intent와 grounding prompt 테스트를 먼저 실패시킨 뒤 구현했고, focused/backend tests, lint, frontend build, `pnpm gemini:grounding-smoke`, latest notice 직접 grounding 호출로 검증 |
+| 2026-06-02 | 김성빈 | Codex | 최종보고서 초안 작성 | 과제 제출 항목인 프로젝트 주제/목적, 기능, 코드 구조, LLM 활용 방식, 실행 결과를 `docs/report/final-report.md`에 보고서 형태로 정리 | 기존 보고서 목차, 제출 체크리스트, Python 핵심 로직 문서를 바탕으로 작성했고 `pnpm docs:check`로 문서 구조를 검증 |
+| 2026-06-02 | 김성빈 | Codex | 최종보고서 문체 정리 | 제출용 보고서가 격식체로 읽히도록 `docs/report/final-report.md` 본문을 했습니다체/합니다체로 통일 | 문체 수정 후 문서 검증을 다시 실행해 제출 문서 구조를 확인 |
+| 2026-06-02 | 김성빈 | Codex | 채팅 일정 후보 저장 연결 | 사용자가 채팅에서 과제/마감 문장을 말하면 백엔드가 기존 일정 parser로 preview action을 생성하고, 프론트가 답변 아래 `캘린더에 추가` 버튼으로 내부 일정 보드에 저장하도록 연결 | TDD로 chat action regression test를 먼저 실패시킨 뒤 구현했고 focused backend tests와 `pnpm build:frontend`로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
@@ -151,4 +156,4 @@
 | 질문 분류 | `gemini-3.1-flash-lite` | 질문 유형 분류와 간단 요약 |
 | 임베딩 | `gemini-embedding-2` | 문서 chunk와 사용자 질문 embedding 생성 |
 | 메모리 추출 | `gemini-3.1-flash-lite` | 대화에서 관심사, 진로 고민, 프로젝트 선호 저장 후보 추출 |
-| 최신 웹 grounding | `gemini-3-flash-preview` | 취업/창업/공모전/기술 트렌드처럼 최신성이 필요한 답변 보강 |
+| 최신 웹 grounding | `gemini-3-flash-preview` | 취업/창업/공모전/소융대 공지/기술 트렌드처럼 최신성이 필요한 답변 보강 |

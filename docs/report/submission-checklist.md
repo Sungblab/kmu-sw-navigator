@@ -137,6 +137,7 @@ Gemini grounding은 UI/API 경로에서 live smoke를 별도로 기록한다. Go
 | --- | --- | --- |
 | `README.md` | 실행 방법, 구현 상태, 제출 자료 링크 | 준비됨 |
 | `docs/product/live-scenario.md` | 20-25분 라이브 시연 흐름 | 준비됨 |
+| `docs/report/final-report.md` | 6-10페이지 최종보고서 초안 | 준비됨 |
 | `docs/report/report-outline.md` | 6-10페이지 보고서 구성 | 준비됨 |
 | `docs/report/presentation-outline.md` | 발표자료 구성과 시간 배분 | 준비됨 |
 | `docs/architecture/python-core-logic.md` | 발표에서 설명할 Python 핵심 로직 | 준비됨 |

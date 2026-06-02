@@ -1,11 +1,11 @@
 # kmu-sw-navigator Wiki
 
-생성일: 2026-05-23
+생성일: 2026-06-02
 
 ## 위키 페이지
 
 - [[career]] — career (1개 원문)
-- [[club]] — 동아리와 활동 (2개 원문)
+- [[club]] — 동아리와 활동 (3개 원문)
 - [[curriculum]] — curriculum (2개 원문)
 - [[freshman]] — 신입생 안내 (1개 원문)
 - [[roadmap]] — 로드맵 (1개 원문)

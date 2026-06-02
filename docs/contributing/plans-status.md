@@ -29,7 +29,7 @@
 | 2026-05-14 | Google Calendar export foundation | 구현/집중 검증 완료, 실제 Google live smoke 대기 | `docs/superpowers/plans/2026-05-14-calendar-export-foundation.md` |
 | 2026-05-14 | Google Calendar OAuth connect/callback/refresh | 구현/집중 검증 완료, live OAuth smoke 대기 | `docs/superpowers/plans/2026-05-14-google-calendar-oauth-connect.md` |
 | 2026-05-14 | Track/activity recommendation | 구현/집중 검증 완료, RAG 출처 근거, 프로필/메모리 기반 입력 자동화, 직접 입력 편집 UI 완료 | `docs/superpowers/plans/2026-05-14-track-activity-recommendation.md` |
-| 2026-05-14 | Google grounding | 구현/집중 검증 완료, live Gemini smoke 대기 | `docs/superpowers/plans/2026-05-14-google-grounding.md` |
+| 2026-05-14 | Google grounding | 구현/집중 검증 완료, 최신 소융대 공지 intent까지 grounding 대상 확장, live Gemini smoke 대기 | `docs/superpowers/plans/2026-05-14-google-grounding.md` |
 | 2026-05-14 | 보고서/발표 라이브 시연 시나리오 보강 | 현재 구현 기준 문서 업데이트 완료 | `docs/product/live-scenario.md`, `docs/report/report-outline.md`, `docs/report/presentation-outline.md` |
 | 2026-05-14 | README 실행/제출 섹션 최신화 | 현재 명령어, 구현 상태, 제출 문서 링크 업데이트 완료 | `README.md`, `docs/contributing/dev-guide.md` |
 | 2026-05-14 | 제출 전 체크리스트 | 과제 조건, 라이브 시연, 검증 명령, 제출 문서 매핑 완료 | `docs/report/submission-checklist.md` |
@@ -101,6 +101,7 @@
 | 2026-05-26 | Recommendation board and calendar workspace | `내 추천`을 `추천 보드`로 바꾸고 상담 기반 추천 현황/로드맵을 보여주며, 일정 화면을 월간 캘린더와 다가오는 일정 보드 중심으로 재구성 | `frontend/src/App.tsx`, `frontend/src/components/navigation.tsx`, `frontend/src/lib/navigator.ts` |
 | 2026-05-27 | RAG quality evaluation gate | 제출 시연 질문의 내부 근거 후보를 로컬 raw/wiki 자료로 자동 점검하는 `pnpm rag:evaluate` 추가. AI/트랙, 수강신청, 개발/활동, 교학팀 문의, 범위 밖 질문 5개 평가 통과 | `backend/app/scripts/rag_quality_eval.py`, `backend/tests/test_rag_quality_eval_script.py`, `docs/testing/rag-evaluation.md` |
 | 2026-05-25 | RAG 과목/수강신청 데이터 수집 기준 | 공식 과목/제도 데이터와 비공식 수강신청 팁/과목 후기를 분리해 수집하는 템플릿과 팀원 요청 항목을 문서화 | `docs/architecture/rag-course-data-collection.md`, `docs/product/team-data-request.md` |
+| 2026-06-02 | Chat schedule preview action | 채팅에서 과제/마감 문장을 말하면 바로 저장하지 않고 일정 후보 preview action을 만들며, 답변 아래 `캘린더에 추가` 버튼으로 내부 일정 보드에 저장하도록 연결 | `backend/app/api/chat.py`, `backend/app/services/assignment_service.py`, `frontend/src/App.tsx`, `backend/tests/api/test_chat_contract_api.py` |
 
 ## 팀원 공유용 개발 현황
 

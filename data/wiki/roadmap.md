@@ -4,7 +4,7 @@ type: topic
 category: roadmap
 status: active
 sources: 1
-last_touched: 2026-05-23
+last_touched: 2026-06-02
 ---
 
 # 로드맵

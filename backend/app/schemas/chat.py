@@ -8,6 +8,7 @@ ChatIntent = Literal[
     "academic_advisor",
     "career_advisor",
     "startup_project_mentor",
+    "latest_notice_advisor",
     "schedule_assistant",
     "general",
 ]

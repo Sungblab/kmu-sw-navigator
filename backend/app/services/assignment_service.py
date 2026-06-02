@@ -296,6 +296,7 @@ def _extract_title(text: str) -> str:
     cleaned = re.sub(r"20\d{2}[-./년 ]+\d{1,2}[-./월 ]+\d{1,2}", " ", cleaned)
     cleaned = re.sub(r"\d{1,2}월\s*\d{1,2}일", " ", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip(" .")
+    cleaned = re.sub(r"\s*(이야|야)$", "", cleaned).strip()
     return cleaned[:80]
 
 

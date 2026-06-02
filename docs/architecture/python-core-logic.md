@@ -123,10 +123,13 @@ AI 상담에서 사용자가 관심 분야, 목표, 코딩 경험, 선호 활동
 | `schedule_assistant` | 과제, 마감, 시험, 일정, 제출 | 일정 탭/일정 미리보기 선택지 |
 | `career_advisor` | 취업, 진로, 인턴, 포트폴리오 | 진로 탭과 최신 정보 검증 필요 표시 |
 | `startup_project_mentor` | 프로젝트, 창업, 공모전, 해커톤 | 프로젝트 탭 |
+| `latest_notice_advisor` | 최신, 공지, 모집, 장학, 행사 + 소융대/학부/국민대 맥락 | Google grounding 웹 근거 슬롯 |
 | `academic_advisor` | 수강, 교과, 학업, 과목, 트랙 | 학업 탭과 내부 자료 출처 슬롯 |
 | `general` | 위 기준에 걸리지 않음 | 다음 상담 방향 선택지 |
 
 일정 의도를 가장 먼저 판정하는 이유는 일정 문장이 학업 단어와 함께 등장하는 경우가 많기 때문이다. 예를 들어 “자료구조 과제 다음주까지”는 학업 주제이기도 하지만, 사용자가 기대하는 행동은 일정 저장에 가깝다.
+
+채팅에서 일정 의도가 감지되면 백엔드는 같은 일정 parser를 사용해 `assignment_preview` action을 함께 내려준다. 이 action은 제목, 과목, 마감일, D-day 후보를 포함하지만 곧바로 저장하지 않는다. 날짜 인식 오류를 막기 위해 프론트엔드는 답변 아래 `캘린더에 추가` 버튼을 보여주고, 사용자가 확인한 뒤 기존 `/api/assignments` 저장 API를 호출한다.
 
 ## 4. Chat contract와 근거 슬롯
 
@@ -218,7 +221,7 @@ Gemini key가 있는 환경에서는 Python 코드가 사용자 질문, intent, 
 
 - 검색 근거는 최대 5개까지만 prompt에 넣는다.
 - content가 너무 길면 500자에서 자른다.
-- 최신 취업/공모전 정보는 Google grounding 전까지 확정 답변하지 않도록 규칙에 넣는다.
+- 최신 취업/공모전/학부 공지 정보는 Google grounding 전까지 확정 답변하지 않도록 규칙에 넣는다.
 - `GEMINI_API_KEY`가 없으면 기존 deterministic answer를 사용한다.
 
 ## 9. Google grounding 기반 최신 웹 근거
@@ -229,12 +232,13 @@ Gemini key가 있는 환경에서는 Python 코드가 사용자 질문, intent, 
 - `backend/app/services/chat_contract_service.py`
 - `backend/app/api/chat.py`
 
-진로, 취업, 창업, 공모전처럼 최신성이 필요한 질문은 내부 RAG만으로 확정하기 어렵다. 그래서 `career_advisor`, `startup_project_mentor` intent에서만 Gemini Google Search grounding을 호출한다.
+진로, 취업, 창업, 공모전, 소프트웨어융합대학 최신 공지처럼 최신성이 필요한 질문은 내부 RAG만으로 확정하기 어렵다. 그래서 `career_advisor`, `startup_project_mentor`, `latest_notice_advisor` intent에서 Gemini Google Search grounding을 호출한다.
 
 핵심 판단은 다음과 같다.
 
-- 학업/학교 자료 질문은 내부 RAG 근거를 우선한다.
-- 진로/취업/창업 질문은 `types.Tool(google_search=types.GoogleSearch())`를 사용한 Gemini grounding generator를 호출한다.
+- 학업/학교 기본 자료 질문은 내부 RAG 근거를 우선한다.
+- 최신 공지, 모집, 장학, 행사, 현장실습, 진로/취업/창업 질문은 `types.Tool(google_search=types.GoogleSearch())`를 사용한 Gemini grounding generator를 호출한다.
+- 소융대/학부 최신 공지 질문은 국민대학교 소프트웨어융합대학 공식 사이트, 학부 공지사항, 공식 SNS를 우선 확인하도록 prompt에 명시한다.
 - grounding 응답의 `grounding_metadata.grounding_chunks[].web`에서 title, uri, domain을 추출한다.
 - 추출한 웹 근거는 `evidence.web_sources`에 넣어 내부 자료 근거와 분리한다.
 - grounding이 실패하면 기존 deterministic 답변과 검증 필요 메시지를 유지한다.

@@ -5,6 +5,7 @@ from app.services.answer_generation_service import (
     GroundedAnswer,
     _looks_incomplete_answer,
     build_answer_prompt,
+    build_grounding_prompt,
 )
 from app.services.chat_contract_service import build_chat_response
 from app.services.retrieval_service import RetrievalResult
@@ -108,6 +109,19 @@ def test_build_answer_prompt_includes_text_attachments() -> None:
     assert "AI 과목은 Python 이후" in prompt
 
 
+def test_build_grounding_prompt_guides_latest_kmu_notice_search() -> None:
+    prompt = build_grounding_prompt(
+        ChatRequest(message="최신 소융대 공지사항 알려줘"),
+        intent="latest_notice_advisor",
+        memories=[],
+        retrieval_results=[],
+    )
+
+    assert "국민대학교 소프트웨어융합대학 공식 사이트" in prompt
+    assert "공지사항" in prompt
+    assert "최신 웹 정보" in prompt
+
+
 def test_build_chat_response_uses_answer_generator_when_present() -> None:
     generator = FakeAnswerGenerator()
 
@@ -149,6 +163,23 @@ def test_build_chat_response_uses_grounding_for_career_questions() -> None:
     assert response.evidence.web_sources[0]["title"] == "AI 채용 공고"
     assert response.needs_verification == []
     assert grounding.calls[0]["intent"] == "career_advisor"
+
+
+def test_build_chat_response_uses_grounding_for_latest_kmu_notice_questions() -> None:
+    grounding = FakeGroundingAnswerGenerator()
+
+    response = build_chat_response(
+        ChatRequest(message="최신 소융대 공지사항 알려줘"),
+        memories=[],
+        retrieval_results=[],
+        grounding_answer_generator=grounding,
+    )
+
+    assert response.intent == "latest_notice_advisor"
+    assert response.answer == "최신 채용 정보는 웹 근거 기준으로 정리했습니다."
+    assert response.evidence.web_sources[0]["title"] == "AI 채용 공고"
+    assert response.needs_verification == []
+    assert grounding.calls[0]["intent"] == "latest_notice_advisor"
 
 
 def test_build_chat_response_does_not_ground_academic_questions() -> None:

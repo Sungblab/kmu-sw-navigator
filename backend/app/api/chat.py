@@ -8,6 +8,7 @@ from starlette.status import HTTP_204_NO_CONTENT
 
 from app.api.dependencies import (
     get_answer_generator,
+    get_assignment_parser,
     get_chat_store,
     get_current_user_id,
     get_document_retriever,
@@ -16,7 +17,13 @@ from app.api.dependencies import (
     get_memory_store,
 )
 from app.core.config import get_settings
-from app.schemas.chat import ChatMessagesResponse, ChatRequest, ChatResponse, ChatSessionsResponse
+from app.schemas.chat import (
+    ChatAction,
+    ChatMessagesResponse,
+    ChatRequest,
+    ChatResponse,
+    ChatSessionsResponse,
+)
 from app.schemas.llm_usage import LLMUsageLogCreateRequest
 from app.services.answer_generation_service import (
     AnswerGenerator,
@@ -25,7 +32,8 @@ from app.services.answer_generation_service import (
     StreamedAnswerChunk,
     _looks_incomplete_answer,
 )
-from app.services.chat_contract_service import build_chat_response, detect_intent
+from app.services.assignment_service import AssignmentParser, preview_assignment_from_text
+from app.services.chat_contract_service import GROUNDING_INTENTS, build_chat_response, detect_intent
 from app.services.memory_service import create_learning_context_memory_from_chat
 from app.services.retrieval_service import (
     LocalDocumentRetriever,
@@ -50,6 +58,7 @@ GroundingAnswerGeneratorDep = Annotated[
     GroundingAnswerGenerator | None,
     Depends(get_grounding_answer_generator),
 ]
+AssignmentParserDep = Annotated[AssignmentParser | None, Depends(get_assignment_parser)]
 
 
 @router.post("")
@@ -62,6 +71,7 @@ def post_chat(
     retriever: RetrieverDep,
     answer_generator: AnswerGeneratorDep,
     grounding_answer_generator: GroundingAnswerGeneratorDep,
+    assignment_parser: AssignmentParserDep,
 ) -> ChatResponse:
     return _build_and_store_chat_response(
         request=request,
@@ -72,6 +82,7 @@ def post_chat(
         retriever=retriever,
         answer_generator=answer_generator,
         grounding_answer_generator=grounding_answer_generator,
+        assignment_parser=assignment_parser,
     )
 
 
@@ -85,6 +96,7 @@ def stream_chat(
     retriever: RetrieverDep,
     answer_generator: AnswerGeneratorDep,
     grounding_answer_generator: GroundingAnswerGeneratorDep,
+    assignment_parser: AssignmentParserDep,
 ) -> StreamingResponse:
     def events() -> Iterator[str]:
         yield _sse("status", {"message": "근거와 개인 정보를 확인하고 있습니다."})
@@ -98,6 +110,7 @@ def stream_chat(
                 retriever=retriever,
                 answer_generator=answer_generator,
                 grounding_answer_generator=grounding_answer_generator,
+                assignment_parser=assignment_parser,
             )
             yield from response
         except Exception as exc:
@@ -123,12 +136,10 @@ def _build_and_store_streaming_chat_response(
     retriever: LocalDocumentRetriever | SupabaseTextRetriever | SupabaseVectorRetriever,
     answer_generator: AnswerGenerator | None,
     grounding_answer_generator: GroundingAnswerGenerator | None,
+    assignment_parser: AssignmentParser | None,
 ) -> Iterator[str]:
     intent = detect_intent(request.message, mode=request.mode)
-    if grounding_answer_generator is not None and intent in {
-        "career_advisor",
-        "startup_project_mentor",
-    }:
+    if grounding_answer_generator is not None and intent in GROUNDING_INTENTS:
         response = _build_and_store_chat_response(
             request=request,
             user_id=user_id,
@@ -138,6 +149,7 @@ def _build_and_store_streaming_chat_response(
             retriever=retriever,
             answer_generator=_chat_answer_generator_for_request(request, answer_generator),
             grounding_answer_generator=grounding_answer_generator,
+            assignment_parser=assignment_parser,
         )
         yield _sse("session", {"session_id": response.session_id})
         for chunk in _chunk_text(response.answer):
@@ -158,6 +170,7 @@ def _build_and_store_streaming_chat_response(
             retriever=retriever,
             answer_generator=streaming_generator,
             grounding_answer_generator=grounding_answer_generator,
+            assignment_parser=assignment_parser,
         )
         yield _sse("session", {"session_id": response.session_id})
         for chunk in _chunk_text(response.answer):
@@ -206,6 +219,11 @@ def _build_and_store_streaming_chat_response(
         user_id=user_id,
         message=request.message,
     )
+    _attach_assignment_preview_action(
+        response,
+        request,
+        assignment_parser=assignment_parser,
+    )
     response = chat_store.save_exchange(user_id, request, response)
     llm_usage_log_store.create_log(
         user_id,
@@ -237,6 +255,7 @@ def _build_and_store_chat_response(
     retriever: LocalDocumentRetriever | SupabaseTextRetriever | SupabaseVectorRetriever,
     answer_generator: AnswerGenerator | None,
     grounding_answer_generator: GroundingAnswerGenerator | None,
+    assignment_parser: AssignmentParser | None,
 ) -> ChatResponse:
     memories = store.list_active_memories(user_id)
     retrieval_results = retriever.search(request.message)
@@ -252,6 +271,11 @@ def _build_and_store_chat_response(
         store=store,
         user_id=user_id,
         message=request.message,
+    )
+    _attach_assignment_preview_action(
+        response,
+        request,
+        assignment_parser=assignment_parser,
     )
     if answer_generator is not None:
         llm_usage_log_store.create_log(
@@ -278,7 +302,7 @@ def _build_and_store_chat_response(
                 input_text=request.message,
                 output_text=response.answer,
                 model=getattr(grounding_answer_generator, "model", None),
-                purpose="최신 웹 근거를 사용한 진로/프로젝트 답변 보강",
+                purpose="최신 웹 근거를 사용한 진로/프로젝트/공지 답변 보강",
                 metadata={
                     "intent": response.intent,
                     "web_source_count": len(response.evidence.web_sources),
@@ -286,6 +310,31 @@ def _build_and_store_chat_response(
             ),
         )
     return chat_store.save_exchange(user_id, request, response)
+
+
+def _attach_assignment_preview_action(
+    response: ChatResponse,
+    request: ChatRequest,
+    *,
+    assignment_parser: AssignmentParser | None,
+) -> None:
+    if response.intent != "schedule_assistant":
+        return
+    preview = preview_assignment_from_text(
+        request.message,
+        parser=assignment_parser,
+    )
+    # 채팅 문장을 곧바로 저장하지 않고 preview를 내려 사용자가 날짜/제목을 확인하게 한다.
+    response.actions.append(
+        ChatAction(
+            type="assignment_preview",
+            label="캘린더에 추가",
+            payload={
+                "source_text": request.message,
+                "preview": preview.model_dump(mode="json"),
+            },
+        )
+    )
 
 
 def _sse(event: str, data: dict | ChatResponse) -> str:

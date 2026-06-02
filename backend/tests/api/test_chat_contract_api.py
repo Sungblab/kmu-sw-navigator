@@ -202,6 +202,33 @@ def test_assignment_sentence_returns_schedule_intent_without_hardcoded_choices()
     assert response.json()["choices"] == []
 
 
+def test_assignment_sentence_returns_calendar_add_action() -> None:
+    store = InMemoryMemoryStore()
+    chat_store = InMemoryChatStore()
+    app.dependency_overrides[get_current_user_id] = lambda: "user-1"
+    app.dependency_overrides[get_memory_store] = lambda: store
+    app.dependency_overrides[get_chat_store] = lambda: chat_store
+    app.dependency_overrides[get_document_retriever] = lambda: LocalDocumentRetriever([])
+    app.dependency_overrides[get_answer_generator] = lambda: None
+    app.dependency_overrides[get_grounding_answer_generator] = lambda: None
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/chat",
+        json={"message": "자료구조 과제 다음주 금요일까지야"},
+    )
+
+    app.dependency_overrides.clear()
+    body = response.json()
+    assert response.status_code == 200
+    assert body["intent"] == "schedule_assistant"
+    assert body["actions"][0]["type"] == "assignment_preview"
+    assert body["actions"][0]["label"] == "캘린더에 추가"
+    assert body["actions"][0]["payload"]["preview"]["title"] == "자료구조 과제"
+    assert body["actions"][0]["payload"]["preview"]["course"] == "자료구조"
+    assert body["actions"][0]["payload"]["source_text"] == "자료구조 과제 다음주 금요일까지야"
+
+
 def test_chat_sessions_and_messages_endpoints_return_saved_exchange() -> None:
     store = InMemoryMemoryStore()
     chat_store = InMemoryChatStore()
