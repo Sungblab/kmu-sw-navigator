@@ -3,7 +3,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
-  Clock3,
   GripVertical,
   Lightbulb,
   LogIn,
@@ -48,7 +47,6 @@ import {
   deleteMemory,
   getMemories,
   getProfile,
-  previewAssignment,
   recommendActivity,
   recommendTrack,
   streamChatMessage,
@@ -246,8 +244,6 @@ export default function App() {
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [isAuthBusy, setIsAuthBusy] = useState(false);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [assignmentDraft, setAssignmentDraft] = useState("자료구조 과제 다음주 금요일까지");
-  const [assignmentPreview, setAssignmentPreview] = useState<AssignmentPreview | null>(null);
   const [trackResult, setTrackResult] = useState<TrackRecommendResponse | null>(null);
   const [activityResult, setActivityResult] = useState<ActivityRecommendResponse | null>(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -447,40 +443,6 @@ export default function App() {
     }
   }
 
-  async function handlePreviewAssignment() {
-    setError(null);
-    try {
-      setAssignmentPreview(await previewAssignment(assignmentDraft));
-      toast.success("일정 미리보기를 만들었습니다.");
-    } catch (apiError) {
-      const message = getErrorMessage(apiError, "일정 미리보기에 실패했습니다.");
-      setError(message);
-      toast.error(message);
-    }
-  }
-
-  async function handleSaveAssignment() {
-    if (!assignmentPreview) {
-      return;
-    }
-    setError(null);
-    try {
-      const saved = await createAssignment({
-        title: assignmentPreview.title,
-        due_at: assignmentPreview.due_at,
-        course: assignmentPreview.course,
-        memo: assignmentPreview.memo,
-      });
-      setAssignments((current) => [saved, ...current]);
-      setAssignmentPreview(null);
-      toast.success("일정을 저장했습니다.");
-    } catch (apiError) {
-      const message = getErrorMessage(apiError, "일정 저장에 실패했습니다.");
-      setError(message);
-      toast.error(message);
-    }
-  }
-
   async function handleSaveAssignmentPreview(preview: AssignmentPreview, sourceText: string) {
     setError(null);
     try {
@@ -491,8 +453,6 @@ export default function App() {
         memo: preview.memo ?? sourceText,
       });
       setAssignments((current) => [saved, ...current]);
-      setAssignmentDraft(sourceText || preview.memo || preview.title);
-      setAssignmentPreview(null);
       setActivePage("schedule");
       toast.success("채팅에서 찾은 일정을 캘린더에 추가했습니다.");
     } catch (apiError) {
@@ -998,11 +958,6 @@ export default function App() {
           ) : activePage === "schedule" ? (
             <SchedulePage
               assignments={assignments}
-              draft={assignmentDraft}
-              preview={assignmentPreview}
-              setDraft={setAssignmentDraft}
-              onPreview={() => void handlePreviewAssignment()}
-              onSave={() => void handleSaveAssignment()}
               onComplete={(assignmentId) => void handleCompleteAssignment(assignmentId)}
               onDelete={(assignmentId) => void handleDeleteAssignment(assignmentId)}
             />
@@ -2378,20 +2333,10 @@ function SourceCard({
 
 function SchedulePage({
   assignments,
-  draft,
-  preview,
-  setDraft,
-  onPreview,
-  onSave,
   onComplete,
   onDelete,
 }: {
   assignments: Assignment[];
-  draft: string;
-  preview: AssignmentPreview | null;
-  setDraft: (value: string) => void;
-  onPreview: () => void;
-  onSave: () => void;
   onComplete: (assignmentId: string) => void;
   onDelete: (assignmentId: string) => void;
 }) {
@@ -2481,63 +2426,6 @@ function SchedulePage({
 
           <div className="space-y-4">
             <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#716c63]" aria-hidden="true" />
-                <h3 className="text-sm font-semibold">AI 일정 추출</h3>
-              </div>
-              <p className="mt-2 text-xs leading-5 text-[#716c63]">
-                예: “자료구조 과제 다음주 금요일까지”처럼 자연어로 입력합니다.
-              </p>
-              <div className="mt-3 rounded-xl border border-[#ded7cb] bg-[#faf8f3] p-3">
-                <textarea
-                  className="block min-h-[88px] w-full resize-none bg-transparent text-sm leading-6 outline-none"
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                  aria-label="일정 자연어 입력"
-                />
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#191817] px-3 text-sm font-semibold text-[#fffdf8] hover:bg-[#2b2926]"
-                    type="button"
-                    onClick={onPreview}
-                  >
-                    <Clock3 className="h-4 w-4" aria-hidden="true" />
-                    추출
-                  </button>
-                  <button
-                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#c9c0b3] bg-[#fffdf8] px-3 text-sm font-semibold hover:bg-[#f1ede5] disabled:opacity-50"
-                    type="button"
-                    disabled={!preview}
-                    onClick={onSave}
-                  >
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                    캘린더에 추가
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {preview ? (
-              <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4">
-                <p className="mb-3 text-xs font-semibold text-[#716c63]">추출 결과</p>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-semibold">{preview.title}</h3>
-                  <p className="mt-1 text-xs text-[#716c63]">
-                    {preview.course ?? "과목 미지정"} · {new Date(preview.due_at).toLocaleDateString()}
-                  </p>
-                  <p className="mt-1 text-[11px] text-[#938d83]">
-                    {preview.parser === "gemini" ? "자동 추출" : "기본 추출"}
-                  </p>
-                </div>
-                <strong className="rounded-full bg-[#191817] px-3 py-1 text-xs text-[#fffdf8]">
-                  {preview.d_day_label}
-                </strong>
-              </div>
-              </div>
-            ) : null}
-
-            <div className="rounded-xl border border-[#ded7cb] bg-[#fffdf8] p-4">
               <h3 className="text-sm font-semibold">다가오는 일정</h3>
               <div className="mt-3 space-y-2">
                 {upcomingAssignments.length ? (
@@ -2578,7 +2466,7 @@ function SchedulePage({
                   ))
                 ) : (
                   <div className="rounded-lg border border-dashed border-[#c9c0b3] bg-[#faf8f3] p-4 text-sm leading-6 text-[#716c63]">
-                    아직 일정이 없습니다. 상담에서 나온 과제 문장이나 공지 문장을 붙여 넣어 캘린더에 추가하세요.
+                    아직 일정이 없습니다. AI 상담에서 과제나 마감 문장을 말하면 답변 아래 일정 후보를 캘린더에 추가할 수 있습니다.
                   </div>
                 )}
               </div>
