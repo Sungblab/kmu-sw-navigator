@@ -229,7 +229,7 @@ class SupabaseAssignmentStore:
         user_id: str,
         request: AssignmentCreateRequest,
     ) -> AssignmentResponse:
-        payload = {"user_id": user_id, **request.model_dump()}
+        payload = {"user_id": user_id, **request.model_dump(mode="json")}
         result = self.client.table("assignments").insert(payload).execute()
         return _assignment_from_row(_single_row(result.data))
 
@@ -263,7 +263,7 @@ class SupabaseAssignmentStore:
         assignment_id: str,
         request: AssignmentUpdateRequest,
     ) -> AssignmentResponse:
-        payload = request.model_dump(exclude_none=True)
+        payload = request.model_dump(mode="json", exclude_none=True)
         result = (
             self.client.table("assignments")
             .update(payload)
@@ -288,7 +288,7 @@ class SupabaseAssignmentStore:
             .update(
                 {
                     "calendar_event_id": calendar_event_id,
-                    "calendar_synced_at": synced_at,
+                    "calendar_synced_at": synced_at.isoformat(),
                 }
             )
             .eq("user_id", user_id)
@@ -326,7 +326,7 @@ class SupabaseGoogleOAuthTokenStore:
             "encrypted_access_token": token.access_token,
             "encrypted_refresh_token": token.refresh_token,
             "scope": token.scope,
-            "expires_at": token.expires_at,
+            "expires_at": token.expires_at.isoformat(),
         }
         result = self.client.table("google_oauth_tokens").upsert(payload).execute()
         return _google_oauth_token_from_row(_single_row(result.data))

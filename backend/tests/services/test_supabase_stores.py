@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -108,6 +109,7 @@ class FakeTableQuery:
 
     def _execute_mutation(self, rows: list[dict[str, Any]]) -> FakeResult:
         assert self.payload is not None
+        json.dumps(self.payload)
         if isinstance(self.payload, list):
             inserted = []
             for item in self.payload:
@@ -297,7 +299,7 @@ def test_supabase_assignment_store_persists_updates_and_deletes_by_user_scope() 
             "user_id": "user-1",
             "title": "자료구조 과제",
             "course": "자료구조",
-            "due_at": datetime(2026, 5, 22, 23, 59),
+            "due_at": "2026-05-22T23:59:00",
             "memo": None,
             "id": assignment.id,
             "status": "done",
@@ -325,6 +327,7 @@ def test_supabase_assignment_store_marks_calendar_exported() -> None:
 
     assert exported.calendar_event_id == "kmu-event-1"
     assert exported.calendar_synced_at == datetime(2026, 5, 14, 12, 0)
+    assert client.tables["assignments"][0]["calendar_synced_at"] == "2026-05-14T12:00:00"
 
 
 def test_supabase_google_oauth_token_store_upserts_and_gets_token() -> None:
@@ -345,3 +348,4 @@ def test_supabase_google_oauth_token_store_upserts_and_gets_token() -> None:
     assert saved.access_token == "protected-access"
     assert store.get_token("user-1") == saved
     assert client.tables["google_oauth_tokens"][0]["encrypted_access_token"] == "protected-access"
+    assert client.tables["google_oauth_tokens"][0]["expires_at"] == "2026-05-14T13:00:00"

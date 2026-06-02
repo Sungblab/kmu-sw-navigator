@@ -146,6 +146,7 @@
 | 2026-06-02 | 김성빈 | Codex | 최종보고서 초안 작성 | 과제 제출 항목인 프로젝트 주제/목적, 기능, 코드 구조, LLM 활용 방식, 실행 결과를 `docs/report/final-report.md`에 보고서 형태로 정리 | 기존 보고서 목차, 제출 체크리스트, Python 핵심 로직 문서를 바탕으로 작성했고 `pnpm docs:check`로 문서 구조를 검증 |
 | 2026-06-02 | 김성빈 | Codex | 최종보고서 문체 정리 | 제출용 보고서가 격식체로 읽히도록 `docs/report/final-report.md` 본문을 했습니다체/합니다체로 통일 | 문체 수정 후 문서 검증을 다시 실행해 제출 문서 구조를 확인 |
 | 2026-06-02 | 김성빈 | Codex | 채팅 일정 후보 저장 연결 | 사용자가 채팅에서 과제/마감 문장을 말하면 백엔드가 기존 일정 parser로 preview action을 생성하고, 프론트가 답변 아래 `캘린더에 추가` 버튼으로 내부 일정 보드에 저장하도록 연결 | TDD로 chat action regression test를 먼저 실패시킨 뒤 구현했고 focused backend tests와 `pnpm build:frontend`로 검증 |
+| 2026-06-02 | 김성빈 | Codex | 배포 일정 저장 500 오류 수정 | OCI 배포 서버 로그의 `Object of type datetime is not JSON serializable` 예외를 추적해 Supabase assignment/token payload가 JSON 직렬화 가능한 값만 보내도록 수정 | fake Supabase client에 JSON 직렬화 검사를 추가했고 `uv run python -m pytest tests/services/test_supabase_stores.py tests/api/test_assignments_api.py`로 회귀를 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 
