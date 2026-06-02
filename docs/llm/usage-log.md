@@ -150,6 +150,7 @@
 | 2026-06-02 | 김성빈 | Codex | 일정 탭 직접 추출 UI 제거 | 채팅 답변의 일정 후보 저장 흐름과 중복되는 일정 탭의 `AI 일정 추출` 입력 박스와 직접 `추출` 버튼을 제거하고 일정 탭은 저장된 일정 확인 중심으로 정리 | 정적 UI 계약 테스트를 먼저 실패시킨 뒤 구현했고 `python -m pytest tests/test_schedule_ui_contract.py`, `pnpm build:frontend`로 검증 |
 | 2026-06-02 | 김성빈 | Codex | 최종보고서 일정 설명 수정 | 채팅 일정 후보 카드와 캘린더에 추가 버튼 중심의 현재 일정 흐름에 맞춰 `docs/report/final-report.md`의 일정 기능, 코드 설명, 실행 결과 문단을 수정 | 일정 탭 직접 추출 설명을 제거하고 채팅 입력 -> assignment_preview action -> 사용자 확인 저장 -> 일정 보드 확인 흐름으로 정리 |
 | 2026-06-02 | 김성빈 | Codex | 최종보고서 단독 제출용 보강 | `docs/report/final-report.md`에서 과제 조건 충족 표를 제거하고 보고서 내부에 LLM 사용 기록 요약표, 직접 검토 내용, 검증 결과 설명을 추가 | 보고서만 제출해도 LLM 활용 목적과 직접 검토/수정/검증 근거가 보이도록 구성하고 문서 검증을 실행 |
+| 2026-06-03 | 김성빈 | Codex | 일정 저장 날짜 하루 밀림 수정 | `다음주 금요일` 일정이 Supabase 저장 뒤 토요일로 보이는 문제를 timezone 경계로 추적하고, 저장 payload와 일정 보드 날짜 표시를 한국 날짜 기준으로 고정 | Supabase 저장소 테스트와 일정 UI 계약 테스트를 먼저 실패시킨 뒤 구현했고 focused backend tests와 `pnpm build:frontend`로 검증 |
 
 ## 앱 기능별 Gemini API 기록 예정 항목
 

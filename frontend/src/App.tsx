@@ -142,6 +142,7 @@ async function readAttachmentText(file: File): Promise<string | null> {
 }
 
 const ACTIVE_CHAT_SESSION_KEY = "kmu:active_chat_session";
+const KOREA_TIME_ZONE = "Asia/Seoul";
 const CHAT_RESPONSE_METADATA_KEY = "__response";
 
 function buildStoredChatResponse(record: ChatMessageRecord): ChatResponse | undefined {
@@ -2438,7 +2439,7 @@ function SchedulePage({
                         <div className="min-w-0">
                           <h4 className="truncate text-sm font-semibold">{assignment.title}</h4>
                           <p className="mt-1 text-xs text-[#716c63]">
-                            {assignment.course ?? "과목 미지정"} · {new Date(assignment.due_at).toLocaleDateString()}
+                            {assignment.course ?? "과목 미지정"} · {formatAssignmentDate(assignment.due_at)}
                           </p>
                         </div>
                         <strong className="shrink-0 rounded-full bg-[#f1ede5] px-2 py-1 text-xs">
@@ -2496,18 +2497,44 @@ function buildCalendarDays(assignments: Assignment[]) {
   return Array.from({ length: 42 }, (_, index) => {
     const date = new Date(gridStart);
     date.setDate(gridStart.getDate() + index);
-    const key = date.toISOString().slice(0, 10);
+    const key = getCalendarDateKey(date);
     return {
       key,
       date,
       inCurrentMonth: date.getMonth() === today.getMonth(),
       isToday: date.toDateString() === today.toDateString(),
       assignments: assignments.filter((assignment) => {
-        const dueDate = new Date(assignment.due_at);
-        return dueDate.toDateString() === date.toDateString();
+        return getAssignmentDateKey(assignment.due_at) === key;
       }),
     };
   });
+}
+
+function formatAssignmentDate(value: string): string {
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: KOREA_TIME_ZONE,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
+function getAssignmentDateKey(value: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: KOREA_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(value));
+  const byType = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${byType.year}-${byType.month}-${byType.day}`;
+}
+
+function getCalendarDateKey(value: Date): string {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function RecommendationPage({

@@ -20,3 +20,16 @@ def test_schedule_page_does_not_offer_direct_ai_extraction_form() -> None:
     assert "onPreview" not in schedule_page
     assert "onSave" not in schedule_page
     assert "setDraft" not in schedule_page
+
+
+def test_schedule_page_formats_assignment_dates_in_korean_timezone() -> None:
+    source = APP_TSX.read_text(encoding="utf-8")
+    schedule_page = _schedule_page_source()
+
+    assert 'const KOREA_TIME_ZONE = "Asia/Seoul";' in source
+    assert "formatAssignmentDate(assignment.due_at)" in schedule_page
+    assert "getAssignmentDateKey(assignment.due_at)" in source
+    assert "getCalendarDateKey(date)" in source
+    assert "new Date(assignment.due_at).toLocaleDateString()" not in schedule_page
+    assert "dueDate.toDateString()" not in schedule_page
+    assert "date.toISOString().slice(0, 10)" not in schedule_page

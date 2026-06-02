@@ -299,12 +299,28 @@ def test_supabase_assignment_store_persists_updates_and_deletes_by_user_scope() 
             "user_id": "user-1",
             "title": "자료구조 과제",
             "course": "자료구조",
-            "due_at": "2026-05-22T23:59:00",
+            "due_at": "2026-05-22T23:59:00+09:00",
             "memo": None,
             "id": assignment.id,
             "status": "done",
         }
     ]
+
+
+def test_supabase_assignment_store_serializes_naive_due_at_as_korean_local_time() -> None:
+    client = FakeSupabaseClient()
+    store = SupabaseAssignmentStore(client)
+
+    store.create_assignment(
+        "user-1",
+        AssignmentCreateRequest(
+            title="자료구조 과제",
+            course="자료구조",
+            due_at=datetime(2026, 6, 12, 23, 59),
+        ),
+    )
+
+    assert client.tables["assignments"][0]["due_at"] == "2026-06-12T23:59:00+09:00"
 
 
 def test_supabase_assignment_store_marks_calendar_exported() -> None:

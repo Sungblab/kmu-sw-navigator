@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 from app.schemas.assignment import (
@@ -13,6 +13,8 @@ from app.schemas.memory import MemoryEventResponse, MemoryResponse
 from app.schemas.profile import ProfileResponse, ProfileUpsertRequest
 from app.services.assignment_service import build_assignment_response
 from app.services.chat_store import _chat_message_evidence, _chat_session_title
+
+KOREA_TIME_ZONE = timezone(timedelta(hours=9), "KST")
 
 
 class SupabaseProfileStore:
@@ -229,7 +231,7 @@ class SupabaseAssignmentStore:
         user_id: str,
         request: AssignmentCreateRequest,
     ) -> AssignmentResponse:
-        payload = {"user_id": user_id, **request.model_dump(mode="json")}
+        payload = {"user_id": user_id, **_assignment_create_payload(request)}
         result = self.client.table("assignments").insert(payload).execute()
         return _assignment_from_row(_single_row(result.data))
 
@@ -455,6 +457,17 @@ def _assignment_from_row(row: dict[str, Any]) -> AssignmentResponse:
         calendar_event_id=row.get("calendar_event_id"),
         calendar_synced_at=_parse_datetime(row.get("calendar_synced_at")),
     )
+
+
+def _assignment_create_payload(request: AssignmentCreateRequest) -> dict[str, Any]:
+    payload = request.model_dump(mode="json")
+    due_at = request.due_at
+    # 학사 일정은 한국 날짜 기준이다. 자연어 parser가 만든 naive datetime을
+    # UTC로 저장하면 23:59 마감이 다음날로 보이므로 KST offset을 명시한다.
+    if due_at.tzinfo is None:
+        due_at = due_at.replace(tzinfo=KOREA_TIME_ZONE)
+    payload["due_at"] = due_at.isoformat()
+    return payload
 
 
 def _google_oauth_token_from_row(row: dict[str, Any]) -> GoogleOAuthTokenRecord:
