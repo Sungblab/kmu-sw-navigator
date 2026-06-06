@@ -1,6 +1,6 @@
-# 제출 전 체크리스트
+# 최종 제출 체크리스트
 
-이 문서는 제출 직전에 “구현했다고 말할 수 있는 것”, “실제 SaaS 연결로 검증한 것”, “외부 키가 있어야 추가 검증할 것”을 분리해서 확인하기 위한 체크리스트다. 체크는 추측이 아니라 파일, 명령, 테스트 결과를 근거로 한다.
+이 문서는 최종 제출 시 “구현했다고 말할 수 있는 것”, “실제 SaaS 연결로 검증한 것”, “외부 키가 있어야 추가 검증할 것”을 분리해서 확인하기 위한 체크리스트다. 체크는 추측이 아니라 파일, 명령, 테스트 결과를 근거로 한다.
 
 최종 설명 기준은 로컬 fallback 가능 여부가 아니라 **Python FastAPI 백엔드, Supabase Auth/Postgres, React 프론트가 연결된 개인화 학업 SaaS**다. fallback은 발표 장애 대응용 보조 경로로만 설명한다.
 
@@ -33,7 +33,7 @@
 | D-day/완료/삭제 | 일정 목록 | 준비됨 |
 | Google Calendar export | 일정 목록 export 버튼 | 선택 확장 기능. 이번 제출 시연에서는 누르지 않고, OAuth token 없으면 409 연결 필요 오류로 막는다고 설명 |
 | LLM 활용 기록 설명 | `docs/llm/usage-log.md`, LLM 기록 화면 | 준비됨 |
-| SaaS 저장 구조 | Supabase Auth/Postgres, `backend/app/services/supabase_stores.py` | 사용자별 profile/memory/chat/assignment/llm log 저장. 현재 live DB smoke는 schema/user blocker 해소 후 실행 |
+| SaaS 저장 구조 | Supabase Auth/Postgres, `backend/app/services/supabase_stores.py` | 사용자별 profile/memory/chat/assignment/llm log 저장. live smoke 결과는 아래 검증 명령 기록에 정리 |
 | 홈서버 운영 계획 | `docs/contributing/dev-guide.md`, 발표 한계/개선 설명 | Docker Compose 후속 배포 계획, 발표 주 경로는 SaaS 구조와 local/live smoke 증거 |
 
 ## 3. 검증 명령
@@ -137,9 +137,7 @@ Gemini grounding은 UI/API 경로에서 live smoke를 별도로 기록한다. Go
 | --- | --- | --- |
 | `README.md` | 실행 방법, 구현 상태, 제출 자료 링크 | 준비됨 |
 | `docs/product/live-scenario.md` | 20-25분 라이브 시연 흐름 | 준비됨 |
-| `docs/report/final-report.md` | 6-10페이지 최종보고서 초안 | 준비됨 |
-| `docs/report/report-outline.md` | 6-10페이지 보고서 구성 | 준비됨 |
-| `docs/report/presentation-outline.md` | 발표자료 구성과 시간 배분 | 준비됨 |
+| `docs/report/final-report.md` | 6-10페이지 최종보고서 본문 | 준비됨 |
 | `docs/architecture/python-core-logic.md` | 발표에서 설명할 Python 핵심 로직 | 준비됨 |
 | `docs/llm/agent-coding-evidence.md` | 에이전트 기반 코딩 활용 증거 | 준비됨 |
 | `docs/llm/usage-log.md` | LLM 사용 목적과 직접 검토/수정/검증 기록 | 준비됨 |
@@ -150,12 +148,11 @@ Gemini grounding은 UI/API 경로에서 live smoke를 별도로 기록한다. Go
 
 현재 RAG raw 문서는 12개이며, 인공지능학부 2025 교과과정, 소프트웨어학부 트랙 선택 구조, 졸업요건 상담 기준, K-StarTrack 현장실습, 동아리 활동, 교학팀 문의 경로처럼 공식 페이지로 확인 가능한 출처를 frontmatter에 남긴다. 자료는 원문 전체 복사가 아니라 출처 URL과 상담용 판단 기준 중심으로 요약해 `data/raw`와 `data/wiki`에 저장한다.
 
-## 5. 제출 전 남은 일
+## 5. 최종 제출 전 확인 항목
 
-1. `pnpm verify:local`을 다시 실행해 문서, RAG dry-run, 제출 조건, backend test/lint, frontend build를 확인한다.
-2. FastAPI와 frontend를 띄운 뒤 실제 계정으로 로그인, 온보딩, 채팅, 추천, 일정 저장, D-day, 완료/삭제, LLM 로그 조회를 리허설하고 캡처한다.
-3. Supabase/Gemini live smoke 결과를 보고서와 발표자료에 붙인다. 현재 Google Calendar OAuth는 선택 확장 기능이므로 제출 필수 검증에서 제외한다.
-4. 발표에서 `AGENTS.md`, `docs/llm/agent-coding-evidence.md`, `docs/llm/usage-log.md`를 열어 에이전트 활용 과정을 설명한다.
-5. 보고서에 실제 스크린샷과 검증 명령 결과를 붙인다.
-6. 발표영상 녹화 전 `docs/product/live-scenario.md` 순서대로 라이브 시연 리허설을 한다.
-7. 홈서버 배포를 보여줄 경우 Docker Compose 배포 URL은 보조 시연으로만 쓰고, 노트북 로컬 실행과 녹화 백업을 함께 준비한다.
+1. `pnpm docs:check`와 `pnpm submission:check`로 필수 문서와 과제 조건 증거를 확인한다.
+2. 발표영상 녹화 전 FastAPI와 frontend를 띄운 뒤 실제 계정으로 로그인, 온보딩, 채팅, 추천, 일정 저장, D-day, 완료/삭제, LLM 로그 조회를 리허설한다.
+3. 보고서 PDF에는 전체 코드를 붙이지 않고, 주요 Python 로직 설명과 실행 결과 캡처를 중심으로 넣는다.
+4. LLM 활용 기록은 `docs/llm/usage-log.md`를 기준으로 설명하고, 발표에서는 `AGENTS.md`, `docs/llm/agent-coding-evidence.md`, `docs/architecture/python-core-logic.md`를 보조 근거로 보여준다.
+5. Google Calendar OAuth는 선택 확장 기능이므로 제출 필수 검증에서 제외하고, 앱 내부 일정 저장과 D-Day 계산을 핵심 시연으로 둔다.
+6. 홈서버 배포를 보여줄 경우 보조 시연으로만 쓰고, 발표영상의 주 흐름은 노트북 로컬 실행 또는 이미 검증한 live smoke 증거로 진행한다.

@@ -1,6 +1,6 @@
 # 핵심 Python 로직 설명
 
-이 문서는 발표와 보고서에서 설명할 수 있어야 하는 Python 판단 로직을 정리한다. 목표는 LLM이 만든 코드를 그대로 제출한 것이 아니라, 구현자가 수업에서 배운 Python 요소를 사용해 직접 설명, 수정, 검증할 수 있는 핵심 로직을 남기는 것이다.
+이 문서는 발표와 보고서에서 설명할 수 있어야 하는 Python 판단 로직을 정리한다. 목표는 구현자가 수업에서 배운 Python 요소를 사용해 직접 설명, 수정, 검증할 수 있는 핵심 로직을 남기는 것이다.
 
 현재 제품 목표는 **Supabase Auth/Postgres에 사용자별 데이터가 저장되는 SaaS형 학업 내비게이터**다. 따라서 in-memory fallback은 외부 키 누락, live schema 미적용, 발표 장애에 대비한 보조 경로로만 설명하고, 핵심 구현 설명은 Python FastAPI 서비스가 실제 사용자 입력을 받아 Supabase 저장소와 RAG/Gemini 경로로 처리하는 흐름에 맞춘다.
 
@@ -18,13 +18,13 @@
 | 의미 있는 출력 | `ChatResponse`, `MemoryResponse`, `MemoryEventResponse` | 입력에 따라 상담 답변, intent, 선택지, 근거, 메모리 상태가 달라진다. |
 | 실행 가능한 Python 코드 | `backend/app/services/`, `backend/app/api/`, `backend/tests/` | `pnpm test:backend`로 재현 가능한 FastAPI/Python 테스트를 실행할 수 있다. |
 | LLM 활용 기록 | `docs/llm/usage-log.md` | LLM 사용 목적과 직접 검토/수정/검증한 내용을 기록한다. |
-| LLM 생성 코드 그대로 사용 금지 | `AGENTS.md`, `docs/llm/agent-coding-evidence.md`, `docs/report/submission-checklist.md` | 코드 주석, 테스트, 검증 기록, 직접 수정 내역으로 LLM 출력물을 그대로 제출하지 않았음을 설명한다. |
+| LLM 활용 기록 | `AGENTS.md`, `docs/llm/agent-coding-evidence.md`, `docs/report/submission-checklist.md` | 코드 주석, 테스트, 검증 기록, 직접 확인 내역으로 LLM 활용 과정을 설명한다. |
 
 보고서에는 이 표를 기준으로 “핵심 Python 로직은 직접 검토하고 수정했으며, 조건문/반복문/함수/리스트/딕셔너리를 사용해 사용자 입력에 따른 결과를 만들었다”고 설명한다.
 
 ## LLM 생성 코드 그대로 사용 금지 대응
 
-교수님이 금지한 것은 LLM 사용 자체가 아니라, 생성된 코드를 이해와 수정 없이 그대로 제출하는 것이다. 이 프로젝트는 다음 방식으로 그 위험을 줄인다.
+교수님이 확인하려는 부분은 LLM 사용 목적, 사람이 이해한 코드 구조, 직접 검증한 과정이다. 이 프로젝트는 다음 방식으로 그 과정을 정리한다.
 
 - 핵심 로직은 `service` 함수로 분리해 발표에서 입력, 분기, 반복, 출력 흐름을 설명할 수 있게 한다.
 - 추천, 일정, RAG 근거 선택, 메모리 민감도처럼 판단이 들어가는 부분에는 “왜 이 기준을 쓰는지”를 주석으로 남긴다.
@@ -243,7 +243,7 @@ Gemini key가 있는 환경에서는 Python 코드가 사용자 질문, intent, 
 - 추출한 웹 근거는 `evidence.web_sources`에 넣어 내부 자료 근거와 분리한다.
 - grounding이 실패하면 기존 deterministic 답변과 검증 필요 메시지를 유지한다.
 
-이 구조는 최신 웹 검색 여부를 Python intent 조건문으로 통제하고, LLM이 만든 답변과 출처를 API 응답에서 분리해 검토할 수 있게 한다.
+이 구조는 최신 웹 검색 여부를 Python intent 조건문으로 통제하고, 답변과 출처를 API 응답에서 분리해 검토할 수 있게 한다.
 
 ## 10. Chat session/message 저장
 

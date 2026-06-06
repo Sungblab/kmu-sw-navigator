@@ -126,7 +126,7 @@
 원본과 정제본을 분리한다.
 
 ```txt
-data/inbox/   # 팀원이 준 원본, 초안, 전사본, 캡처 설명
+data/inbox/   # 팀원이 준 원본, 임시본, 전사본, 캡처 설명
 data/raw/     # RAG에 넣기 좋게 정제한 Markdown
 data/wiki/    # Mini LLM Wiki로 컴파일된 문서
 ```

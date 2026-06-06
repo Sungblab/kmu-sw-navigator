@@ -1,164 +1,204 @@
 # LLM 활용 기록
 
-이 문서는 제출용 LLM 활용 기록입니다. 개발 과정에서 사용한 LLM 기록은 이 문서에 남깁니다. 앱 내부 Gemini API 사용 로그는 `llm_usage_logs` table과 `GET /api/llm-logs`로 조회할 수 있게 연결했으며, 현재 기록 범위는 채팅 답변 생성, Google grounding, 일정 parser, 선택적 embedding ingest 경로를 포함합니다.
+이 문서는 KMU SW Navigator 프로젝트의 제출용 LLM 활용 기록입니다. 일자별 작업 로그가 아니라 **팀원별 사용 도구, 사용 목적, 산출물, 사람이 확인한 내용**을 중심으로 정리합니다. 보고서 PDF에 포함하거나 별도 문서로 제출해도 바로 읽을 수 있도록 작성했습니다.
 
-## 기록 형식
+본 프로젝트에서 LLM은 세 가지 범위로 사용했습니다.
 
-| 날짜 | 작성자 | 도구 | 목적 | 결과 | 직접 검토/수정 |
+1. 개발 보조: Codex, ChatGPT, Gemini Code Assist를 사용해 주제 정리, 설계, 구현 보조, 오류 분석, 리뷰 관점 점검을 수행했습니다.
+2. 데이터 정형화 보조: Gemini와 ChatGPT를 사용해 팀원이 수집한 학생회, 학사, 동아리 자료를 JSON 또는 Markdown 형태로 정리했습니다.
+3. 앱 기능: Gemini API를 사용해 RAG 답변 생성, 자연어 일정 파싱, 문서 임베딩, 최신 웹 grounding을 수행했습니다.
+
+## 1. 팀원별 LLM 활용 요약
+
+| 이름 | 역할 | 사용 도구 | 사용 목적 | 산출물 | 사람이 확인한 내용 |
 | --- | --- | --- | --- | --- | --- |
-| 2026-05-13 | 김성빈 | Codex | PRD 검토와 MVP 방향 확정 | 완성형 웹앱 + LLM 협업 기록 강화 방향 확정 | 김성빈이 주제와 팀 운영 방향을 확정 |
-| 2026-05-13 | 김성빈 | Codex | OpenCairn 문서 구조 조사 | docs index, roadmap, feature registry, dev guide, Superpowers spec/plan 구조를 본 프로젝트에 맞게 축소 | 과제 repo에는 private docs가 아니라 제출 증거로 docs/superpowers를 포함하기로 결정 |
-| 2026-05-13 | 김성빈 | Codex | repo 초기 문서와 공개 GitHub 세팅 준비 | README, CONTRIBUTING, AGENTS, docs 구조, LLM 기록 템플릿 작성 | 김성빈이 PM/개발 리드 역할과 팀원 역할 미정을 반영 |
-| 2026-05-13 | 김성빈 | Codex | 패키지 구조와 GitHub 운영 방식 정리 | pnpm workspace, uv backend, Docker 선택 사항, PR/Issue 템플릿, verify workflow 구성 | 수업 MVP에서는 Supabase Cloud를 기본으로 쓰고 Docker를 필수 요구사항에서 제외하기로 결정 |
-| 2026-05-13 | 김성빈 | Codex | OpenCairn/UnivMind 구현 참고 후 Mini LLM Wiki 설계/구현 | raw/wiki 자료 구조, heading-aware chunker, wiki compiler, schema 확장, wiki 생성 script 추가 | LangGraph/worker는 과제 범위에서 제외하고 Python script로 축소 구현 |
-| 2026-05-13 | 김성빈 | Codex | 코드 리뷰와 주석 기록 방식 정리 | Gemini Code Assist 자동 리뷰, 팀원 리뷰, 리뷰 반영/미반영 이유, 의도 주석을 제출 증거로 남기는 규칙 추가 | 리뷰 코멘트를 맹목적으로 반영하지 않고 직접 판단한 근거를 PR thread와 문서에 남기기로 결정 |
-| 2026-05-13 | 김성빈 | Codex | 프로젝트 전용 Codex 스킬 세팅 | `~/.codex/skills/kmu-freshman-ai`에 과제 조건, 문서 라우팅, 검증, Gemini 리뷰 대응 절차를 담은 스킬 작성 | 새 세션에서도 동일한 작업 방식과 기록 기준을 유지하기 위한 로컬 개발 가이드로 사용 |
-| 2026-05-13 | 김성빈 | Codex | 로그인/메인 HTML 목업 스타일 결정 | getdesign.md의 Cal.com 뉴트럴 UI를 참고해 랜딩페이지 없이 로그인/메인 앱 화면 목업 작성 | 발표 시연과 실제 React 구현 기준으로 쓰기 위해 튀지 않는 밝은 뉴트럴 스타일을 선택 |
-| 2026-05-13 | 김성빈 | Codex | 모바일 웹앱 중심 목업 보정 | Pretendard 한글 폰트, 하단 탭바, sticky 상단바, safe-area, 48px 터치 타깃을 반영 | 실제 사용자는 휴대폰으로 볼 가능성이 높으므로 데스크톱보다 모바일 사용성을 우선하기로 결정 |
-| 2026-05-13 | 김성빈 | Codex | 모바일 네비게이션 재검토 | 하단 고정 탭바를 제거하고 PC/모바일 모두 일반 상단 메뉴바 계열로 통일 | 모바일만 과하게 앱처럼 보이지 않도록 웹앱 전체의 일관성을 우선 |
-| 2026-05-13 | 김성빈 | Codex | 챗봇 근거 시각화 목업 작성 | 채팅 답변 옆에 Mini Wiki/source 그래프, 학기별 로드맵, 추천 이유 체인을 배치한 HTML 목업 추가 | RAG 답변의 근거와 추천 판단 흐름을 발표에서 설명하기 쉽게 만들기로 결정 |
-| 2026-05-13 | 김성빈 | Codex | 개발 현황 추적용 Codex 스킬 추가 | `~/.codex/skills/kmu-freshman-ai-next-step`에 문서, git 상태, 실제 코드, 검증 기록을 함께 읽고 다음 구현 단위를 추천하는 절차를 정리 | `plans-status.md`만 믿지 않고 실제 구현과 검증 근거를 대조하도록 스킬 목적을 제한 |
-| 2026-05-13 | 김성빈 | Codex | LLM 개발 하네스 문서화 | `AGENTS.md`, `docs/README.md`, feature registry, Superpowers spec/plan, Codex 스킬, 검증 명령, 사용 기록이 연결되는 구조를 `docs/llm/codex-workflow.md`에 정리 | 보고서에서 “AI가 만든 코드”가 아니라 “AI를 통제하고 검증한 개발 절차”로 설명하기로 결정 |
-| 2026-05-13 | 김성빈 | Codex | 개인화 SW 내비게이터 초기 설계 확정 | 신입생 전용 범위에서 전체 학년 대상의 학업/진로/프로젝트/일정 개인화 AI 내비게이터로 확장하는 umbrella spec 작성 | 필수 프로필은 최소화하고, 관심사/진로 고민은 대화형 선택지와 메모리로 쌓는 방향을 확정 |
-| 2026-05-13 | 김성빈 | Codex | 메모리/RAG/grounding/Calendar 설계 정리 | `profiles`, `user_memories`, `memory_events`, 내부 RAG, Google grounding, Google Calendar export, 근거 표시 정책을 문서화 | 파인튜닝 대신 raw 자료, Mini LLM Wiki, embedding RAG, 최신 웹 grounding을 조합하기로 결정 |
-| 2026-05-13 | 김성빈 | Codex | repo/product rename 정리 | 로컬 폴더, GitHub repo, package/workspace metadata, README, API title, frontend title, GitHub 설정 문서를 `kmu-sw-navigator` 방향으로 정렬 | 과거 LLM 사용 기록의 초기 스킬명은 당시 이름으로 보존하고 현재 사용자-facing 명칭만 갱신 |
-| 2026-05-13 | 김성빈 | Codex | Python 과제 제출 기준 반영 | 사용자 입력, 조건문, 반복문, 함수, 리스트/딕셔너리, 의미 있는 출력, 실행 가능한 Python 코드, LLM 활용 기록 기준을 `AGENTS.md`와 테스트 전략에 추가 | LLM 사용은 허용하되 생성 코드를 그대로 제출하지 않고 핵심 로직 주석과 리팩토링으로 설명 가능하게 유지하기로 결정 |
-| 2026-05-13 | 김성빈 | Codex | 프로필/메모리/chat contract foundation 구현 | `profiles`, `user_memories`, `memory_events`, `chat_sessions`, `chat_messages`, Google token schema/RLS, FastAPI `/api/profile`, `/api/memories`, `/api/chat`, 메모리 민감도 정책, React 홈/기록 화면을 추가 | TDD로 memory/API/chat 테스트를 먼저 실패시킨 뒤 구현했고, `pnpm docs:check`, `pnpm test:backend`, `pnpm lint:backend`, `pnpm build:frontend` 기준으로 검증 |
-| 2026-05-13 | 김성빈 | Codex | 핵심 Python 로직 주석과 설명 문서 보강 | 메모리 민감도 정책, 메모리 이벤트 기록, 채팅 intent fallback, Chat contract 근거 슬롯의 판단 이유와 과제 조건 충족 매핑을 코드 주석과 `docs/architecture/python-core-logic.md`에 정리 | 과제 발표에서 사용자 입력, 조건문, 반복문, 함수, 리스트/딕셔너리, 의미 있는 출력, 실행 가능한 Python 코드, LLM 활용 기록을 직접 설명할 수 있도록 정책 이유 중심으로 수정 |
-| 2026-05-14 | 김성빈 | Codex | Navigator workspace UI shell 구현 | Claude/NotebookLM식 왼쪽 navigation, 중앙 chat workspace, 오른쪽 context panel 구조로 React 앱 shell을 교체하고 warm monochrome/Pretendard 톤으로 정리 | 사용자가 승인한 와이어프레임 기준으로 green accent를 제거하고 `pnpm build:frontend` 및 색상 class 검색으로 검증 |
-| 2026-05-14 | 김성빈 | Codex | 모바일 workspace navigation 보강 | 모바일 상단 메뉴 버튼과 drawer를 추가해 숨겨진 sidebar navigation, recent chats, LLM 기록, 설정 진입을 사용할 수 있게 수정 | 데스크톱 3-column 구조는 유지하고 `pnpm build:frontend`, 색상 class 검색, dev server 200 응답으로 검증 |
-| 2026-05-14 | 김성빈 | Codex | 모바일 context panel 보강 | 모바일 상단 context 버튼과 오른쪽 drawer를 추가해 프로필, 메모리, 답변 근거, 일정, 추천 액션을 확인할 수 있게 수정 | 데스크톱 context panel과 같은 `ContextPanelContent`를 재사용해 중복을 줄이고 `pnpm build:frontend`로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Supabase persistence adapter 구현 | profile/memory 저장소를 protocol로 분리하고 Supabase adapter, 설정 로딩, fake client 테스트를 추가 | user_id 소유권 조건, in-memory fallback 필요성, live DB smoke 미수행 범위를 직접 검토했고 `pnpm test:backend`, `pnpm lint:backend`로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Supabase live 연결 검증 경로 추가 | `pnpm supabase:smoke`로 profile/memory/event write-read를 직접 확인하는 Python smoke script 추가 | 현재 로컬에는 Supabase `.env`와 Auth user UUID가 없어 실제 연결은 키 설정 후 수행해야 함을 문서화 |
-| 2026-05-14 | 김성빈 | Codex | Supabase 환경 점검 명령 추가 | `pnpm env:check`와 `pnpm env:check:strict`를 추가해 backend Direct 값과 frontend Framework 값을 비밀값 노출 없이 확인 | service role key는 backend 전용으로 유지하고, 현재 로컬 `.env` 누락 상태와 strict 실패를 직접 검증 |
-| 2026-05-14 | 김성빈 | Codex | Supabase JWT 인증 dependency 구현 | `Authorization: Bearer` token 검증, `sub` 기반 user id 결정, 로컬 dev fallback 테스트를 추가 | 사용자가 임의로 `user_id`를 보내지 못하게 하는 기준과 오프라인 테스트 fallback 범위를 직접 검토 |
-| 2026-05-14 | 김성빈 | Codex | Frontend Supabase session token 연결 | React API client가 Supabase session access token을 Bearer header로 보내고, 세션이 없으면 demo fallback을 쓰게 수정 | 실제 로그인 UI는 후속 구현으로 남기고 `pnpm build:frontend`, `pnpm test:backend`로 contract를 검증 |
-| 2026-05-14 | 김성빈 | Codex | Frontend Supabase 로그인 UI 구현 | 설정 화면에 이메일/비밀번호 로그인, 가입, 로그아웃, session 상태 표시를 추가 | Supabase env가 없을 때 demo fallback을 유지하는 방향으로 직접 검토하고 `pnpm build:frontend`로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Supabase Auth API smoke 경로 추가 | 실제 Supabase access token으로 `/api/profile` Bearer 인증 write/read를 확인하는 `pnpm supabase:auth-smoke` 추가 | service-role DB smoke와 사용자 session API smoke를 분리하고, token 누락/HTTP 실패 경로를 테스트로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Supabase 로그인 기반 smoke 경로 추가 | Supabase email/password login으로 access token을 받은 뒤 `/api/profile` Bearer 인증 write/read를 실행하는 `pnpm supabase:login-smoke` 추가 | 수동 token 복사 없이 Auth login과 FastAPI 인증 boundary를 함께 검증하도록 TDD로 helper와 mock transport 테스트를 작성 |
-| 2026-05-14 | 김성빈 | Codex | LLM usage Supabase smoke 경로 추가 | `llm_usage_logs`에 smoke row를 insert하고 같은 user scope로 list하는 `pnpm supabase:llm-smoke` 추가 | 제출 증거가 되는 앱 내부 LLM 기록 저장소를 실제 Supabase에서 검증할 수 있게 TDD로 helper와 scope 테스트를 작성 |
-| 2026-05-14 | 김성빈 | Codex | Gemini live smoke 경로 추가 | Gemini embedding과 일정 parser를 실제 API key로 확인하는 `pnpm gemini:smoke` 추가 | 외부 key가 없을 때는 명확히 skip하고, fake embedding/parser 테스트로 smoke result shape와 설정 해석을 검증 |
-| 2026-05-14 | 김성빈 | Codex | Gemini answer smoke 경로 추가 | Gemini 답변 생성 경로를 실제 API key로 확인하는 `pnpm gemini:answer-smoke` 추가 | 내부 근거가 포함된 academic 질문으로 RAG prompt -> answer generator 경로를 검증하도록 TDD로 fake generator 테스트를 작성 |
-| 2026-05-14 | 김성빈 | Codex | Gemini grounding smoke 경로 추가 | Gemini Google Search grounding 경로를 실제 API key로 확인하는 `pnpm gemini:grounding-smoke` 추가 | 최신 진로 질문에서 web source가 `evidence.web_sources`로 반환되는지 TDD로 fake grounding 테스트를 작성 |
-| 2026-05-14 | 김성빈 | Codex | Google Calendar export smoke 경로 추가 | 저장된 Google OAuth token이 있는 사용자로 assignment export와 `events.insert`를 검증하는 `pnpm google:calendar-smoke` 추가 | token이 없으면 synthetic fallback으로 통과하지 않게 막고, 실제 Google event id가 저장되는 흐름을 TDD로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Live smoke plan 명령 추가 | 제출 전 Supabase, Gemini, Google Calendar live smoke의 준비 여부와 실행 순서를 보여주는 `pnpm live:smoke-plan` 추가 | 비밀값을 출력하지 않고 누락 env/입력만 표시하도록 TDD로 report format을 검증 |
-| 2026-05-14 | 김성빈 | Codex | 제출 증거 자동 체크 추가 | 과제 조건 8개를 실제 파일/키워드와 매핑해 확인하는 `pnpm submission:check` 추가 | 사용자 입력, 조건문, 반복문, 함수, 리스트/딕셔너리, 의미 있는 출력, 실행 가능한 Python, LLM 기록을 제출 전 자동 점검하도록 테스트 작성 |
-| 2026-05-14 | 김성빈 | Codex | RAG 문서 ingest foundation 구현 | raw/wiki Markdown을 heading-aware `document_chunks` payload로 변환하는 서비스와 CLI dry-run 추가 | wiki 우선/raw 보강 검색 정책을 직접 설명할 수 있도록 `source_type`, `heading_path`, `metadata`를 유지하고 `pnpm rag:ingest:dry`로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Gemini embedding service 구현 | Gemini embedding adapter, deterministic test fallback, embedding 차원 검증, `rag:ingest:embeddings` 옵션 추가 | 실제 검색 품질용 embedding과 테스트용 deterministic vector를 구분하고, 키가 없을 때 live 호출을 막도록 검토 |
-| 2026-05-14 | 김성빈 | Codex | Local RAG retrieval chat evidence 구현 | DB 없이 raw/wiki chunk를 검색하는 retriever를 만들고 `/api/chat` evidence에 실제 source를 연결 | wiki 우선/raw 보강 정책과 근거 부족 처리 기준을 직접 설명 가능하게 테스트와 문서에 기록 |
-| 2026-05-14 | 김성빈 | Codex | Supabase text retrieval adapter 구현 | `search_document_chunks_text` RPC adapter와 local fallback 선택 dependency 추가 | local/Supabase retrieval evidence shape를 같게 유지하고 fake RPC 테스트로 매핑을 검증 |
-| 2026-05-14 | 김성빈 | Codex | Supabase vector retrieval adapter 구현 | 질문 embedding 후 `match_document_chunks` RPC를 호출하는 retriever와 fallback 선택 로직 추가 | Gemini key/Supabase env 유무별 경로를 나누고 fake embedding/RPC 테스트로 호출 파라미터를 검증 |
-| 2026-05-14 | 김성빈 | Codex | Gemini answer generation 구현 | retrieved evidence와 memory context를 prompt로 묶어 Gemini 답변 생성 dependency를 추가 | 키가 없을 때 deterministic fallback을 유지하고 fake generator 테스트로 prompt/context 전달을 검증 |
-| 2026-05-14 | 김성빈 | Codex | Google grounding 구현 | 진로/취업/창업 intent에서 Gemini Google Search grounding을 호출하고 `evidence.web_sources`를 표시하는 backend/frontend 흐름 추가 | Google 공식 Gemini grounding 문서와 현재 설치 SDK 타입을 확인하고, 실패 시 기존 검증 필요 메시지를 유지하도록 focused tests와 전체 backend tests로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Chat session/message 저장 구현 | `/api/chat` 요청과 assistant 응답을 session/message pair로 저장하는 in-memory/Supabase store 추가 | session id 생성, 기존 session 재사용, evidence snapshot 저장 기준을 직접 검토하고 focused tests로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Chat session list UI 연결 | chat session/message 조회 API와 frontend recent chats 연동 추가 | session reset, 사용자별 조회, 메시지 복원 흐름을 직접 검토하고 backend/frontend 검증 실행 |
-| 2026-05-14 | 김성빈 | Codex | Assignment D-day 기능 구현 | 자연어 일정 preview, D-day 계산, 일정 저장/list API와 frontend schedule page 연결 | 상대 날짜/정규식 추출, missing fields, confidence 기준을 직접 설명 가능한 Python 규칙으로 구현하고 테스트로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Assignment Supabase persistence와 완료/삭제 구현 | `assignments` Supabase adapter, 완료/삭제 API, 일정 탭 완료/삭제 버튼을 추가 | 사용자별 `user_id` 조건, in-memory fallback, API 계약, frontend 204 응답 처리를 직접 검토하고 focused tests와 frontend build로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Google Calendar export foundation 구현 | 저장된 assignment를 Google Calendar event payload로 변환하고 `calendar_event_id`, `calendar_synced_at`을 저장하는 API/UI 흐름 추가 | Google 공식 Events insert 문서의 start/end event 구조를 참고하되, 실제 OAuth/API 호출은 후속 live 연동으로 분리하고 중복 export 방지 로직을 테스트로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Google Calendar OAuth connect/callback 구현 | Calendar OAuth 설정 상태 API, consent URL 생성 API, callback token exchange, server-only token store, 설정 화면 연결 버튼, Google OAuth env 문서화를 추가 | 앱 로그인과 Calendar consent를 분리하고 raw user id가 OAuth state에 노출되지 않도록 signed state로 수정했으며, Google token endpoint 호출은 mock transport로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Google Calendar events.insert adapter 구현 | 저장된 Calendar token이 있으면 assignment export API가 Google Calendar `events.insert` endpoint에 event payload를 전송하고 실제 event id를 저장하게 연결 | token이 없을 때는 로컬 데모용 synthetic id fallback을 유지하고, token이 있을 때의 Bearer header/API payload는 `httpx.MockTransport`로 검증 |
-| 2026-05-14 | 김성빈 | Codex | Google Calendar token refresh 구현 | 만료된 access token을 refresh token으로 갱신하고 새 access token으로 `events.insert`를 호출하는 흐름을 추가 | refresh token은 server-only 저장소에 유지하고, token endpoint와 Calendar API 호출 순서를 focused tests로 검증 |
-| 2026-05-14 | 김성빈 | Codex | 트랙/활동 추천 규칙 구현 | 학년, 관심사, 목표, 코딩 경험, 활동 성향을 입력받아 트랙/활동 후보와 다음 행동을 반환하는 API/UI를 추가 | 추천 후보를 리스트/딕셔너리로 정의하고 조건문 점수 계산을 직접 설명 가능한 Python 로직으로 정리해 focused tests와 frontend build로 검증 |
-| 2026-05-14 | 김성빈 | Codex | 추천 결과 RAG 출처 연결 | 트랙/활동 추천 응답에 내부 문서 검색 근거 `evidence.internal_sources`를 추가하고 frontend에 근거 chip을 표시 | 추천 점수 계산은 직접 설명 가능한 Python 규칙으로 유지하고, RAG 검색은 출처 설명 용도로 분리했으며 focused service/API tests로 검증 |
-| 2026-05-14 | 김성빈 | Codex | 프로필/메모리 기반 추천 입력 자동화 | 진로/취업 화면이 `Memory.natural_text`와 `value_json`에서 관심사/목표/활동 성향을 추출해 추천 API 입력으로 사용하게 수정 | 메모리가 없을 때는 데모 fallback을 유지하고, 추천 판단 자체는 기존 Python backend 규칙으로 유지했으며 frontend build로 검증 |
-| 2026-05-14 | 김성빈 | Codex | 추천 입력 직접 편집 UI 구현 | 진로/취업 화면에서 트랙 관심사, 활동 관심사, 목표, 코딩 경험, 학습 선호, 활동 방식, 주간 가능 시간을 수정해 추천 API에 보낼 수 있게 연결 | 자동 추출값은 초기값으로만 쓰고 사용자가 직접 수정한 입력을 우선하도록 검토했으며 frontend build와 문서 검증으로 확인 |
-| 2026-05-14 | 김성빈 | Codex | Gemini 일정 파싱 보강 | `GEMINI_API_KEY`가 있으면 일정 preview가 Gemini JSON parser를 먼저 쓰고 실패 시 Python 규칙 parser로 fallback하도록 구현 | 외부 LLM 결과는 `ParsedAssignment`로 검증/변환하고 D-day 계산은 Python 코드가 수행하게 유지했으며 focused service/API tests로 검증 |
-| 2026-05-14 | 김성빈 | Codex | 보고서/발표 라이브 시연 시나리오 보강 | 현재 구현된 workspace UI, Supabase 연결 구조, RAG 상담, 추천 입력, 일정/D-day, LLM 활용 기록을 20-25분 발표 흐름으로 정리 | 실제 구현 상태와 아직 live key가 필요한 검증 항목을 분리해 과장 없이 설명하도록 문서화하고 `pnpm docs:check`로 검증 |
-| 2026-05-14 | 김성빈 | Codex | README 실행/제출 섹션 최신화 | 빠른 시작, Supabase env 분리, RAG ingest, live smoke, 현재 구현 상태, 제출 문서 링크를 README에 정리 | dev-guide의 frontend env 이름도 실제 `VITE_*` 기준으로 수정하고 문서 검증으로 확인 |
-| 2026-05-14 | 김성빈 | Codex | 제출 전 체크리스트 작성 | 과제 조건, 데모 항목, 검증 명령, 제출 문서를 실제 구현 파일과 연결한 checklist 작성 | live key가 필요한 항목과 키 없이 검증 가능한 항목을 분리하고 문서 인덱스/README에 링크를 추가 |
-| 2026-05-14 | 김성빈 | Codex | 최종 코드/문서 감사 | 구현된 API와 문서 표현을 대조해 `/api/assignments/preview`, `/api/recommend/activity`, Calendar export, LLM log 상태를 현재 코드에 맞게 수정 | 오래된 키워드 검색, backend tests, frontend build, docs check로 문서-코드 불일치 감소를 확인 |
-| 2026-05-14 | 김성빈 | Codex | LLM usage log API/UI 구현 | `llm_usage_logs` store, `GET /api/llm-logs`, 채팅 답변 생성, Google grounding, 일정 parser 자동 기록, embedding ingest 선택 기록, LLM 기록 화면 조회를 추가 | TDD로 focused tests를 먼저 실패시킨 뒤 구현했고 `pnpm test:backend`, `pnpm lint:backend`, `pnpm build:frontend`로 검증 |
-| 2026-05-14 | 김성빈 | Codex | 로컬 검증 명령 통합 | 외부 키 없이 실행 가능한 문서 검사, wiki build, RAG dry-run, 제출 증거 검사, 테스트, lint, frontend build를 `pnpm verify:local`로 묶음 | 김성빈이 제출 전 반복 실행할 기본 검증 흐름으로 채택했고, 실제 `pnpm verify:local`과 `git diff --check` 결과를 확인 |
-| 2026-05-14 | 김성빈 | Codex | 로컬 dev server 접속 오류 점검 | `localhost refused` 이후 backend/frontend dev server를 띄우고 Playwright console log로 CORS 원인을 확인해 Vite fallback port 허용과 favicon을 추가 | CORS 테스트를 먼저 실패시킨 뒤 수정했고, `pnpm verify:local`, `pnpm build:frontend`, Playwright smoke로 직접 검증 |
-| 2026-05-14 | 김성빈 | Codex | Supabase Framework client key 연결 | Supabase Dashboard가 제공한 `VITE_SUPABASE_PUBLISHABLE_KEY`를 프론트 env에 적용하고 기존 `VITE_SUPABASE_ANON_KEY` alias와 함께 지원 | 비밀값은 git ignored `.env`에만 두고, publishable key alias tests를 먼저 실패시킨 뒤 `pnpm verify:local`로 검증 |
-| 2026-05-16 | 김성빈 | Codex | 에이전트 기반 코딩 활용 증거 문서 보강 | `docs/llm/agent-coding-evidence.md`를 추가하고 codex workflow, 보고서 목차, 발표 구성, 제출 체크리스트, feature registry, plans status, docs check 필수 목록을 연결 | 교수님 평가 포인트에 맞춰 “AI가 대신 코딩”이 아니라 “에이전트를 통제하고 검증한 개발 과정”으로 설명하도록 직접 문구와 제출 증거 흐름을 정리 |
-| 2026-05-16 | 김성빈 | Codex | LLM 생성 코드 그대로 사용 금지 증거 강화 | `pnpm submission:check`에 “LLM 생성 코드 그대로 사용 금지 증거” 항목을 추가하고 Python 핵심 로직 문서와 제출 체크리스트에 직접 검토/수정/테스트 근거를 보강 | 주석만으로 방어하지 않고, 설명 가능한 Python 로직 문서와 자동 제출 증거 체크를 함께 사용하기로 결정 |
-| 2026-05-16 | 김성빈 | Codex | 응답 종료 전 문서 갱신 판단 규칙 추가 | `AGENTS.md`에 답변을 끝내기 전 문서 갱신 필요 여부를 판단하고, 필요할 때만 관련 문서를 갱신하는 규칙 추가 | 매번 문서를 억지로 수정하지 않고 기능/API/검증/제출 설명 변화가 있을 때만 문서화하도록 운영 기준을 정리 |
-| 2026-05-22 | 김성빈 | Codex | 홈서버 운영 전략 문서화 | 라즈베리파이 홈서버 운영은 Docker Compose 기반 후속 배포로 두고, 발표 라이브 시연은 노트북 로컬 실행을 1순위로 유지하도록 dev guide, live scenario, 제출 체크리스트를 갱신 | 네트워크, DDNS, HTTPS, OAuth 변수 때문에 홈서버 URL을 주 경로로 과장하지 않고, 보조 시연과 녹화 백업을 함께 준비하는 기준으로 정리 |
-| 2026-05-23 | 김성빈 | Codex | 데모 UI polish 구현 | live smoke가 외부 키 부족으로 막힌 상태를 확인한 뒤, 외부 API 계약을 바꾸지 않는 `streamdown`, `@streamdown/cjk`, `sonner` 기반 답변 렌더링/토스트 개선 spec과 plan을 작성하고 구현 | assistant 답변은 markdown으로 표시하고 주요 성공/실패 액션은 toast로 피드백하며, `pnpm build:frontend`로 TypeScript/Vite build를 검증 |
-| 2026-05-23 | 김성빈 | Codex | 로컬 데모 Supabase schema fallback 보강 | Supabase Direct key는 있으나 `google_oauth_tokens`, `user_memories` 등 live table이 schema cache에 없어 `/api/chat`이 500을 내는 문제를 확인하고 dependency schema probe와 in-memory/local fallback 테스트를 추가 | 실제 Supabase live smoke는 `supabase/schema.sql` 적용과 live key가 필요하다고 분리했고, API 직접 호출과 브라우저 smoke로 로컬 데모 채팅 응답을 검증 |
-| 2026-05-23 | 김성빈 | Codex | SaaS 제출 목표 문서 재정렬 | 사용자가 로컬 실행 수준이 아니라 실제 SaaS형 학업 내비게이터를 목표로 한다고 명확히 한 뒤 PRD, roadmap, 보고서 목차, 제출 체크리스트, 라이브 시연 시나리오를 수정 | 로컬 fallback은 보조 경로로만 남기고 Supabase live 연결, Python 핵심 로직 설명, LLM 사용 기록, 6-10페이지 보고서/20-25분 발표영상 기준으로 제출 전략을 재정리 |
-| 2026-05-23 | 김성빈 | Codex | Supabase live readiness와 Python 핵심 로직 주석 점검 | `pnpm env:check`, `pnpm live:smoke-plan`, `pnpm env:check:strict`, Supabase DB/login/LLM smoke, schema readiness probe를 실행하고 Python 핵심 서비스 5개 주석을 검토 | `SUPABASE_JWT_SECRET`, smoke user id/email/password, `GEMINI_API_KEY` 누락과 `schema_ready=False`를 local fallback 완성으로 과장하지 않고 live blocker로 문서화했으며, 판단 기준 주석은 충분해 코드 churn 없이 문서만 갱신 |
-| 2026-05-23 | 김성빈 | Codex | live auth gate와 Gemini smoke 정리 | 프론트 `demo-user` fallback과 백엔드 `X-User-Id` 런타임 fallback을 제거하고, `GEMINI_API_KEY` 설정 후 Gemini embedding/answer/grounding smoke를 실행 | 비밀값은 `.env`에만 두고 출력/커밋하지 않았으며, Supabase schema/user blocker와 Gemini live 성공을 분리해 테스트와 문서로 검증 |
-| 2026-05-23 | 김성빈 | Codex | RAG 자료 접수/정형화 흐름 추가 | 사용자가 교과과정, 트랙, 동아리, 학교 시스템 자료를 파일/사진/텍스트로 제공할 때 `data/inbox`와 `pnpm rag:prepare-raw`를 거쳐 raw Markdown으로 정리하는 경로를 추가 | 사진/PDF는 곧바로 vector DB에 넣지 않고 텍스트화, 출처, 수집일, category를 확인한 뒤 wiki build와 ingest dry-run으로 검증하도록 정리 |
-| 2026-05-23 | 김성빈 | Codex | Supabase live smoke blocker 세분화 | service role로 Supabase Auth smoke user를 생성하고 `pnpm supabase:schema-check`와 schema missing API handler를 추가 | password는 출력하지 않고 gitignored root `.env`에만 저장했으며, DB/login/LLM smoke 실패 원인을 env/user가 아니라 `supabase/schema.sql` 미적용으로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Supabase schema 적용 전 계약 점검 | `search_document_chunks_text` RPC 인자명이 backend/schema-check/schema.sql에서 일치하는지 확인하고 SQL Editor 적용 절차를 문서화 | 현재 로컬에는 Supabase CLI가 없음을 확인했고, Dashboard SQL Editor 적용 뒤 실행할 smoke 명령을 정리 |
-| 2026-05-23 | 김성빈 | Codex | Supabase schema missing UX 보강 | 백엔드 `503 supabase_schema_missing` 응답을 프론트 API client가 JSON으로 파싱해 사용자에게 schema 미적용 원인을 보여주도록 수정 | 단순 `API 요청 실패: 503` 대신 live 준비 blocker를 직접 설명하게 하고, frontend build와 backend tests로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Live smoke runner 추가 | schema 적용 후 Supabase DB/LLM/login, Gemini smoke, embedding ingest를 순차 실행하는 `pnpm live:smoke-run` 명령을 추가 | schema check를 먼저 실행해 미적용이면 후속 write smoke를 막고, runner 단위 테스트와 전체 backend tests로 검증 |
-| 2026-05-23 | 김성빈 | Codex | RAG embedding ingest 중복 방지 | `document_chunks`에 unique index를 추가하고 ingest script를 insert에서 upsert로 변경 | live smoke runner와 자료 보강을 반복해도 같은 chunk가 중복 저장되지 않도록 conflict key를 테스트로 검증 |
-| 2026-05-23 | 김성빈 | Codex | RAG 원천자료 접수 템플릿 보강 | 사용자가 교과과정/트랙/동아리/학사 자료를 파일이나 사진으로 줄 때 출처, 대상 학부/학년, category, 필수 필드를 함께 받는 템플릿 추가 | 바로 JSON으로 고정하지 않고 Markdown 정형화 후 chunk/embedding ingest로 넘기는 기준을 문서와 dry-run으로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Runtime product mode gate 추가 | 사용자가 우려한 목업/데모 fallback 회귀를 막기 위해 `frontend/src`, `backend/app`에서 `demo-user`, `X-User-Id`, mock/목업/데모 표현을 검사하는 `pnpm product:check` 추가 | `pnpm product:check`, backend tests, frontend build로 검증하고 `verify:local`에도 포함 |
-| 2026-05-23 | 김성빈 | Codex | Supabase schema readiness coverage 보강 | live schema check가 핵심 앱 테이블만 보는 문제를 줄이기 위해 `schema.sql`에 정의된 모든 table을 `pnpm supabase:schema-check` 대상에 포함 | contract test를 먼저 실패시킨 뒤 `raw_documents`, `wiki_pages`, `wiki_logs`, `chat_logs`까지 체크하도록 수정하고 live blocker 목록을 갱신 |
-| 2026-05-23 | 김성빈 | Codex | RAG source product mode gate 추가 | raw/wiki/seed 자료가 더 이상 임시 샘플처럼 보이지 않도록 출처 표시와 회귀 검사를 추가 | `pnpm wiki:build`, `pnpm rag:source-check`, `pnpm rag:ingest:dry`로 data/wiki 재생성과 ingest payload를 검증 |
-| 2026-05-23 | 김성빈 | Codex | Calendar export live gate 강화 | 사용자가 모든 흐름을 live로 보여주겠다고 명확히 해 token 없는 Google Calendar export의 synthetic id 성공 처리를 제거하고 409 연결 필요 오류로 변경 | TDD로 서비스/API 테스트를 먼저 실패시킨 뒤 구현했고, `pnpm test:backend -- tests/services/test_calendar_service.py tests/api/test_assignments_api.py`로 검증 |
-| 2026-05-23 | 김성빈 | Codex | 공식 공개 자료 기반 RAG 보강 | 국민대학교 소프트웨어융합대학 공개 페이지를 확인해 인공지능학부 교육 목표, 소프트웨어학부 교육 구조, 동아리 활동, 교학팀 문의 경로를 raw RAG 문서로 요약 추가 | 원문 전체 복사가 아니라 출처 URL과 상담용 판단 기준 중심으로 정리하고 wiki build/source check/ingest dry-run으로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Supabase seed 중복 방지 | schema 적용 뒤 초기 확인용 seed를 반복 실행해도 `document_chunks`가 중복되지 않도록 `content_hash`와 conflict key를 추가 | seed SQL contract test를 먼저 실패시킨 뒤 수정하고 focused/backend tests로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Supabase SQL Editor bundle 생성 명령 추가 | Supabase Dashboard에서 schema 적용 시 파일 순서 실수를 줄이기 위해 `pnpm supabase:sql-bundle` 명령을 추가 | schema-only와 schema+seed bundle 생성을 테스트하고 docs에 적용 절차를 갱신 |
-| 2026-05-23 | 김성빈 | Codex | Live smoke blocker 안내 보강 | schema 미적용으로 `pnpm live:smoke-run`이 멈출 때 SQL bundle 생성, SQL Editor 적용, live smoke 재실행 명령을 출력하도록 개선 | 출력 helper 테스트와 전체 backend tests로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Supabase SQL bundle 검증 gate 추가 | Supabase Dashboard에 붙여넣는 SQL bundle이 schema/seed 필수 marker를 포함하고 비밀값 marker를 포함하지 않는지 자동 검증하도록 보강 | TDD로 `validate_sql_bundle` 테스트를 먼저 실패시킨 뒤 구현했고, `python -m pytest tests/test_build_supabase_sql_bundle.py`로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Live readiness report 추가 | Supabase schema 적용 전 env, SQL bundle validation, live schema 상태와 next action을 한 번에 확인하는 `pnpm live:readiness` 명령을 추가 | TDD로 report formatting 테스트를 먼저 실패시킨 뒤 구현했고, `python -m pytest tests/test_live_readiness_report_script.py`로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Live smoke 실패 분류 보강 | schema 적용 뒤 Supabase/Gemini/Google smoke 중 첫 실패를 `schema`/`auth`/`env`/`code`로 분류하고 다음 점검 명령을 출력하도록 보강 | TDD로 `print_failure_guidance` 테스트를 먼저 실패시킨 뒤 구현했고, `pnpm test:backend -- tests/test_live_smoke_run_script.py`로 검증 |
-| 2026-05-23 | 김성빈 | Codex | RAG intake validation gate 추가 | 사용자가 파일/사진/텍스트로 준 학부 자료가 출처, 수집일, 대상, category, 개인정보 위험 검사를 통과한 뒤 raw/wiki/embedding으로 들어가도록 `pnpm rag:intake-check` 추가 | TDD로 intake parser와 개인정보 위험 테스트를 먼저 실패시킨 뒤 구현했고, `python -m pytest tests/test_rag_intake_check_script.py`로 검증 |
-| 2026-05-23 | 김성빈 | Codex | RAG intake prepare command hint 추가 | 접수 템플릿을 채운 자료가 검사를 통과하면 사람이 title/category/source를 다시 입력하지 않아도 되도록 `pnpm rag:prepare-raw` 명령을 출력 | TDD로 prepare command 출력 테스트를 먼저 실패시킨 뒤 구현했고, `python -m pytest tests/test_rag_intake_check_script.py`로 검증 |
-| 2026-05-23 | 김성빈 | Codex | RAG intake stub generator 추가 | PDF/사진/캡처/텍스트 원본 파일명과 제목/category/source를 받아 `data/inbox/*-intake.md` 접수 stub을 생성하는 `pnpm rag:intake-stub` 추가 | stub 생성 함수, category 검증, 파일명 sanitize, 파일 쓰기 테스트를 작성하고 `python -m pytest tests/test_create_rag_intake_stub_script.py`로 검증 |
-| 2026-05-23 | 김성빈 | Codex | RAG intake placeholder gate 보강 | 접수 stub의 `확인 필요`, `TODO`, 기본 전사 안내문이 남아 있으면 raw 변환 명령을 출력하지 않도록 `pnpm rag:intake-check` 보강 | TDD로 placeholder가 남은 stub을 먼저 통과 실패시키고, 실제 stub 생성 후 intake-check가 blocked 처리하는 end-to-end 검증을 실행 |
-| 2026-05-23 | 김성빈 | Codex | 앱 내 live runtime status 추가 | 설정 화면에서 Supabase backend, Supabase schema, Gemini, Google Calendar readiness를 비밀값 없이 확인하는 `/api/runtime/status`와 UI 표시를 추가 | TDD로 runtime status service/API 테스트를 먼저 실패시킨 뒤 구현했고, schema 미적용은 env/Gemini 성공과 분리해 blocker로 표시하도록 검증. 이후 app data 503과 runtime status 표시를 분리해 schema blocker 상황에서도 진단 상태를 볼 수 있게 수정 |
-| 2026-05-23 | 김성빈 | Codex | 로그인 전 live readiness 표시 | 로그인 화면에서 비인증 `/api/runtime/public-status`를 호출해 Supabase backend/schema/Gemini readiness를 비밀값 없이 표시 | public endpoint 테스트를 먼저 실패시킨 뒤 구현했고, frontend build와 브라우저 로그인 화면 확인으로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Runtime schema blocker next action 표시 | Supabase schema blocker가 있을 때 runtime status API와 화면에 SQL bundle 생성, SQL Editor 적용, live smoke 재실행 순서를 표시 | TDD로 `next_actions` 기대값을 먼저 실패시킨 뒤 구현했고, API 응답과 frontend build로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Live app data failure recovery 보강 | Supabase Auth 로그인 후 app data 로딩이 schema 503 등으로 실패할 때 무한 로딩 대신 live 상태와 schema 다음 액션을 보여주는 복구 화면을 추가 | 프론트엔드 전용 테스트 하네스가 없어 `pnpm build:frontend`로 TypeScript/Vite 빌드를 검증했고, 문서에는 live schema blocker가 남아 있음을 과장 없이 기록 |
-| 2026-05-23 | 김성빈 | Codex | 공식 KMU RAG 자료 보강 2 | 공식 페이지 기반으로 인공지능학부 2025 교과과정, 소프트웨어학부 트랙 선택 구조, 졸업요건 상담 기준, K-StarTrack 현장실습 자료를 raw/wiki에 추가하고 초기 raw 자료의 출처 표현도 공식 확인 경로로 정리 | 웹으로 공식 출처를 확인한 뒤 raw 문서를 직접 요약/구조화했고, `pnpm wiki:build`, `pnpm rag:source-check`, `pnpm rag:ingest:dry`로 19 documents / 118 chunks 준비를 검증 |
-| 2026-05-23 | 김성빈 | Codex | Runtime missing detail UI 보강 | live status 화면에서 Supabase schema missing table/function 전체와 Google Calendar missing env 이름을 비밀값 없이 표시 | `RuntimeComponentStatus`의 기존 `missing_schema`/`missing_env` 계약을 활용했고, `pnpm build:frontend`로 타입/번들 검증 |
-| 2026-05-23 | 김성빈 | Codex | Live smoke API health preflight 추가 | Supabase schema 적용 후 login/API smoke를 실행하기 전에 `--api-base`의 FastAPI `/health`를 먼저 확인하도록 보강 | TDD로 health endpoint 호출, 연결 실패 처리, backend 실행 안내 출력을 먼저 실패시킨 뒤 구현했고, focused test와 전체 local gate로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Live readiness API health report 추가 | `pnpm live:readiness`가 schema 준비 뒤 `--api-base`의 FastAPI `/health` 상태를 함께 출력하도록 보강 | TDD로 API ready/blocker/skipped 분기를 먼저 실패시킨 뒤 구현했고, 현재 live에서는 schema blocker 때문에 API health가 skipped로 남는 것을 확인 |
-| 2026-05-23 | 김성빈 | Codex | Supabase schema cache reload marker 추가 | SQL Editor 적용 직후 PostgREST schema cache가 늦게 갱신되어 RPC가 missing으로 보이는 위험을 줄이도록 schema 끝에 `notify pgrst, 'reload schema'`를 추가 | TDD로 schema SQL contract와 SQL bundle marker 테스트를 먼저 실패시킨 뒤 구현했고, bundle 생성과 focused tests로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Live smoke schema retry 추가 | SQL Editor 적용 직후 PostgREST schema cache 반영 지연으로 table/RPC가 잠깐 missing일 때 `live:smoke-run`이 schema check를 짧게 재시도하도록 보강 | TDD로 첫 시도 실패 후 두 번째 ready, 모든 재시도 실패 시 마지막 실패 반환 테스트를 먼저 작성한 뒤 구현했고, focused test와 전체 local gate로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Supabase schema-check retry option 추가 | SQL Editor 적용 직후 `pnpm supabase:schema-check` 자체도 schema check를 기본 3회 재시도하고 `--retries`, `--retry-delay` 옵션을 받도록 보강 | TDD로 retry 성공/실패와 pnpm `--` separator 처리를 먼저 실패시킨 뒤 구현했고, focused test로 검증 |
-| 2026-05-23 | 김성빈 | Codex | live 시연 용어와 RAG 자료 접수 기준 정리 | 사용자가 데모 유저/목업이 아니라 로그인부터 온보딩, 채팅까지 live 흐름을 원한다고 명확히 한 뒤 현재 문서 링크를 `docs/product/live-scenario.md`로 바꾸고 자료 접수 항목을 보강 | Gemini live smoke 3종은 실제 API 호출 성공, Supabase live smoke는 schema 미적용 blocker로 분리해 검증 |
-| 2026-05-23 | 김성빈 | Codex | Supabase SQL Editor copy helper 추가 | Supabase CLI/psql과 DB password가 없는 현재 환경에서 SQL Editor 적용 실수를 줄이기 위해 검증된 schema+seed bundle을 클립보드에 복사하는 `pnpm supabase:sql-copy` 추가 | TDD로 env project ref 파싱, Dashboard URL 생성, pnpm separator, clipboard 호출을 검증했고 비밀값은 출력하지 않도록 기존 bundle validator를 재사용 |
-| 2026-05-23 | 김성빈 | Codex | Live onboarding memory 확장 | 첫 로그인 온보딩에서 관심 분야, 목표, 코딩 경험, 학습 선호, 활동 방식을 받아 기존 `user_memories` active memory로 저장하고 첫 채팅 질문/추천 입력에 반영 | TDD로 `POST /api/memories`가 onboarding memory와 memory event를 생성하는 API 테스트를 먼저 실패시킨 뒤 구현했고, frontend build와 focused backend test로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Login smoke onboarding memory 검증 추가 | Supabase email/password login smoke가 Bearer profile write/read뿐 아니라 `/api/memories` onboarding memory 생성까지 확인하도록 확장 | TDD로 smoke helper와 login smoke mock transport 기대 요청 수를 먼저 실패시킨 뒤 구현했고 focused smoke script tests로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Login smoke stale backend 분류 추가 | `supabase:login-smoke`가 401로만 실패해 auth/schema/code 원인이 흐려지는 문제를 줄이기 위해 profile write 전에 `/api/runtime/public-status` contract preflight를 추가 | TDD로 contract success/stale 404 테스트를 먼저 실패시킨 뒤 구현했고, 실제 8000 stale backend에서 재시작 안내 메시지로 분류되는 것을 확인 |
-| 2026-05-23 | 김성빈 | Codex | 활성 문서 live language gate 추가 | 제출/제품/아키텍처/기여 문서가 실제 로그인, 온보딩, 채팅 live 흐름을 기준으로 설명되도록 `pnpm live-language:check`와 회귀 테스트를 추가 | TDD로 현재 활성 문서의 비-live 표현을 먼저 실패시킨 뒤 문서를 정리했고, historical LLM 기록과 archived 설계 문서는 보존 |
-| 2026-05-23 | 김성빈 | Codex | Live readiness stale backend 진단 추가 | schema 미적용 상태에서도 `live:readiness`가 현재 `--api-base`의 `/api/runtime/public-status`를 확인해 오래된 FastAPI 서버를 별도 blocker로 표시하도록 보강 | TDD로 readiness report와 contract checker 테스트를 먼저 실패시킨 뒤 구현했고, 실제 8000 포트에서 Supabase schema blocker와 stale backend blocker가 함께 표시됨을 확인 |
-| 2026-05-23 | 김성빈 | Codex | SQL copy smoke api-base 안내 보정 | 8000번 stale backend 때문에 SQL 적용 뒤 검증 명령이 잘못된 port를 안내하지 않도록 `supabase:sql-copy -- --api-base ...` 옵션을 추가 | TDD로 copy helper 출력이 8001 smoke 명령을 포함하는지 먼저 실패시킨 뒤 구현했고, 실제 클립보드 복사 명령을 8001 기준으로 재실행 |
-| 2026-05-23 | 김성빈 | Codex | Supabase Dashboard access blocker 확인 | Chrome Supabase 세션으로 SQL Editor 접근을 시도해 schema 적용 가능 여부를 확인 | Dashboard가 `You do not have access to this project`를 반환해 env/schema/code 문제가 아니라 project owner/member 계정 또는 DB 접속 권한이 필요한 blocker로 문서화 |
-| 2026-05-23 | 김성빈 | Codex | Embedding ingest live failure 수정 | schema 적용 뒤 `live:smoke-run` 마지막 단계에서 Gemini embedding batch 결과 수가 chunk 수보다 적게 반환되어 `zip(strict=True)`가 실패하는 문제를 수정 | TDD로 batch embedding 개수 부족 시 chunk 단위 재시도 regression test를 먼저 실패시킨 뒤 구현했고, `pnpm rag:ingest:embeddings`와 `pnpm live:smoke-run --api-base http://127.0.0.1:8001` 전체 통과로 검증 |
-| 2026-05-23 | 김성빈 | Codex | Supabase live smoke 전체 통과 기록 | SQL Editor schema+seed 적용 후 Supabase schema, API contract, DB/profile/memory, login/API, LLM log, Gemini, grounding, embedding ingest가 모두 live 경로에서 통과하는지 확인 | `pnpm supabase:schema-check`, `pnpm live:readiness -- --include-seed --api-base http://127.0.0.1:8001`, `pnpm live:smoke-run --api-base http://127.0.0.1:8001`로 검증했고 Google Calendar OAuth는 별도 확장 기능으로 분리 |
-| 2026-05-24 | 김성빈 | Codex | 제출 범위에서 Google Calendar OAuth 제외 | 팀 발표와 제출 기준을 내부 일정 관리 중심으로 재정리하고 Google Calendar는 OAuth가 필요한 선택 확장 기능으로 낮춤 | 실제 구현된 일정 저장, D-day, 완료/삭제가 과제 조건을 충족하므로 문서에서 Google Calendar live smoke를 필수 blocker로 보이지 않게 정리 |
-| 2026-05-25 | 김성빈 | Codex | OpenCairn chat UX 패턴 반영 | OpenCairn의 recent thread, message playback, SSE stream 구조를 참고해 KMU 앱에 최근 상담 자동 복원, 마지막 메시지 preview, active session 저장, `/api/chat/stream` 이벤트 응답을 추가 | `uv run python -m pytest tests/services/test_chat_store.py tests/api/test_chat_contract_api.py`, `pnpm build:frontend`, `pnpm docs:check`, `pnpm supabase:login-smoke`, live `/api/chat/stream` smoke로 검증 |
-| 2026-05-25 | 김성빈 | Codex | 로그인 후 로딩 UX 비차단 처리 | 로그인 세션이 있는 상태에서는 사용자 데이터 로딩 화면으로 앱 전체를 막지 않고 workspace shell, 상담 입력, inline 복구 UI를 먼저 보여주도록 수정 | `pnpm build:frontend`, `git diff --check`, 브라우저 DOM 확인으로 `사용자 데이터를 불러오는 중입니다.` 차단 문구가 사라진 것을 검증 |
-| 2026-05-25 | 김성빈 | Codex | 채팅 UX와 기록 관리 보강 | OpenCairn의 인용/근거 분리 패턴을 축소 적용해 raw 근거 chip을 중복 제거된 번호형 근거로 바꾸고, 상담 삭제, 자동 제목, 마크다운 강조 정규화, SSE 종료 버퍼 처리를 추가 | `pnpm build:frontend`, `uv run python -m pytest tests/services/test_chat_store.py tests/services/test_supabase_stores.py tests/api/test_chat_contract_api.py`, `pnpm lint:backend`로 검증 |
-| 2026-05-25 | 김성빈 | Codex | 채팅 hardcoded 후속 질문 제거 | 상담 답변에 LLM이 생성하지 않은 `학업 상담`/`진로 상담`/`일정 관리` 고정 칩과 입력창 하단 고정 칩이 붙어 실제 상담 경험을 해치는 문제를 제거 | backend contract test를 고정 choices 없음 기준으로 바꾸고 frontend build/backend focused test/Gemini answer smoke로 검증 |
-| 2026-05-25 | 김성빈 | Codex | 채팅 composer와 실제 streaming 보강 | 모드 선택, 빠름/균형 모델 선택, 텍스트 파일 첨부, 답변 중지, Gemini `generate_content_stream` SSE 흐름을 구현 | focused backend tests 14개, `pnpm build:frontend`, `pnpm lint:backend`, 실제 Gemini streaming TestClient smoke로 `gemini-3.1-flash-lite` fast 응답과 첨부 반영을 검증 |
-| 2026-05-26 | 김성빈 | Codex | Gemini 스트리밍 답변 끊김 복구 | 스트리밍 chunk의 종료 메타데이터를 보존하고 `MAX_TOKENS`처럼 중간 종료된 답변은 기존 비스트리밍 재시도 경로로 완성 답변을 만들어 최종 `done` 응답과 저장본에 반영 | cutoff regression test를 먼저 실패시킨 뒤 구현했고 `uv run python -m pytest tests/api/test_chat_contract_api.py tests/services/test_answer_generation_service.py`, `uv run ruff check app tests/api/test_chat_contract_api.py tests/services/test_answer_generation_service.py`로 검증 |
-| 2026-05-26 | 김성빈 | Codex | Gemini 스트리밍 출력 예산 보정 | UnivMind/OpenCairn 스트리밍 구현을 참고해 낮은 `max_output_tokens=768` 제한을 4096으로 올리고, Gemini의 camelCase `finishReason`과 빈 종료 chunk를 보존하도록 수정 | output budget regression test를 먼저 실패시킨 뒤 구현했고 `uv run python -m pytest tests/services/test_answer_generation_service.py tests/api/test_chat_contract_api.py`, `uv run python -m ruff check app/services/answer_generation_service.py app/api/chat.py tests/services/test_answer_generation_service.py tests/api/test_chat_contract_api.py`로 검증 |
-| 2026-05-26 | 김성빈 | Codex | 추천 화면 기본값 제거 | 진로/활동 추천 화면이 사용자 정보를 이미 아는 것처럼 보이지 않도록 기본 관심사/목표/활동값을 비우고, 정보가 부족하면 AI 상담으로 이동해 관심사와 목표를 먼저 정리하게 변경 | `pnpm build:frontend`, `git diff --check`로 검증 |
-| 2026-05-26 | 김성빈 | Codex | 중복 상담 기록 메뉴와 문서 스크롤 제거 | 사이드바 최근 상담이 실제 기록 탐색 역할을 하므로 별도 `상담 기록` 페이지 진입점을 제거하고 앱 레이아웃을 viewport 안에 고정 | `pnpm build:frontend`, `pnpm docs:check`, `git diff --check`로 검증 |
-| 2026-05-26 | 김성빈 | Codex | AI 상담 중심 추천 UX 전환 | 별도 `진로/취업` 폼 화면을 `내 추천` 현황 화면으로 낮추고, 추천 정보가 부족하면 진로 상담 페르소나로 이동해 관심사/목표/코딩 경험을 먼저 물어보게 변경 | `pnpm build:frontend`, `pnpm docs:check`, `git diff --check`로 검증 |
-| 2026-05-26 | 김성빈 | Codex | 설정 모달 관리 화면 | 설정을 페이지가 아니라 모달로 띄우고 계정, 내 정보, 메모리 보관, AI 상담 모드와 모델 선택을 한 화면에서 관리하도록 변경 | `pnpm build:frontend`, `pnpm docs:check`, `git diff --check`로 검증 |
-| 2026-05-26 | 김성빈 | Codex | 대화 기반 메모리 자동 저장 | AI 상담 문장에서 관심 트랙, 목표, 코딩 경험, 학습 선호, 주간 가능 시간을 추출해 `conversation / learning_context` 메모리로 저장하고 프론트 메모리 상태에 즉시 반영 | regression test를 먼저 실패시킨 뒤 구현했고 `uv run python -m pytest tests/api/test_chat_contract_api.py`, `uv run python -m pytest tests/services/test_memory_service.py`, `pnpm build:frontend`, `pnpm docs:check`, `git diff --check`로 검증 |
-| 2026-05-26 | 김성빈 | Codex | 우측 참고 패널 인터랙션 보강 | 내 정보 수정 버튼, 근거 카드 기반 후속 질문, 다음 행동 질문 버튼을 추가해 참고 패널에서 바로 상담 입력으로 이어지도록 변경 | `pnpm build:frontend`, `pnpm docs:check`, `git diff --check`로 검증 |
-| 2026-05-26 | 김성빈 | Codex | 데스크톱 사이드바 접기/폭 조절 추가 | 왼쪽 내비게이션과 오른쪽 참고 패널을 접을 수 있게 하고, 펼친 상태에서는 패널 경계선을 드래그해 폭을 조절하도록 변경 | `pnpm build:frontend`로 검증 |
-| 2026-05-26 | 김성빈 | Codex | 추천 보드와 일정 캘린더 UX 보강 | `내 추천`을 `추천 보드`로 바꾸고 상담 기반 추천 현황/로드맵 화면으로 재구성했으며, 일정 탭에 월간 캘린더와 다가오는 일정 목록을 추가 | `pnpm build:frontend`, `pnpm lint:backend`, `pnpm test:backend -- tests/services/test_answer_generation_service.py tests/api/test_chat_contract_api.py`, `pnpm docs:check`, `git diff --check`로 검증 |
-| 2026-05-27 | 김성빈 | Codex | 오픈소스 비교 기반 RAG 평가 게이트 추가 | 대학 RAG 챗봇과 product-grade RAG 오픈소스 비교에서 약점으로 드러난 “근거 검증 가능성”을 보강하기 위해 `pnpm rag:evaluate`를 추가 | 테스트를 먼저 실패시킨 뒤 로컬 raw/wiki 근거 평가 스크립트를 구현했고, `pnpm rag:evaluate`, focused backend test, docs check로 검증 |
-| 2026-06-02 | 김성빈 | Codex | 팀원 제공 동아리 데이터 정형화 | `clubs_information.json`의 두음, WINK, AIM, KOSS 정보를 `data/raw/kmu-team-clubs-information.md`로 정리하고 WINK/AIM 공식 확인 링크와 출처 확인 필요 문구를 반영 | `pnpm wiki:build`, `pnpm rag:ingest:dry`, `pnpm rag:evaluate`, `pnpm docs:check`, `git diff --check`로 검증했고, `data/inbox`의 JSON/빈 파일은 intake-check blocked 입력으로 남아 있음을 확인 |
-| 2026-06-02 | 김성빈 | Codex | 최신 소융대 공지 Google grounding 라우팅 | `최신`, `공지`, `모집`, `장학`, `행사`와 소융대/학부/국민대 맥락이 함께 있는 질문을 `latest_notice_advisor`로 분류하고 Google Search grounding 경로에 연결 | TDD로 latest notice intent와 grounding prompt 테스트를 먼저 실패시킨 뒤 구현했고, focused/backend tests, lint, frontend build, `pnpm gemini:grounding-smoke`, latest notice 직접 grounding 호출로 검증 |
-| 2026-06-02 | 김성빈 | Codex | 최종보고서 초안 작성 | 과제 제출 항목인 프로젝트 주제/목적, 기능, 코드 구조, LLM 활용 방식, 실행 결과를 `docs/report/final-report.md`에 보고서 형태로 정리 | 기존 보고서 목차, 제출 체크리스트, Python 핵심 로직 문서를 바탕으로 작성했고 `pnpm docs:check`로 문서 구조를 검증 |
-| 2026-06-02 | 김성빈 | Codex | 최종보고서 문체 정리 | 제출용 보고서가 격식체로 읽히도록 `docs/report/final-report.md` 본문을 했습니다체/합니다체로 통일 | 문체 수정 후 문서 검증을 다시 실행해 제출 문서 구조를 확인 |
-| 2026-06-02 | 김성빈 | Codex | 채팅 일정 후보 저장 연결 | 사용자가 채팅에서 과제/마감 문장을 말하면 백엔드가 기존 일정 parser로 preview action을 생성하고, 프론트가 답변 아래 `캘린더에 추가` 버튼으로 내부 일정 보드에 저장하도록 연결 | TDD로 chat action regression test를 먼저 실패시킨 뒤 구현했고 focused backend tests와 `pnpm build:frontend`로 검증 |
-| 2026-06-02 | 김성빈 | Codex | 배포 일정 저장 500 오류 수정 | OCI 배포 서버 로그의 `Object of type datetime is not JSON serializable` 예외를 추적해 Supabase assignment/token payload가 JSON 직렬화 가능한 값만 보내도록 수정 | fake Supabase client에 JSON 직렬화 검사를 추가했고 `uv run python -m pytest tests/services/test_supabase_stores.py tests/api/test_assignments_api.py`로 회귀를 검증 |
-| 2026-06-02 | 김성빈 | Codex | 일정 탭 직접 추출 UI 제거 | 채팅 답변의 일정 후보 저장 흐름과 중복되는 일정 탭의 `AI 일정 추출` 입력 박스와 직접 `추출` 버튼을 제거하고 일정 탭은 저장된 일정 확인 중심으로 정리 | 정적 UI 계약 테스트를 먼저 실패시킨 뒤 구현했고 `python -m pytest tests/test_schedule_ui_contract.py`, `pnpm build:frontend`로 검증 |
-| 2026-06-02 | 김성빈 | Codex | 최종보고서 일정 설명 수정 | 채팅 일정 후보 카드와 캘린더에 추가 버튼 중심의 현재 일정 흐름에 맞춰 `docs/report/final-report.md`의 일정 기능, 코드 설명, 실행 결과 문단을 수정 | 일정 탭 직접 추출 설명을 제거하고 채팅 입력 -> assignment_preview action -> 사용자 확인 저장 -> 일정 보드 확인 흐름으로 정리 |
-| 2026-06-02 | 김성빈 | Codex | 최종보고서 단독 제출용 보강 | `docs/report/final-report.md`에서 과제 조건 충족 표를 제거하고 보고서 내부에 LLM 사용 기록 요약표, 직접 검토 내용, 검증 결과 설명을 추가 | 보고서만 제출해도 LLM 활용 목적과 직접 검토/수정/검증 근거가 보이도록 구성하고 문서 검증을 실행 |
-| 2026-06-03 | 김성빈 | Codex | 일정 저장 날짜 하루 밀림 수정 | `다음주 금요일` 일정이 Supabase 저장 뒤 토요일로 보이는 문제를 timezone 경계로 추적하고, 저장 payload와 일정 보드 날짜 표시를 한국 날짜 기준으로 고정 | Supabase 저장소 테스트와 일정 UI 계약 테스트를 먼저 실패시킨 뒤 구현했고 focused backend tests와 `pnpm build:frontend`로 검증 |
+| 김성빈 | PM, 개발 통합, 검증 | Codex, ChatGPT, Gemini API, Gemini Code Assist | 프로젝트 주제 구체화, PRD/spec/plan 작성, FastAPI/RAG/Supabase/Gemini 구현 보조, 오류 분석, 코드 리뷰 관점 점검, 보고서 정리 | 개인화 RAG 기반 AI 내비게이터 범위 확정, Python FastAPI 백엔드, React UI, Supabase 저장소, Gemini 기반 답변 생성/일정 파싱 흐름 구현 | 추천 규칙, 일정 D-Day 계산, RAG 근거 선택, 인증/저장소 경계, LLM 로그 저장 흐름을 코드와 테스트로 확인했습니다. |
+| 차성민 | 개발 보조, 기능 테스트, 코드 정리 | Codex | 프론트엔드 개발 중 API 호출 fallback과 팀 역할 문서 정리 보조 | git author `2476ae`로 `frontend/src/lib/api.ts`, `package.json`의 dev API fetch fallback 수정과 `docs/collaboration/team-roles.md` 수정 기록 | API fallback 수정이 실제 프론트엔드 API 호출 흐름과 맞는지 확인했고, 팀 역할 문서는 최종 역할 분담과 맞게 유지했습니다. |
+| 이가은 | 데이터 수집/정리 | Gemini, ChatGPT | 학생회/학사 관련 자료를 JSON 형태로 정리하는 과정에서 사용 | `data/inbox/council.json` 형태의 접수 단계 자료 작성 | 자료를 최종 지식베이스와 분리해 `data/inbox`에 두고, 추후 출처, 내용, 개인정보 위험을 확인할 대상으로 표시했습니다. |
+| 정재훈 | 데이터 수집/정리 | Gemini, ChatGPT | 동아리 자료를 JSON과 Markdown 형태로 정리하는 과정에서 사용 | `data/inbox/clubs_information.json`에 두음, WINK, AIM, KOSS 동아리 정보 정리 | 동아리명, 활동 내용, 지원 대상, 출처 확인 필요 항목을 사람이 확인할 수 있도록 접수 자료로 분리했습니다. |
+| 비타 | 발표자료 | 해당 없음 | 발표자료 구성과 시연 흐름 정리 담당 | 발표자료 제작과 발표 화면 구성 | 이번 제출용 LLM 활용 기록에는 별도 LLM 사용 사실을 기재하지 않습니다. |
+| 최승범 | 발표자료 | 해당 없음 | 발표자료 구성과 시연 흐름 정리 담당 | 발표자료 제작과 발표 화면 구성 | 이번 제출용 LLM 활용 기록에는 별도 LLM 사용 사실을 기재하지 않습니다. |
 
-## 앱 기능별 Gemini API 기록 예정 항목
+## 2. 개발 보조 LLM 사용 방식
 
-| 기능 | 모델 | 목적 |
+김성빈은 Codex와 ChatGPT를 설계와 검증을 돕는 개발 보조 도구로 사용했습니다. 사용 방식은 다음과 같습니다.
+
+| 단계 | LLM 활용 | 사람이 확인한 내용 |
 | --- | --- | --- |
-| RAG 챗봇 | `gemini-3-flash-preview`, `gemini-3.1-flash-lite` | 검색된 자료, 상담 모드, 사용자가 첨부한 텍스트 파일을 바탕으로 신입생 질문에 스트리밍 답변 |
-| 일정 파싱 | `gemini-3.1-flash-lite` | 자연어 일정에서 제목, 과목, 마감일 JSON 추출 |
-| 질문 분류 | `gemini-3.1-flash-lite` | 질문 유형 분류와 간단 요약 |
-| 임베딩 | `gemini-embedding-2` | 문서 chunk와 사용자 질문 embedding 생성 |
-| 메모리 추출 | `gemini-3.1-flash-lite` | 대화에서 관심사, 진로 고민, 프로젝트 선호 저장 후보 추출 |
-| 최신 웹 grounding | `gemini-3-flash-preview` | 취업/창업/공모전/소융대 공지/기술 트렌드처럼 최신성이 필요한 답변 보강 |
+| 주제 구체화 | 가계부, 추천 시스템, 챗봇, 웹앱 등 가능한 주제 중 과제 조건을 만족하는 방향을 비교했습니다. | 최종 주제를 국민대학교 소프트웨어융합대학 개인화 RAG 내비게이터로 결정했습니다. |
+| 요구사항 정리 | 과제 조건, 사용자 입력, Python 핵심 로직, LLM 활용 기록 요구사항을 문서 구조로 정리했습니다. | 제출물 기준을 `docs/report/`, `docs/architecture/`, `docs/llm/`로 나누고 보고서에 들어갈 항목을 확정했습니다. |
+| 설계 문서 작성 | PRD, Superpowers spec, implementation plan의 구조와 문장 정리에 사용했습니다. | MVP 범위, 제외 범위, 실제 구현 가능한 기능을 직접 고르고 문서 표현을 수정했습니다. |
+| 구현 보조 | FastAPI route, service, Pydantic schema, 테스트 구조를 잡는 데 사용했습니다. | 프로젝트 구조에 맞게 함수 분리, 타입 정리, 테스트 보강을 수행했습니다. |
+| 오류 분석 | 테스트 실패, API payload 오류, Supabase 저장소 문제, 프론트 API 연결 문제를 분석하는 데 사용했습니다. | 실제 로그와 테스트 결과를 보고 원인을 확정한 뒤 코드를 수정했습니다. |
+| 코드 리뷰 관점 | Gemini Code Assist와 Codex를 통해 누락 테스트, 보안 위험, 문서 불일치 가능성을 점검했습니다. | 타당한 지적만 반영하고, 비밀값 커밋 방지와 live 검증 상태를 직접 확인했습니다. |
+| 보고서 정리 | 코드 설명, LLM 활용 방식, 제출 조건 매핑 문장을 정리하는 데 사용했습니다. | 보고서에는 전체 코드를 붙이지 않고 주요 Python 로직과 파일 경로 중심으로 설명했습니다. |
+
+## 2.1 개발 과정에서의 구체적 활용
+
+개발 과정에서 LLM은 기능을 한 번에 완성하는 용도가 아니라, 작업을 작게 나누고 검증 가능한 형태로 정리하는 데 사용했습니다.
+
+### 3.1 주제와 범위 결정
+
+초기에는 가계부, 학점 계산기, 퀴즈 프로그램, 추천 시스템, 챗봇, 웹앱 등 여러 주제를 비교했습니다. LLM에는 각 주제가 과제 조건을 얼마나 잘 보여줄 수 있는지, Python 로직을 설명하기 쉬운지, 발표 데모로 설득력이 있는지 비교하도록 요청했습니다.
+
+그 결과 단순 계산 프로그램보다 사용자 입력, 조건문, 반복문, 리스트/딕셔너리, API 응답, LLM 활용 기록을 모두 보여줄 수 있는 웹앱이 적합하다고 판단했습니다. 최종적으로 국민대학교 소프트웨어융합대학 학생을 위한 개인화 RAG 기반 AI 내비게이터로 주제를 정했습니다.
+
+사람이 결정한 내용은 다음과 같습니다.
+
+- 신입생 안내를 주요 데모 시나리오로 사용합니다.
+- 설계 범위는 소프트웨어융합대학 전체 학년까지 확장 가능하게 둡니다.
+- Python 핵심 로직은 FastAPI 백엔드에 둡니다.
+- React 프론트엔드는 사용자 입력과 결과 확인 화면으로 사용합니다.
+- Supabase, RAG, Gemini API는 실제 서비스처럼 보이게 만드는 보조 구조로 사용합니다.
+
+### 3.2 문서 구조 설계
+
+LLM은 제출 문서와 개발 문서를 분리하는 데 사용했습니다. 처음에는 README 하나에 모든 내용을 넣을 수도 있었지만, 프로젝트가 커지면서 문서를 역할별로 나누었습니다.
+
+| 문서 영역 | LLM 활용 방식 | 사람이 정한 기준 |
+| --- | --- | --- |
+| `docs/report/` | 최종보고서, 데모 흐름, 제출 체크리스트의 구성을 잡는 데 사용 | 제출 PDF와 발표영상에서 바로 설명 가능한 문서만 남겼습니다. |
+| `docs/architecture/` | RAG, Mini LLM Wiki, Python 핵심 로직 설명 구조를 잡는 데 사용 | 발표에서 질문받을 수 있는 판단 기준 위주로 정리했습니다. |
+| `docs/llm/` | LLM 사용 목적, 에이전트 활용 방식, 프롬프트 요약을 정리하는 데 사용 | 일자별 나열보다 사람별 역할과 사용 목적 중심으로 정리했습니다. |
+| `docs/superpowers/` | 기능별 설계와 실행 계획을 기록하는 구조를 잡는 데 사용 | 구현 전에 범위와 검증 기준을 남기도록 했습니다. |
+| `docs/contributing/` | roadmap, feature registry, plans-status 문서 구조를 잡는 데 사용 | 팀원이 어느 파일을 봐야 하는지 빠르게 알 수 있게 했습니다. |
+
+### 3.3 Python 백엔드 구현 보조
+
+Codex는 FastAPI 백엔드의 route, service, schema, test 구조를 정리하는 데 사용했습니다. 구현 과정에서 사람은 파일 구조와 책임 분리를 확인했습니다.
+
+주요 활용 예시는 다음과 같습니다.
+
+| 기능 | LLM 활용 | 사람이 확인한 코드 기준 |
+| --- | --- | --- |
+| 채팅 API | 사용자 질문을 받고 RAG 검색, 답변 생성, 저장을 연결하는 흐름 정리 | `backend/app/api/chat.py`에서 route가 사용자 입력을 받고 service 계층으로 넘기는지 확인 |
+| RAG 검색 | raw/wiki 문서 chunk 검색 방식과 evidence 응답 구조 정리 | `backend/app/services/retrieval_service.py`에서 반복문으로 문서 후보를 순회하고 점수화하는지 확인 |
+| 답변 생성 | 검색 근거, 사용자 메모리, intent를 프롬프트로 구성하는 방식 정리 | `backend/app/services/answer_generation_service.py`에서 내부 근거와 웹 근거가 분리되는지 확인 |
+| 추천 기능 | 트랙/활동 후보를 리스트와 딕셔너리로 관리하고 점수화하는 구조 정리 | `backend/app/services/recommendation_service.py`에서 조건문과 점수 계산이 설명 가능한지 확인 |
+| 일정 기능 | 자연어 일정 parser, D-Day 계산, 일정 저장 payload 구조 정리 | `backend/app/services/assignment_service.py`에서 날짜 계산과 저장 값이 테스트 가능한지 확인 |
+| LLM 로그 | Gemini 사용 기록을 저장하고 조회하는 API 구조 정리 | `llm_usage_logs` 저장 흐름과 `GET /api/llm-logs` 응답을 확인 |
+
+### 3.4 오류 분석과 수정
+
+개발 중 오류가 발생했을 때 LLM에는 에러 메시지, 실패한 테스트, 관련 파일을 기준으로 원인 후보를 좁히도록 요청했습니다. 이후 실제 수정 여부는 테스트와 실행 결과로 확인했습니다.
+
+활용한 오류 분석 유형은 다음과 같습니다.
+
+- API 응답 payload가 프론트엔드 타입과 맞지 않는 문제 분석
+- Supabase 저장소 adapter에서 JSON 직렬화가 필요한 값 확인
+- 일정 저장 API에서 날짜, 시간, D-Day 값이 깨지는 문제 분석
+- Gemini API key가 없을 때 fallback 경로가 정상 동작하는지 확인
+- live smoke와 local test의 역할을 분리하는 문서 정리
+- 프론트엔드 API fallback과 dev server proxy 흐름 점검
+
+오류 분석 후에는 관련 테스트를 실행해 수정 결과를 확인했습니다.
+
+### 3.5 프론트엔드와 데모 흐름 정리
+
+프론트엔드는 React UI 자체가 과제의 핵심 언어는 아니지만, 사용자가 입력하고 결과를 확인하는 화면입니다. LLM은 화면 흐름과 API 연결 구조를 정리하는 데 사용했습니다.
+
+주요 활용 내용은 다음과 같습니다.
+
+- AI 상담, 학업 로드맵, 진로/취업, 프로젝트, 일정, 설정 탭 구성 정리
+- 채팅 입력과 assistant 답변 표시 흐름 정리
+- RAG 근거 chip, 개인화 메모리, 추천 액션 표시 방식 정리
+- 자연어 일정 입력 후 일정 후보 카드 표시 방식 정리
+- LLM 활용 기록 화면과 제출 증거 설명 흐름 정리
+
+프론트엔드 구현 결과는 `pnpm build:frontend`로 확인했습니다.
+
+### 3.6 보고서와 발표 준비
+
+보고서 작성에서는 LLM을 문장 정리와 구성 점검에 사용했습니다. 다만 보고서에는 전체 코드를 붙이지 않고, 과제 조건을 보여주는 주요 Python 파일과 로직 중심으로 설명했습니다.
+
+보고서에 반영한 핵심 설명은 다음과 같습니다.
+
+- 프로젝트 주제와 목적
+- 주요 기능
+- 시스템 구조
+- 코드 구조
+- 채팅 API, RAG 검색, 추천, 일정 D-Day 계산의 주요 흐름
+- LLM 활용 방식
+- 실행 결과
+- 한계와 개선 방향
+
+발표 준비에서는 데모 순서를 정리하는 데 사용했습니다. 최종 발표자료는 이미 별도 PPT로 만들었기 때문에 repo 안의 outline 문서는 제거했고, 현재는 `docs/product/live-scenario.md`와 `docs/report/final-report.md`를 기준으로 설명합니다.
+
+## 3. 에이전트 개발 하네스
+
+본 프로젝트는 LLM이 작업할 때마다 같은 기준을 따르도록 작업 규칙과 검증 절차를 고정했습니다. 이 구조를 개발 하네스라고 설명할 수 있습니다.
+
+| 구성 | 위치 | 역할 |
+| --- | --- | --- |
+| repo 규칙 | `AGENTS.md` | 한국어 응답, 문서 읽기 순서, Python 과제 조건, 완료 전 검증 절차를 고정 |
+| 문서 라우터 | `docs/README.md` | PRD, roadmap, feature registry, architecture, testing, report 문서로 이동 |
+| 기능 레지스트리 | `docs/contributing/feature-registry.md` | 기능별 소유 경로와 중복 작업 방지 기준 |
+| 작업 상태 | `docs/contributing/plans-status.md` | 구현 상태, live smoke 결과, 다음 작업 후보 기록 |
+| 설계/실행 계획 | `docs/superpowers/specs/`, `docs/superpowers/plans/` | 기능 구현 전 요구사항과 구현 순서 기록 |
+| Codex 전용 스킬 | `~/.codex/skills/kmu-sw-navigator-*` | 새 Codex 세션이 repo 규칙, 완료 게이트, 다음 작업 판단 기준을 복원 |
+| 검증 명령 | `package.json` scripts | 문서, Python, wiki, RAG ingest, frontend build를 반복 검증 |
+| 제출용 기록 | `docs/llm/usage-log.md`, `docs/llm/agent-coding-evidence.md` | LLM 사용 목적, 산출물, 확인 내용을 기록 |
+
+하네스를 둔 이유는 작업마다 기준이 달라지지 않게 하기 위해서입니다. 예를 들어 새 Codex 세션을 시작하더라도 먼저 repo 규칙을 읽고, 관련 문서를 확인하고, 변경 후 검증 명령을 실행하도록 만들었습니다. 이렇게 하면 프로젝트 설명, 코드 구조, 테스트 결과, 제출 문서가 서로 어긋나는 문제를 줄일 수 있습니다.
+
+작업 흐름은 다음 순서로 반복했습니다.
+
+```txt
+요구사항 확인
+-> AGENTS.md와 docs/README.md로 작업 규칙 복원
+-> PRD/roadmap/feature registry로 범위 확인
+-> spec 또는 plan 작성
+-> 구현
+-> 코드 구조, 보안, 과제 조건, 설명 가능성 확인
+-> 테스트/빌드/문서 검증 실행
+-> 실패하면 원인 분석 후 수정
+-> LLM 사용 기록과 관련 문서 갱신
+```
+
+하네스가 실제로 적용된 예시는 다음과 같습니다.
+
+| 상황 | 사용한 하네스 요소 | 결과 |
+| --- | --- | --- |
+| 새 기능 구현 전 | `docs/superpowers/specs/`, `docs/superpowers/plans/` | 기능 범위와 검증 기준을 먼저 정리했습니다. |
+| 기능 상태 확인 | `docs/contributing/feature-registry.md`, `docs/contributing/plans-status.md` | 어떤 기능이 완료됐고 어떤 파일이 관련되는지 확인했습니다. |
+| 문서와 코드 불일치 점검 | `docs/README.md`, `docs/architecture/`, `docs/report/` | 제출 문서가 실제 구현과 맞는지 점검했습니다. |
+| 과제 조건 확인 | `pnpm submission:check` | 사용자 입력, 조건문, 반복문, 함수, 리스트/딕셔너리, 의미 있는 출력, 실행 가능한 Python, LLM 활용 기록 증거를 확인했습니다. |
+| 문서 누락 확인 | `pnpm docs:check` | 필수 문서가 repo에 존재하는지 확인했습니다. |
+| Python 백엔드 확인 | `pnpm test:backend`, `pnpm lint:backend` | API와 service 로직이 테스트와 lint를 통과하는지 확인했습니다. |
+| 프론트엔드 확인 | `pnpm build:frontend` | React 앱이 production build를 통과하는지 확인했습니다. |
+
+## 4. 팀원 데이터 정형화에서의 LLM 사용
+
+이가은과 정재훈은 데이터 수집/정리 과정에서 Gemini와 ChatGPT를 사용했습니다. 이 과정의 목적은 원자료를 앱이 처리하기 쉬운 JSON 또는 Markdown 형태로 정리하는 것이었습니다.
+
+| 팀원 | 사용 도구 | 처리한 자료 | 정리 결과 | 확인 방식 |
+| --- | --- | --- | --- | --- |
+| 이가은 | Gemini, ChatGPT | 학생회/학사 관련 자료 | `data/inbox/council.json` | 최종 지식베이스와 분리해 접수 자료로 보관하고, 출처/내용/개인정보 위험 확인 대상으로 표시 |
+| 정재훈 | Gemini, ChatGPT | 동아리 자료 | `data/inbox/clubs_information.json`, Markdown 자료 | 동아리명, 활동 내용, 지원 대상, 출처 확인 필요 항목을 사람이 확인할 수 있게 분리 |
+
+`data/inbox`를 사용한 이유는 팀원이 정리한 자료를 바로 RAG 검색 근거로 넣지 않고, 먼저 접수 자료로 분리하기 위해서입니다. 이후 실제 반영 단계에서는 출처, category, placeholder, 개인정보 위험을 확인한 뒤 `data/raw`와 `data/wiki`로 옮기는 절차를 사용합니다.
+
+## 5. 앱 기능별 Gemini API 사용
+
+앱 내부 Gemini API 사용 기록은 별도로 `llm_usage_logs` 테이블과 `GET /api/llm-logs` API에서 조회할 수 있게 연결했습니다. 개발 과정의 LLM 활용 기록은 위 팀원별 표와 하네스 설명으로 제출하고, 앱 기능에서의 Gemini 사용은 아래처럼 구분합니다.
+
+| 기능 | 모델 | 목적 | 코드에서 담당한 부분 |
+| --- | --- | --- | --- |
+| RAG 챗봇 | `gemini-3-flash-preview`, `gemini-3.1-flash-lite` | 검색된 자료, 상담 모드, 사용자 입력을 바탕으로 자연어 답변 생성 | 검색 근거 선택, intent 분류, 사용자 메모리 주입, 응답 schema 관리 |
+| 일정 파싱 | `gemini-3.1-flash-lite` | 자연어 일정에서 제목, 과목, 마감일 JSON 추출 | D-Day 계산과 저장 payload 생성 |
+| 임베딩 | `gemini-embedding-2` | 문서 chunk와 사용자 질문 embedding 생성 | ingest 대상 문서, source_type, chunk metadata 관리 |
+| 최신 웹 grounding | `gemini-3-flash-preview` | 취업/창업/공모전/소융대 공지처럼 최신성이 필요한 답변 보강 | 최신성이 필요한 intent에서만 호출하고, 내부 RAG 근거와 웹 근거를 분리 표시 |
+
+앱 내부 LLM 기록은 개발 과정의 LLM 활용 기록과 구분합니다. 개발 과정의 기록은 이 문서의 팀원별 표와 하네스 설명이고, 앱 내부 기록은 실제 사용자가 채팅하거나 일정 파싱, embedding ingest, grounding을 실행했을 때 남는 서비스 로그입니다.
+
+## 6. 제출 시 설명할 핵심 포인트
+
+교수님에게 설명할 때는 다음 순서로 말하면 됩니다.
+
+1. 우리 팀은 LLM을 개발 보조, 데이터 정형화 보조, 앱 기능 세 가지 범위로 나누어 사용했습니다.
+2. 김성빈은 Codex, ChatGPT, Gemini API, Gemini Code Assist를 사용해 설계, 구현 보조, 오류 분석, 검증, 보고서 정리를 했습니다.
+3. 차성민은 Codex를 사용해 프론트엔드 API fallback과 팀 역할 문서 정리를 보조했습니다.
+4. 이가은과 정재훈은 Gemini와 ChatGPT를 사용해 수집 자료를 JSON/Markdown 형태로 정리했습니다.
+5. 앱 내부에서는 Gemini API를 RAG 답변 생성, 일정 파싱, embedding, 최신 웹 grounding에 사용했습니다.
+6. 개발 과정은 `AGENTS.md`, `docs/README.md`, feature registry, Superpowers spec/plan, Codex 전용 스킬, 검증 명령으로 관리했습니다.
+7. 제출 조건은 `pnpm submission:check`, 문서 존재 여부는 `pnpm docs:check`, 백엔드와 프론트엔드는 테스트/린트/build 명령으로 확인했습니다.

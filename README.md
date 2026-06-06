@@ -25,7 +25,7 @@
 - **일정 관리**: 자연어로 입력한 과제/일정을 구조화하고 D-day를 계산하며 Google Calendar 내보내기를 지원합니다.
 - **Supabase 연결 점검**: backend Direct 값과 frontend Framework/client 값을 분리해 확인합니다.
 - **LLM 활용 기록**: 앱 내부 Gemini 사용 기록과 Codex 기반 개발 워크플로우를 함께 남깁니다.
-- **발표/보고서 지원**: 라이브 시연 순서, 보고서 목차, 코드 설명 포인트를 repo 안에서 관리합니다.
+- **제출 문서 지원**: 라이브 시연 순서, 최종보고서, 코드 설명 포인트를 repo 안에서 관리합니다.
 
 ## 기술 스택
 
@@ -269,10 +269,8 @@ pnpm submission:check
 | 목적 | 문서 |
 | --- | --- |
 | 라이브 시연 흐름 | [docs/product/live-scenario.md](docs/product/live-scenario.md) |
-| 최종보고서 초안 | [docs/report/final-report.md](docs/report/final-report.md) |
-| 보고서 목차와 문장 초안 | [docs/report/report-outline.md](docs/report/report-outline.md) |
-| 발표 구성과 시간 배분 | [docs/report/presentation-outline.md](docs/report/presentation-outline.md) |
-| 제출 전 체크리스트 | [docs/report/submission-checklist.md](docs/report/submission-checklist.md) |
+| 최종보고서 본문 | [docs/report/final-report.md](docs/report/final-report.md) |
+| 최종 제출 체크리스트 | [docs/report/submission-checklist.md](docs/report/submission-checklist.md) |
 | 핵심 Python 로직 설명 | [docs/architecture/python-core-logic.md](docs/architecture/python-core-logic.md) |
 | LLM 활용 기록 | [docs/llm/usage-log.md](docs/llm/usage-log.md) |
 

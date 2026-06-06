@@ -451,7 +451,7 @@ Python 사용:
 
 이렇게 해야 AI 서비스답게 동작하면서도 과제에서 요구하는 Python 로직을 명확히 설명할 수 있다.
 
-## 20. API 초안
+## 20. API 구성
 
 ```txt
 POST /api/profile

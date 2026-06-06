@@ -26,6 +26,6 @@
 
 | 순서 | 요청 요약 | 결정 |
 | --- | --- | --- |
-| 1 | 교수님이 에이전트를 써서 코딩하는 과정을 중요하게 본다고 하며 문서 보강 요청 | `docs/llm/agent-coding-evidence.md`를 추가해 Codex/Superpowers/Gemini Code Assist/Gemini API 역할, 하네스, 직접 검토 기준, 과제 조건 연결을 설명하기로 결정 |
+| 1 | 교수님이 에이전트를 써서 코딩하는 과정을 중요하게 본다고 하며 문서 보강 요청 | `docs/llm/agent-coding-evidence.md`를 추가해 Codex/Superpowers/Gemini Code Assist/Gemini API 역할, 하네스, 확인 과정, 과제 조건 연결을 설명하기로 결정 |
 | 2 | 교수님이 LLM이 만들어준 코드를 그대로 쓰면 안 된다고 했고 Python 파일에 주석을 자세히 적었다고 공유 | 주석만으로 설명하지 않고 `python-core-logic`, `agent-coding-evidence`, `submission:check`에 직접 검토/수정/테스트 증거를 추가하기로 결정 |
 | 3 | 답변을 끝내기 전에 문서 업데이트 필요 여부를 항상 생각하는 제약을 원함 | `AGENTS.md`에 문서 갱신 판단 게이트를 추가하되, 필요 없으면 불필요한 문서 수정은 생략하도록 정리 |
